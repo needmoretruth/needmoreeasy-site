@@ -1,0 +1,29 @@
+# Cloudflare Pages response headers.
+#
+# The two cross-origin lines are what make SharedArrayBuffer available, which
+# is what lets a Python program on this page stop and wait for the visitor to
+# type an answer. Nothing here loads from another origin, so isolating the page
+# costs us nothing.
+
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval' https://static.cloudflareinsights.com; style-src 'self'; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com https://static.cloudflareinsights.com; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+
+# The two cloudflareinsights.com entries are for the page-view counter that
+# Cloudflare Pages injects at the edge. It sets no cookies and sees no program
+# text. Removing those two entries blocks it; the page keeps working either way.
+
+# The compiler and the Python engine are content-addressed by their build, not
+# by a version in the path, so they are revalidated rather than pinned forever.
+/assets/wasm/*
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/assets/wasm-run/*
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/assets/*
+  Cache-Control: public, max-age=3600, must-revalidate

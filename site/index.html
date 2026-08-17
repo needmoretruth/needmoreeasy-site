@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NeedMoreEasy — a language that starts with a sentence and grows into Python</title>
+<meta name="description" content="NeedMoreEasy (NME) compiles ordinary sentences, in English or Korean, into ordinary Python. Try it in your browser: the real compiler runs on this page.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://needmoreeasy.com/">
+<link rel="alternate" hreflang="en" href="https://needmoreeasy.com/">
+<link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/">
+<link rel="alternate" hreflang="x-default" href="https://needmoreeasy.com/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="NeedMoreEasy — start with a sentence, grow into Python">
+<meta property="og:description" content="A language that compiles sentences, in English or Korean, into ordinary Python. The compiler runs in your browser on this page.">
+<meta property="og:url" content="https://needmoreeasy.com/">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="/">need<span>more</span>easy</a>
+    <nav class="head-nav" aria-label="Site">
+      <a href="#playground">Try it</a>
+      <a href="#install">Install</a>
+      <a class="nav-hide-sm" href="#learn">Learn</a>
+      <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
+      <span class="lang-toggle">
+        <a href="/" aria-current="true" data-lang-choice="en">EN</a>
+        <a href="/ko/" data-lang-choice="ko">한국어</a>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-text">
+      <h1>If Python still feels hard, start with a sentence.</h1>
+      <p class="lede">
+        NeedMoreEasy (NME) is a small language that compiles into ordinary
+        Python. Write plain sentences — in English, in Korean, or with both on
+        one line — and replace them with real Python whenever you are ready, one
+        line at a time, in the same file. There is no second project to start.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#playground">Try it in your browser</a>
+        <a class="btn btn-ghost" href="https://github.com/needmoretruth/needmoreeasy">Read the source</a>
+      </div>
+      <div class="badges">
+        <span class="badge badge-beta">public beta</span>
+        <span class="badge">Apache-2.0</span>
+        <span class="badge">compiles to Python</span>
+        <span class="badge">English &amp; Korean</span>
+      </div>
+    </div>
+    <div class="hero-figure">
+      <span class="figure-label">you write</span>
+      <pre class="code">이름을 물어봐 What is your name?
+show Hello 이름!
+3번 반복해서 Welcome to NME 말해줘</pre>
+      <div class="figure-arrow">compiles to</div>
+      <pre class="code">이름 = input("What is your name?" + " ")
+print("Hello " + str(이름) + "!")
+for _ in range(3): print("Welcome to NME")</pre>
+    </div>
+  </div>
+</section>
+
+<section id="playground">
+  <div class="wrap">
+    <div class="play-head">
+      <div>
+        <p class="eyebrow">Playground</p>
+        <h2>Write on the left. That is the Python on the right.</h2>
+        <p class="lede">
+          This page carries the compiler from the repository, built for the
+          browser, and a Python engine next to it. Your program is compiled as
+          you type and runs in this tab. Your program never leaves it.
+        </p>
+      </div>
+    </div>
+
+    <div class="examples" id="examples" role="group" aria-label="Example programs"></div>
+
+    <div class="panes">
+      <div class="pane">
+        <div class="pane-head"><strong>Your program</strong><span>.nme</span></div>
+        <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
+                  autocorrect="off" aria-label="NME program"></textarea>
+      </div>
+      <div class="pane">
+        <div class="pane-head"><strong id="python-state">Python</strong><span>what the compiler produced</span></div>
+        <pre class="readout" id="python" data-state="ok" aria-live="polite"></pre>
+      </div>
+    </div>
+
+    <div class="run-bar">
+      <button class="btn btn-primary" id="run" type="button">Run</button>
+      <button class="btn btn-ghost" id="stop" type="button" disabled>Stop</button>
+      <span class="run-note" id="engine-note" aria-live="polite"></span>
+    </div>
+
+    <div class="terminal" id="terminal" data-placeholder="Output appears here." aria-live="polite" aria-label="Program output"></div>
+
+    <div class="term-input-row" id="input-row" hidden>
+      <input class="term-input" id="term-input" type="text" autocomplete="off"
+             aria-label="Answer for the program">
+      <button class="btn btn-primary" id="send" type="button">Answer</button>
+    </div>
+
+    <div class="notice" id="answers-wrap" hidden>
+      <p data-no-shared-memory></p>
+      <label for="answers"><strong>Answers, one per line</strong></label>
+      <textarea class="editor answers-box" id="answers" rows="3"></textarea>
+    </div>
+
+    <p class="notice">
+      The engine in your browser is <strong>RustPython</strong>, an independent
+      Python written in Rust — not CPython. Programs that open files, use the
+      network, or import packages from PyPI need NME installed on your own
+      computer, where it uses your real Python. Everything else on this page
+      behaves the same in both places.
+    </p>
+  </div>
+</section>
+
+<section id="levels">
+  <div class="wrap">
+    <p class="eyebrow">Three levels, one file</p>
+    <h2>You are never asked to start over.</h2>
+    <p class="lede">
+      The levels are not modes and there is nothing to declare. Any line may be
+      written at any level, and valid Python always wins — it is kept exactly as
+      you typed it.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Sentence</h3>
+        <p class="role">day one</p>
+        <p>Almost no punctuation. Say what you want to happen.</p>
+        <pre class="code">3 times Welcome to NME</pre>
+      </div>
+      <div class="card">
+        <h3>Beginner</h3>
+        <p class="role">shorter, still gentle</p>
+        <p>Compact and precise, with fewer rules than Python.</p>
+        <pre class="code">3 times: say "Hello"</pre>
+      </div>
+      <div class="card">
+        <h3>Advanced</h3>
+        <p class="role">ordinary Python</p>
+        <p>Real Python, preserved byte for byte on compilation.</p>
+        <pre class="code">for i in range(3): print(i)</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="languages">
+  <div class="wrap">
+    <div class="split">
+      <div>
+        <p class="eyebrow">Two human languages</p>
+        <h2>English and Korean can share a line.</h2>
+        <p class="lede">
+          Every NME word exists in both languages, and mixing them needs no
+          declaration. This matters for a first language: you can keep writing
+          in whichever words you actually think in.
+        </p>
+        <p class="fineprint">
+          Error messages carry a stable code such as <code>E0102</code>, and the
+          command line will explain any of them in either language.
+        </p>
+      </div>
+      <div>
+        <pre class="code">이름을 물어봐 What is your name?
+show Hello 이름!
+3번 반복해서 Welcome to NME 말해줘</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <div class="split">
+      <div>
+        <p class="eyebrow">Install</p>
+        <h2>On your own computer, it runs on your real Python.</h2>
+        <p class="lede">
+          This is the public beta and it builds from source. You need stable
+          Rust, Python 3.8 or newer, and Git. Windows, macOS and Linux steps are
+          all in the installation guide.
+        </p>
+        <p class="fineprint">
+          <a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/install.md">Installation guide</a> ·
+          <a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/getting-started.md">Five-minute guide</a>
+        </p>
+      </div>
+      <div class="copy-wrap">
+        <button class="copy-btn" type="button" data-copy="install-code">copy</button>
+        <pre class="code" id="install-code">git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+cd needmoreeasy
+cargo install --path crates/nme-cli --locked
+nme --version
+
+nme run examples/hello-sentence</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="learn">
+  <div class="wrap">
+    <p class="eyebrow">Learn</p>
+    <h2>Everything is in the repository.</h2>
+    <ul class="links">
+      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/getting-started.md">Five-minute guide</a>
+        <span>Starts from no programming knowledge at all.</span></li>
+      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/tutorial.md">Learning path</a>
+        <span>Six projects, ending with a tiny compiler you write yourself.</span></li>
+      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/language.md">Language reference</a>
+        <span>All three levels, exact meanings, mixing rules, limitations.</span></li>
+      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/guides/index.md">Learning guides</a>
+        <span>Short guides labelled by difficulty and topic.</span></li>
+      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/converting-python.md">Convert Python into NME</a>
+        <span>Take a Python file and get an easier version back.</span></li>
+      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/editors.md">VS Code, Cursor, Zed</a>
+        <span>Ready-made tasks and file setup.</span></li>
+      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/ai-assistants.md">AI coding assistants</a>
+        <span>One link to give Claude Code, Codex or OpenCode first.</span></li>
+      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/CHANGELOG.md">Changelog</a>
+        <span>What changed in every beta.</span></li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>NeedMoreEasy · Apache-2.0 · compiler <code>0.0.1-beta.160</code></span>
+    <span class="foot-spacer"></span>
+    <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
+    <a href="https://github.com/needmoretruth/needmoreeasy/issues">Issues</a>
+    <a href="/ko/" data-lang-choice="ko">한국어</a>
+  </div>
+</footer>
+
+<script type="module" src="/assets/site.js"></script>
+</body>
+</html>

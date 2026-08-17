@@ -1,0 +1,32 @@
+[package]
+name = "nme-web"
+description = "Browser bindings for the NeedMoreEasy compiler core: NME source in, Python source (or a rendered diagnostic) out."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[lints]
+workspace = true
+
+# wasm-pack ships an older wasm-opt than the WebAssembly features rustc 1.96
+# emits by default, so it rejects our own output unless those features are
+# named explicitly. Every browser we target has supported all three for years.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = [
+  "-Oz",
+  "--enable-bulk-memory",
+  "--enable-nontrapping-float-to-int",
+  "--enable-sign-ext",
+]
+
+[dependencies]
+# The real compiler, pinned to one upstream commit so the site never silently
+# changes language behaviour when the language repository moves. Bump the rev
+# deliberately, rebuild, and re-verify the playground.
+nme-core = { git = "https://github.com/needmoretruth/needmoreeasy", rev = "83865943e5b55569139783cc29f3f8935d564d72" }
+wasm-bindgen = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
