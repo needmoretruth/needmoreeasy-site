@@ -17,13 +17,8 @@
 # Cloudflare Pages injects at the edge. It sets no cookies and sees no program
 # text. Removing those two entries blocks it; the page keeps working either way.
 
-# The compiler and the Python engine are content-addressed by their build, not
-# by a version in the path, so they are revalidated rather than pinned forever.
-/assets/wasm/*
-  Cache-Control: public, max-age=3600, must-revalidate
-
-/assets/wasm-run/*
-  Cache-Control: public, max-age=3600, must-revalidate
-
-/assets/*
-  Cache-Control: public, max-age=3600, must-revalidate
+# No Cache-Control overrides here on purpose. Cloudflare Pages already sends
+# `max-age=0, must-revalidate`, which makes a redeploy visible immediately and
+# still lets the browser skip re-downloading an unchanged 6 MB engine (it gets
+# a 304). An earlier one-hour max-age here served a stale stylesheet for an
+# hour after a fix went live.

@@ -43,6 +43,15 @@ export CLOUDFLARE_EMAIL CLOUDFLARE_API_KEY
 export CLOUDFLARE_ACCOUNT_ID="$ACCOUNT_ID"
 npx --yes wrangler@4 pages deploy site --project-name "$PROJECT" --branch main --commit-dirty=true
 
+echo "== 가장자리 캐시 비우기 =="
+# Pages serves each deployment immediately, but Cloudflare's edge may still be
+# holding the previous copy of an asset; without this a fixed stylesheet can
+# stay invisible for as long as its cache lifetime.
+curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/CLOUDFLARE_ZONE_ID_WAS_HERE/purge_cache" \
+  -H "X-Auth-Email: ${CLOUDFLARE_EMAIL}" -H "X-Auth-Key: ${CLOUDFLARE_API_KEY}" \
+  -H "Content-Type: application/json" --data '{"purge_everything":true}' \
+  -o /dev/null -w "  purge -> HTTP %{http_code}\n"
+
 echo "== 외부에서 실제 확인 =="
 for url in https://needmoreeasy.com/ https://needmoreeasy.com/ko/ https://www.needmoreeasy.com/; do
   code=$(curl -sS -o /dev/null --max-time 40 --retry 4 --retry-delay 5 --retry-all-errors -w '%{http_code}' "$url")

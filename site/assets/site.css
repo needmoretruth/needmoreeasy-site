@@ -448,3 +448,9 @@ html[lang="ko"] body { word-break: keep-all; }
 
 /* Keep the first line of a copyable block clear of the copy button. */
 .copy-wrap pre.code { padding-right: 84px; }
+
+/* Grid children default to `min-width: auto`, so one long line inside a code
+   block stretches its whole column and pushes the page sideways on a phone.
+   These two rules are what keep the body from scrolling horizontally at 320px. */
+.split > *,
+.hero .wrap > * { min-width: 0; }
