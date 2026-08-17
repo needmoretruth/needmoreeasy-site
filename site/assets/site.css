@@ -445,3 +445,6 @@ p code, li code {
    headline would split a word in half mid-line. `keep-all` makes it wrap at
    spaces, which is how Korean text is meant to break. */
 html[lang="ko"] body { word-break: keep-all; }
+
+/* Keep the first line of a copyable block clear of the copy button. */
+.copy-wrap pre.code { padding-right: 84px; }
