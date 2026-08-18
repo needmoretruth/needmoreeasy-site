@@ -460,6 +460,7 @@ class Playground {
     this.answers = root.querySelector('#answers');
     this.dot = root.querySelector('#engine-dot');
     this.panes = root.querySelector('.panes');
+    this.pythonPane = root.querySelector('.pane-python');
     this.tabs = [...root.querySelectorAll('.play-tabs [data-view]')];
     this.slotList = root.querySelector('#slot-list');
     this.slotFlash = root.querySelector('#slot-flash');
@@ -884,6 +885,14 @@ class Playground {
       return;
     }
     const outcome = JSON.parse(compile(this.editor.value));
+    // A quick pulse on the Python pane whenever it is rebuilt. Compiling as
+    // you type is the thing this page is for, and without a flicker the pane
+    // looks static even while it is changing.
+    if (this.pythonPane) {
+      this.pythonPane.dataset.fresh = 'true';
+      clearTimeout(this.freshTimer);
+      this.freshTimer = setTimeout(() => { this.pythonPane.dataset.fresh = 'false'; }, 450);
+    }
     if (outcome.ok) {
       this.compiled = outcome.python;
       this.python.dataset.state = 'ok';

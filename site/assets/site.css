@@ -1652,3 +1652,12 @@ main > section + section::before {
   -webkit-mask-image: radial-gradient(340px circle at var(--px, -1000px) var(--py, -1000px), #000 10%, transparent 72%);
   mask-image: radial-gradient(340px circle at var(--px, -1000px) var(--py, -1000px), #000 10%, transparent 72%);
 }
+
+/* The Python pane lights its edge for a moment each time it is rebuilt, so the
+ * "compiled as you type" promise is visible rather than merely true. */
+.pane-python[data-fresh="true"] {
+  box-shadow: var(--shadow-2), 0 0 0 1px var(--edge-top);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pane-python[data-fresh="true"] { box-shadow: var(--shadow-2); }
+}
