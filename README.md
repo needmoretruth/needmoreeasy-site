@@ -36,6 +36,7 @@ node scripts/check-site-links.mjs  # every internal link resolves, none redirect
 node scripts/check-site-layout.mjs # 5 widths x 2 themes: overflow, console, theme toggle
 node scripts/check-site-playground.mjs  # run a program, answer a question, download it
 node scripts/check-site-structure.mjs   # ids, alt text, heading levels, page language
+node scripts/check-live.mjs        # open the published site and check it from outside
 node scripts/make-og-image.mjs     # redraw the link-preview card from the site's own CSS
 bash scripts/deploy.sh             # build both wasm modules, run every check, publish, verify
 ```

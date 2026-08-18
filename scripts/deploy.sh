@@ -81,4 +81,7 @@ for url in https://needmoreeasy.com/ https://needmoreeasy.com/ko/ https://www.ne
   echo "  $url -> $code"
   [ "$code" = "200" ] || { echo "배포 후 확인 실패: $url" >&2; exit 1; }
 done
+echo "== 배포된 사이트를 밖에서 열어 확인 =="
+node scripts/check-live.mjs https://needmoreeasy.com
+
 echo "배포 완료."
