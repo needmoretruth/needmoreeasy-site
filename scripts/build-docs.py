@@ -218,6 +218,17 @@ def is_navigation_row(line: str) -> bool:
     return True
 
 
+def strip_meta_lines(text: str) -> str:
+    """Removes the four metadata bullets; they are shown as a strip instead."""
+    kept = []
+    for line in text.split("\n"):
+        match = re.match(r"^- ([^:：]+)[:：]\s*(.+)$", line.strip())
+        if match and META_KEYS.get(match.group(1).strip()):
+            continue
+        kept.append(line)
+    return "\n".join(kept)
+
+
 def read_meta(text: str) -> dict[str, str]:
     meta: dict[str, str] = {}
     for line in text.split("\n")[:24]:
@@ -249,15 +260,19 @@ def collect(docs: Path) -> list[Page]:
                 continue
             if (path.name.endswith(".ko.md")) != (lang == "ko"):
                 continue
+            # Only the numbered guides form the ordered course; the three
+            # unnumbered files are about writing examples, not about the
+            # language, so they sit with the reference material.
+            group = "guides" if re.match(r"^\d\d-", name) else "deeper"
             pages.append(
-                make_page(f"guides/{name}", lang, f"guides/{name}", path, "guides")
+                make_page(f"guides/{name}", lang, f"guides/{name}", path, group)
             )
     return pages
 
 
 def make_page(key: str, lang: str, slug: str, path: Path, group: str) -> Page:
     raw = path.read_text(encoding="utf-8")
-    text = strip_repo_navigation(raw)
+    text = strip_meta_lines(strip_repo_navigation(raw))
     return Page(
         key=key,
         lang=lang,
@@ -406,6 +421,12 @@ def escape(text: str) -> str:
     return html.escape(text, quote=True)
 
 
+def stars_of(page: Page) -> str:
+    """The `★★☆☆☆` part of a guide's difficulty line, or nothing."""
+    words = page.meta.get("difficulty", "").split()
+    return words[0] if words else ""
+
+
 def rail(page: Page, pages: list[Page], guides: list[Page]) -> str:
     words = STRINGS[page.lang]
     mine = [candidate for candidate in pages if candidate.lang == page.lang]
@@ -428,7 +449,7 @@ def rail(page: Page, pages: list[Page], guides: list[Page]) -> str:
         for guide in guides:
             if guide.lang != page.lang:
                 continue
-            if guide.meta.get("difficulty", "").split()[0] != stars:
+            if stars_of(guide) != stars:
                 continue
             current = ' aria-current="page"' if guide.url == page.url else ""
             items.append(
@@ -512,8 +533,8 @@ def page_shell(
       <a class="nav-hide-sm" href="{words["learn"]}guides.html">{escape(words["guides"])}</a>
       <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
       <span class="lang-toggle">
-        <a href="/learn/" {'aria-current="true" ' if page_lang == 'en' else ''}data-lang-choice="en">EN</a>
-        <a href="/ko/learn/" {'aria-current="true" ' if page_lang == 'ko' else ''}data-lang-choice="ko">한국어</a>
+        <a href="{canonical if page_lang == 'en' else twin}" {'aria-current="true" ' if page_lang == 'en' else ''}data-lang-choice="en">EN</a>
+        <a href="{twin if page_lang == 'en' else canonical}" {'aria-current="true" ' if page_lang == 'ko' else ''}data-lang-choice="ko">한국어</a>
       </span>
     </nav>
   </div>
@@ -583,19 +604,33 @@ def crumbs(page: Page) -> str:
     return f'<nav class="doc-crumbs">{"".join(trail)}</nav>'
 
 
+PREREQ_LABEL = {"en": "Prerequisites", "ko": "선수 지식"}
+RESULT_LABEL = {"en": "You will end up with", "ko": "결과물"}
+
+
 def meta_strip(page: Page) -> str:
+    """Difficulty and topic as badges; the rest as two quiet lines."""
     if not page.meta:
         return ""
     words = STRINGS[page.lang]
-    bits = []
+    badges = []
     if "difficulty" in page.meta:
-        bits.append(
-            f'<span class="badge">{escape(words["difficulty"])} '
-            f'{escape(page.meta["difficulty"])}</span>'
-        )
+        badges.append(f'<span class="badge">{escape(page.meta["difficulty"])}</span>')
     if "topic" in page.meta:
-        bits.append(f'<span class="badge">{escape(page.meta["topic"])}</span>')
-    return f'<div class="badges">{"".join(bits)}</div>' if bits else ""
+        badges.append(f'<span class="badge">{escape(page.meta["topic"])}</span>')
+
+    rows = []
+    for key, labels in (("prerequisites", PREREQ_LABEL), ("result", RESULT_LABEL)):
+        if key in page.meta:
+            rows.append(
+                f"<dt>{escape(labels[page.lang])}</dt>"
+                f"<dd>{md.render_inline(page.meta[key])}</dd>"
+            )
+    if not badges and not rows:
+        return ""
+    badge_html = f'<div class="badges">{"".join(badges)}</div>' if badges else ""
+    row_html = f"<dl>{''.join(rows)}</dl>" if rows else ""
+    return f'<div class="doc-meta">{badge_html}{row_html}</div>'
 
 
 # ------------------------------------------------------------------ hubs
@@ -606,7 +641,7 @@ def guides_hub(lang: str, guides: list[Page], index_text: str | None) -> str:
     mine = [guide for guide in guides if guide.lang == lang]
     items = []
     for guide in mine:
-        stars = guide.meta.get("difficulty", "").split()[0] if guide.meta.get("difficulty") else ""
+        stars = stars_of(guide)
         topic = guide.meta.get("topic", "")
         haystack = f"{guide.title} {topic}".lower()
         items.append(
@@ -667,34 +702,102 @@ def learn_hub(lang: str, pages: list[Page]) -> str:
 """
 
 
+PROMPT_CARDS = [
+    (
+        "prompts/sentence",
+        True,
+        "100% of the sentence syntax, plus short examples. Start here if you "
+        "are new to programming — this is usually all you need.",
+        "문장형 문법 100%와 짧은 예제. 코딩을 처음 한다면 이것 하나면 됩니다.",
+    ),
+    (
+        "prompts/all-levels",
+        False,
+        "The same, plus the beginner and advanced levels, the bundled modules "
+        "and the error codes.",
+        "위에 초급·고급 문법과 딸려 오는 도구, 오류 코드까지 더했습니다.",
+    ),
+    (
+        "prompts/complete",
+        False,
+        "Everything above and twelve complete programs. The most accurate "
+        "answers, if it fits in the chat window.",
+        "위 전부에 완성된 예제 프로그램 12개까지. 대화창에 들어간다면 가장 정확합니다.",
+    ),
+]
+
+
 def prompt_hub_extra(lang: str, pages: list[Page], docs: Path) -> str:
-    """Three cards with a copy button, above the repository's own README."""
-    words = STRINGS[lang]
-    wanted = [
-        ("prompts/sentence", True),
-        ("prompts/all-levels", False),
-        ("prompts/complete", False),
-    ]
+    """Three cards, each able to put the whole prompt on the clipboard."""
     by_slug = {page.slug: page for page in pages if page.lang == lang}
+    copy_label = "copy the whole prompt" if lang == "en" else "전체 복사"
+    read_label = "read it" if lang == "en" else "읽기"
     cards = []
-    for slug, recommended in wanted:
+    for slug, recommended, blurb_en, blurb_ko in PROMPT_CARDS:
         page = by_slug.get(slug)
         if page is None:
             continue
+        raw = raw_url(page)
         size = len(page.source.read_text(encoding="utf-8"))
-        blurb = page.text.split("\n\n")[2].replace("\n", " ").strip()[:160]
         classes = "prompt-card is-pick" if recommended else "prompt-card"
-        read = "read it" if lang == "en" else "읽기"
         cards.append(
-            f'<div class="{classes}" lang="{lang}">'
+            f'<div class="{classes}">'
             f"<h3>{escape(page.title)}</h3>"
-            f"<p>{escape(blurb)}</p>"
+            f"<p>{escape(blurb_en if lang == 'en' else blurb_ko)}</p>"
             f'<p class="prompt-size">{size // 1000}k</p>'
             f'<p class="prompt-actions">'
-            f'<a class="btn btn-ghost" href="{page.url}">{read} →</a></p>'
+            f'<button class="btn btn-primary" type="button" data-copy-file="{raw}">'
+            f"{copy_label}</button>"
+            f'<a class="btn btn-ghost" href="{page.url}">{read_label} →</a></p>'
             "</div>"
         )
     return f'<div class="prompt-grid">{"".join(cards)}</div>'
+
+
+def raw_url(page: Page) -> str:
+    """Where the untouched Markdown is published, for copying and saving."""
+    prefix = "/learn/" if page.lang == "en" else "/ko/learn/"
+    return f"{prefix}{page.slug}.md"
+
+
+def copy_bar(page: Page) -> str:
+    """The button that puts a whole prompt on the clipboard, in one press."""
+    if not page.slug.startswith("prompts/"):
+        return ""
+    copy_label = "copy the whole prompt" if page.lang == "en" else "프롬프트 전체 복사"
+    save_label = "save the file" if page.lang == "en" else "파일로 저장"
+    note = (
+        "Paste it at the start of a chat with any AI."
+        if page.lang == "en"
+        else "AI와의 대화 맨 앞에 붙여넣으면 됩니다."
+    )
+    raw = raw_url(page)
+    return (
+        '<div class="copy-bar">'
+        f'<button class="btn btn-primary" type="button" data-copy-file="{raw}">'
+        f"{copy_label}</button>"
+        f'<a class="btn btn-ghost" href="{raw}" download>{save_label}</a>'
+        f'<span class="run-note">{escape(note)}</span>'
+        "</div>"
+    )
+
+
+def split_prompt_readme(text: str) -> tuple[str, str]:
+    """Splits at the comparison section, which the cards replace."""
+    lines = text.split("\n")
+    starts = [
+        index
+        for index, line in enumerate(lines)
+        if line.startswith("## ") and ("어느 것을" in line or "Which one" in line)
+    ]
+    if not starts:
+        return text, ""
+    start = starts[0]
+    after = next(
+        (index for index in range(start + 1, len(lines)) if lines[index].startswith("## ")),
+        len(lines),
+    )
+    return "\n".join(lines[:start]), "\n".join(lines[after:])
 
 
 def split_index(text: str) -> str:
@@ -727,6 +830,9 @@ def render_page(
     body = wrap_tables(body)
     body = add_anchors(body)
     body = decorate_snippets(body, page, compiler)
+    strip = meta_strip(page) + copy_bar(page)
+    if strip and "</h1>" in body:
+        body = body.replace("</h1>", "</h1>\n" + strip, 1)
 
     twin = by_key.get((page.key, "ko" if page.lang == "en" else "en"))
     twin_url = twin.url if twin else STRINGS["ko" if page.lang == "en" else "en"]["learn"]
@@ -735,7 +841,6 @@ def render_page(
 
     article = f"""    <article class="doc-main">
 {crumbs(page)}
-{meta_strip(page)}
 <div class="prose">
 {body}
 </div>
@@ -780,6 +885,12 @@ def build(docs: Path, binary: Path | None) -> None:
             encoding="utf-8",
         )
         written += 1
+        # A prompt is meant to be copied whole, so the Markdown itself is
+        # published beside the page rather than only rendered into it.
+        if page.slug.startswith("prompts/"):
+            page.out.with_suffix(".md").write_text(
+                page.source.read_text(encoding="utf-8"), encoding="utf-8"
+            )
 
     # The two hub pages are ours, not the repository's.
     for lang in ("en", "ko"):
@@ -800,11 +911,18 @@ def build(docs: Path, binary: Path | None) -> None:
 
         prompts_page = by_key.get(("prompts/README", lang))
         if prompts_page is not None:
-            extra = prompt_hub_extra(lang, pages, docs)
-            body = md.render(prompts_page.text, make_link_rewriter(prompts_page, by_key, docs))
-            body = decorate_snippets(add_anchors(wrap_tables(body)), prompts_page, compiler)
+            rewrite = make_link_rewriter(prompts_page, by_key, docs)
+            intro, rest = split_prompt_readme(prompts_page.text)
+            pieces = [
+                md.render(intro, rewrite),
+                prompt_hub_extra(lang, pages, docs),
+                md.render(rest, rewrite) if rest else "",
+            ]
+            body = decorate_snippets(
+                add_anchors(wrap_tables("\n".join(pieces))), prompts_page, compiler
+            )
             written += write_hub(
-                lang, "prompts", prompts_page.title, extra + body, pages, guides
+                lang, "prompts", prompts_page.title, body, pages, guides
             )
 
         written += write_hub(lang, "index", words["hub_title"], learn_hub(lang, pages), pages, guides)

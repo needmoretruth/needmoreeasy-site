@@ -62,6 +62,11 @@ def headings(text: str) -> list[tuple[int, str, str]]:
     return collected
 
 
+def render_inline(text: str, link_rewriter=None) -> str:
+    """One line of Markdown as inline HTML, with no paragraph around it."""
+    return _inline(text.strip(), _Context(link_rewriter, []))
+
+
 def title(text: str) -> str | None:
     """The text of the first level-1 heading, or None if there is none."""
     return next((plain for level, _, plain in headings(text) if level == 1), None)
@@ -70,6 +75,7 @@ def title(text: str) -> str | None:
 def _document(text, link_rewriter, collected):
     lines = _strip_comments(text.expandtabs(4).replace("\r\n", "\n").split("\n"))
     return _blocks(lines, _Context(link_rewriter, collected))
+
 
 def _text(value):
     return html.escape(value, quote=False)
@@ -218,6 +224,7 @@ def _paragraph(lines, index, context, out):
     out.append("<p>" + _inline(body, context) + "</p>\n")
     return index
 
+
 def _list(lines, index, context, out):
     ordered = bool(ORDERED.match(lines[index]))
     matcher = ORDERED if ordered else BULLET
@@ -332,6 +339,7 @@ def _row(cells, aligns, tag, context):
         style = f' style="text-align:{align}"' if align else ""
         parts.append(f"<{tag}{style}>{_inline(cell, context)}</{tag}>")
     return "<tr>" + "".join(parts) + "</tr>\n"
+
 
 def _plain(text):
     """Heading text with the inline markers dropped, for ids and the ToC."""

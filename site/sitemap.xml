@@ -11,4 +11,1074 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/"/>
   </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/ai-assistants.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/ai-assistants.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/ai-assistants.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/ai-assistants.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/ai-assistants.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/ai-assistants.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/converting-python.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/converting-python.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/converting-python.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/converting-python.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/converting-python.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/converting-python.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/editors.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/editors.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/editors.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/editors.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/editors.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/editors.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/01-hello.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/01-hello.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/01-hello.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/01-hello.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/01-hello.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/01-hello.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/02-ask.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/02-ask.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/02-ask.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/02-ask.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/02-ask.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/02-ask.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/03-set.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/03-set.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/03-set.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/03-set.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/03-set.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/03-set.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/04-update.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/04-update.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/04-update.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/04-update.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/04-update.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/04-update.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/05-repeat.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/05-repeat.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/05-repeat.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/05-repeat.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/05-repeat.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/05-repeat.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/06-if.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/06-if.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/06-if.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/06-if.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/06-if.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/06-if.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/07-while.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/07-while.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/07-while.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/07-while.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/07-while.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/07-while.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/08-break.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/08-break.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/08-break.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/08-break.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/08-break.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/08-break.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/09-and-or.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/09-and-or.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/09-and-or.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/09-and-or.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/09-and-or.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/09-and-or.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/10-random.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/10-random.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/10-random.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/10-random.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/10-random.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/10-random.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/11-check-build.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/11-check-build.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/11-check-build.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/11-check-build.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/11-check-build.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/11-check-build.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/12-convert.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/12-convert.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/12-convert.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/12-convert.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/12-convert.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/12-convert.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/13-files.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/13-files.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/13-files.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/13-files.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/13-files.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/13-files.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/14-json.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/14-json.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/14-json.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/14-json.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/14-json.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/14-json.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/15-high-score.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/15-high-score.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/15-high-score.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/15-high-score.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/15-high-score.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/15-high-score.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/16-name-list.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/16-name-list.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/16-name-list.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/16-name-list.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/16-name-list.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/16-name-list.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/17-blockchain.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/17-blockchain.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/17-blockchain.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/17-blockchain.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/17-blockchain.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/17-blockchain.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/18-proof-of-work.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/18-proof-of-work.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/18-proof-of-work.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/18-proof-of-work.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/18-proof-of-work.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/18-proof-of-work.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/19-signatures.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/19-signatures.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/19-signatures.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/19-signatures.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/19-signatures.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/19-signatures.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/20-consensus.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/20-consensus.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/20-consensus.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/20-consensus.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/20-consensus.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/20-consensus.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/21-http.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/21-http.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/21-http.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/21-http.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/21-http.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/21-http.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/22-terminal-menu.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/22-terminal-menu.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/22-terminal-menu.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/22-terminal-menu.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/22-terminal-menu.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/22-terminal-menu.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/23-modules.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/23-modules.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/23-modules.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/23-modules.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/23-modules.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/23-modules.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/24-python-packages.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/24-python-packages.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/24-python-packages.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/24-python-packages.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/24-python-packages.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/24-python-packages.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/25-native.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/25-native.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/25-native.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/25-native.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/25-native.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/25-native.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/26-adventure.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/26-adventure.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/26-adventure.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/26-adventure.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/26-adventure.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/26-adventure.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/27-calculator.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/27-calculator.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/27-calculator.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/27-calculator.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/27-calculator.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/27-calculator.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/28-compiler.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/28-compiler.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/28-compiler.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/28-compiler.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/28-compiler.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/28-compiler.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/29-bootstrap.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/29-bootstrap.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/29-bootstrap.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/29-bootstrap.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/29-bootstrap.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/29-bootstrap.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/30-data.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/30-data.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/30-data.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/30-data.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/30-data.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/30-data.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/31-address-book.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/31-address-book.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/31-address-book.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/31-address-book.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/31-address-book.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/31-address-book.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/32-weather.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/32-weather.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/32-weather.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/32-weather.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/32-weather.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/32-weather.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/33-todo.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/33-todo.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/33-todo.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/33-todo.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/33-todo.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/33-todo.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/34-selfhost.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/34-selfhost.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/34-selfhost.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/34-selfhost.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/34-selfhost.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/34-selfhost.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/35-diary.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/35-diary.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/35-diary.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/35-diary.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/35-diary.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/35-diary.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/36-word-count.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/36-word-count.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/36-word-count.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/36-word-count.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/36-word-count.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/36-word-count.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/37-word-guess.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/37-word-guess.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/37-word-guess.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/37-word-guess.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/37-word-guess.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/37-word-guess.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/38-quiz.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/38-quiz.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/38-quiz.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/38-quiz.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/38-quiz.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/38-quiz.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/39-sorting.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/39-sorting.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/39-sorting.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/39-sorting.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/39-sorting.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/39-sorting.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/40-report.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/40-report.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/40-report.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/40-report.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/40-report.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/40-report.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/41-text-stats.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/41-text-stats.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/41-text-stats.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/41-text-stats.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/41-text-stats.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/41-text-stats.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/42-compare.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/42-compare.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/42-compare.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/42-compare.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/42-compare.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/42-compare.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/43-habit.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/43-habit.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/43-habit.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/43-habit.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/43-habit.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/43-habit.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/44-playlist.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/44-playlist.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/44-playlist.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/44-playlist.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/44-playlist.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/44-playlist.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/45-csv.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/45-csv.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/45-csv.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/45-csv.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/45-csv.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/45-csv.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/46-expressions.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/46-expressions.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/46-expressions.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/46-expressions.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/46-expressions.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/46-expressions.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/47-progress.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/47-progress.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/47-progress.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/47-progress.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/47-progress.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/47-progress.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/48-shop.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/48-shop.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/48-shop.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/48-shop.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/48-shop.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/48-shop.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/49-tokens.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/49-tokens.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/49-tokens.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/49-tokens.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/49-tokens.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/49-tokens.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/50-strings.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/50-strings.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/50-strings.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/50-strings.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/50-strings.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/50-strings.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/51-grid.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/51-grid.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/51-grid.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/51-grid.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/51-grid.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/51-grid.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/52-tic-tac-toe.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/52-tic-tac-toe.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/52-tic-tac-toe.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/52-tic-tac-toe.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/52-tic-tac-toe.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/52-tic-tac-toe.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/53-sets.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/53-sets.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/53-sets.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/53-sets.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/53-sets.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/53-sets.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/54-stats.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/54-stats.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/54-stats.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/54-stats.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/54-stats.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/54-stats.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/55-net.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/55-net.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/55-net.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/55-net.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/55-net.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/55-net.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/56-log.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/56-log.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/56-log.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/56-log.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/56-log.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/56-log.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/57-group.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/57-group.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/57-group.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/57-group.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/57-group.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/57-group.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/58-bytecode.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/58-bytecode.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/58-bytecode.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/58-bytecode.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/58-bytecode.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/58-bytecode.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/59-editor.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/59-editor.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/59-editor.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/59-editor.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/59-editor.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/59-editor.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/60-search.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/60-search.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/60-search.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/60-search.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/60-search.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/60-search.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/61-bank.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/61-bank.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/61-bank.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/61-bank.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/61-bank.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/61-bank.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/62-bubble.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/62-bubble.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/62-bubble.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/62-bubble.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/62-bubble.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/62-bubble.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/63-ascii-art.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/63-ascii-art.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/63-ascii-art.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/63-ascii-art.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/63-ascii-art.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/63-ascii-art.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/64-binary-search.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/64-binary-search.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/64-binary-search.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/64-binary-search.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/64-binary-search.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/64-binary-search.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/65-files-folder.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/65-files-folder.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/65-files-folder.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/65-files-folder.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/65-files-folder.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/65-files-folder.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/66-top-ten.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/66-top-ten.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/66-top-ten.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/66-top-ten.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/66-top-ten.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/66-top-ten.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/67-grade-book.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/67-grade-book.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/67-grade-book.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/67-grade-book.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/67-grade-book.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/67-grade-book.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/68-errors.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/68-errors.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/68-errors.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/68-errors.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/68-errors.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/68-errors.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/69-patterns.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/69-patterns.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/69-patterns.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/69-patterns.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/69-patterns.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/69-patterns.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/70-reaction.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/70-reaction.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/70-reaction.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/70-reaction.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/70-reaction.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/70-reaction.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/71-chart.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/71-chart.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/71-chart.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/71-chart.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/71-chart.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/71-chart.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/72-project-files.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/72-project-files.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/72-project-files.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/72-project-files.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/72-project-files.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/72-project-files.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/73-capstone.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/73-capstone.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/73-capstone.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/73-capstone.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/73-capstone.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/73-capstone.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/74-merge.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/74-merge.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/74-merge.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/74-merge.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/74-merge.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/74-merge.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/75-ai.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/75-ai.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/75-ai.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/75-ai.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/75-ai.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/75-ai.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/76-poll.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/76-poll.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/76-poll.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/76-poll.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/76-poll.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/76-poll.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/77-download.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/77-download.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/77-download.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/77-download.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/77-download.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/77-download.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/78-analysis.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/78-analysis.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/78-analysis.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/78-analysis.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/78-analysis.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/78-analysis.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/79-functions.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/79-functions.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/79-functions.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/79-functions.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/79-functions.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/79-functions.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/80-argv.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/80-argv.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/80-argv.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/80-argv.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/80-argv.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/80-argv.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/81-testing.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/81-testing.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/81-testing.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/81-testing.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/81-testing.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/81-testing.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/82-ast.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/82-ast.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/82-ast.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/82-ast.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/82-ast.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/82-ast.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/83-mastermind.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/83-mastermind.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/83-mastermind.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/83-mastermind.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/83-mastermind.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/83-mastermind.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/84-links.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/84-links.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/84-links.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/84-links.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/84-links.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/84-links.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/85-bytecode-compiler.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/85-bytecode-compiler.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/85-bytecode-compiler.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/85-bytecode-compiler.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/85-bytecode-compiler.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/85-bytecode-compiler.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/cryptocurrency.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/cryptocurrency.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/cryptocurrency.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/cryptocurrency.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/cryptocurrency.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/cryptocurrency.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/example-authoring.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/example-authoring.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/example-authoring.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/example-authoring.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/example-authoring.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/example-authoring.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/example-template.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/example-template.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/example-template.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/example-template.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/example-template.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/example-template.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/install.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/install.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/install.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/install.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/install.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/install.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/native-backend.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/native-backend.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/native-backend.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/native-backend.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/native-backend.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/native-backend.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/native-reference.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/native-reference.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/native-reference.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/native-reference.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/native-reference.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/native-reference.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/prompts.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/prompts.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/prompts.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/prompts.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/prompts.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/prompts.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/prompts.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/prompts.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/prompts.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/prompts.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/prompts.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/prompts.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/prompts/all-levels.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/prompts/all-levels.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/prompts/all-levels.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/prompts/all-levels.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/prompts/all-levels.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/prompts/all-levels.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/prompts/complete.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/prompts/complete.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/prompts/complete.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/prompts/complete.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/prompts/complete.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/prompts/complete.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/prompts/sentence.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/prompts/sentence.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/prompts/sentence.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/prompts/sentence.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/prompts/sentence.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/prompts/sentence.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/reference.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/reference.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/reference.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/reference.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/reference.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/reference.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/start.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/start.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/start.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/start.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/start.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/start.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/syntax.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/syntax.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/syntax.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/syntax.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/syntax.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/syntax.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/tutorial.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/tutorial.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/tutorial.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/tutorial.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/tutorial.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/tutorial.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/versioning.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/versioning.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/versioning.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/versioning.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/versioning.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/versioning.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/zero-knowledge.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/zero-knowledge.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/zero-knowledge.html"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/zero-knowledge.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/zero-knowledge.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/zero-knowledge.html"/>
+  </url>
 </urlset>

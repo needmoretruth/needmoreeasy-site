@@ -32,15 +32,15 @@
   --amber-wash: rgba(190, 130, 40, 0.16);
 
   /* The colour field behind everything ---------------------------------- */
-  --field: #eef1ef;
-  --blob-1: rgba(46, 130, 92, 0.30);
-  --blob-2: rgba(58, 110, 180, 0.24);
-  --blob-3: rgba(206, 148, 62, 0.20);
+  --field: #e4e9e6;
+  --blob-1: rgba(28, 122, 82, 0.52);
+  --blob-2: rgba(44, 96, 178, 0.42);
+  --blob-3: rgba(214, 146, 46, 0.34);
 
   /* Glass ---------------------------------------------------------------- */
-  --glass: rgba(255, 255, 255, 0.60);
-  --glass-strong: rgba(255, 255, 255, 0.80);
-  --glass-sunken: rgba(255, 255, 255, 0.34);
+  --glass: rgba(255, 255, 255, 0.52);
+  --glass-strong: rgba(255, 255, 255, 0.74);
+  --glass-sunken: rgba(255, 255, 255, 0.28);
   --glass-line: rgba(255, 255, 255, 0.72);
   --glass-shadow: 0 20px 44px -26px rgba(12, 30, 22, 0.55);
   --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.65);
@@ -78,10 +78,10 @@
     --amber: #dfae6c;
     --amber-wash: rgba(223, 174, 108, 0.16);
 
-    --field: #0a0d0c;
-    --blob-1: rgba(38, 150, 100, 0.30);
-    --blob-2: rgba(48, 100, 180, 0.26);
-    --blob-3: rgba(180, 120, 50, 0.18);
+    --field: #080b0a;
+    --blob-1: rgba(30, 150, 100, 0.46);
+    --blob-2: rgba(40, 96, 186, 0.40);
+    --blob-3: rgba(178, 116, 44, 0.26);
 
     --glass: rgba(24, 29, 27, 0.58);
     --glass-strong: rgba(26, 32, 29, 0.76);
@@ -171,6 +171,22 @@ body {
     radial-gradient(56rem 46rem at 52% 108%, var(--blob-3), transparent 62%);
   background-attachment: fixed;
   background-repeat: no-repeat;
+}
+
+/* A very fine grain over the colour field. Without it the gradients band on
+   a wide screen and the page reads as flat plastic rather than as light
+   through glass. It is one 120-byte SVG, drawn once and fixed in place. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.32'/%3E%3C/svg%3E");
+}
+@media (prefers-reduced-transparency: reduce) {
+  body::before { display: none; }
 }
 
 h1, h2, h3 { line-height: 1.25; margin: 0; font-weight: 700; letter-spacing: -0.015em; }
@@ -547,6 +563,10 @@ p code, li code, td code {
   border: 1px solid var(--line);
 }
 
+/* The rule above is for a word of code inside a sentence. Inside a <pre> the
+   block already provides the surface, so the chip must be undone. */
+pre code { background: none; border: 0; padding: 0; font-size: inherit; color: inherit; }
+
 .split { display: grid; gap: 22px; grid-template-columns: 1fr; align-items: start; margin-top: 24px; }
 @media (min-width: 900px) { .split { grid-template-columns: 1fr 1fr; gap: 34px; } }
 
@@ -799,6 +819,19 @@ table.syntax code { white-space: pre-wrap; word-break: break-word; }
 .prose .anchor:focus { opacity: 1; }
 @media (max-width: 700px) { .prose .anchor { display: none; } }
 
+.doc-meta { margin: 0 0 22px; }
+.doc-meta .badges { margin-bottom: 8px; }
+.doc-meta dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+.doc-meta dt { font-weight: 600; }
+.doc-meta dd { margin: 0; }
+
 /* --- a runnable code block ----------------------------------------------- */
 
 .snippet { position: relative; margin: 0 0 1.2em; }
@@ -936,18 +969,19 @@ table.syntax code { white-space: pre-wrap; word-break: break-word; }
 .prompt-card .prompt-size { font-family: var(--mono); font-size: 0.76rem; color: var(--muted); }
 .prompt-card .prompt-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
 .prompt-card.is-pick { border-color: var(--accent); }
-.prompt-card.is-pick h3::after {
-  content: "추천";
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  vertical-align: 2px;
-  margin-left: 8px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: var(--accent-wash);
-  color: var(--accent-ink);
+.prompt-card .btn { padding: 8px 16px; font-size: 0.9rem; }
+
+.copy-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 24px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-line);
+  background: var(--glass-sunken);
 }
-.prompt-card[lang="en"].is-pick h3::after { content: "recommended"; }
 
 .alert { align-items: center; }
 .alert p { flex: 1 1 auto; }

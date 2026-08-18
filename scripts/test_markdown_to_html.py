@@ -29,7 +29,7 @@ LEFTOVERS = (
     ("bullet", re.compile(r"^- ")),
     ("table row", re.compile(r"^\|")),
     ("blockquote", re.compile(r"^> ")),
-    ("bold marker", re.compile(r"\*\*")),
+    ("bold", re.compile(r"\*\*")),
     ("link", re.compile(r"\]\(")),
     ("comment", re.compile(r"<!--")),
 )

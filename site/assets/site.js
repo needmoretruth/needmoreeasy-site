@@ -117,6 +117,27 @@ function wireCopyButtons() {
   });
 }
 
+/* A prompt is thousands of words long, so it is copied from the file rather
+ * than from anything on screen: one press, whole document, no scrolling. */
+function wireFileCopyButtons() {
+  const label = LANG === 'ko' ? '복사했습니다' : 'copied';
+  const failed = LANG === 'ko' ? '복사하지 못했습니다' : 'copy failed';
+  document.querySelectorAll('[data-copy-file]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const original = button.textContent;
+      try {
+        const response = await fetch(button.dataset.copyFile);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        await navigator.clipboard.writeText(await response.text());
+        button.textContent = label;
+      } catch {
+        button.textContent = failed;
+      }
+      setTimeout(() => { button.textContent = original; }, 1600);
+    });
+  });
+}
+
 /* --- Python colouring ---------------------------------------------------- */
 
 const PY_KEYWORDS = new Set([
@@ -168,8 +189,12 @@ function wireDocRail() {
   sync();
   wide.addEventListener('change', sync);
 
+  // Bring the current guide into view inside the rail only. `scrollIntoView`
+  // would move the page itself, dropping the reader below the title.
   const current = rail.querySelector('[aria-current="page"]');
-  if (current) current.scrollIntoView({ block: 'center' });
+  if (current && rail.scrollHeight > rail.clientHeight) {
+    rail.scrollTop = current.offsetTop - rail.clientHeight / 2;
+  }
 }
 
 /* Eighty-five guides is too many to scroll through on a phone, so the list
@@ -610,6 +635,7 @@ class Playground {
 forwardKoreanSpeakersOnce();
 rememberLanguageChoice();
 wireCopyButtons();
+wireFileCopyButtons();
 wireDocRail();
 wireGuideFilter();
 
