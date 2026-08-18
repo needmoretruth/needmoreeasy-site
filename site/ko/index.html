@@ -14,9 +14,16 @@
 <meta property="og:title" content="NeedMoreEasy — 문장으로 시작해서 파이썬까지">
 <meta property="og:description" content="한국어 문장을 그대로 파이썬으로 바꾸는 언어입니다. 이 페이지에서 바로 써 볼 수 있습니다.">
 <meta property="og:url" content="https://needmoreeasy.com/ko/">
+<script src="/assets/theme.js"></script>
 <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
+
+<div class="stage" aria-hidden="true">
+  <i class="orb"></i><i class="orb"></i><i class="orb"></i><i class="orb"></i>
+</div>
+
+<a class="skip-link" href="#playground">연습장으로 건너뛰기</a>
 
 <header class="site-head">
   <div class="wrap">
@@ -26,11 +33,16 @@
       <a href="#install">설치</a>
       <a href="/ko/learn/">배우기</a>
       <a href="https://github.com/needmoretruth/needmoreeasy">깃허브</a>
+    </nav>
+      <span class="theme-toggle" role="group" aria-label="화면 테마">
+        <button type="button" data-theme-choice="light" aria-pressed="false" title="밝게" aria-label="밝게"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg></button>
+        <button type="button" data-theme-choice="system" aria-pressed="true" title="기기 설정 따르기" aria-label="기기 설정 따르기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 3.6a8.4 8.4 0 0 1 0 16.8z" fill="currentColor" stroke="none"/></svg></button>
+        <button type="button" data-theme-choice="dark" aria-pressed="false" title="어둡게" aria-label="어둡게"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.4A8.6 8.6 0 0 1 9.6 4a8.6 8.6 0 1 0 10.4 10.4z"/></svg></button>
+      </span>
       <span class="lang-toggle">
         <a href="/" data-lang-choice="en">EN</a>
         <a href="/ko/" aria-current="true" data-lang-choice="ko">한국어</a>
       </span>
-    </nav>
   </div>
 </header>
 
@@ -86,14 +98,19 @@ for _ in range(3): print("Welcome to NME")</pre>
 
     <div class="examples" id="examples" role="group" aria-label="예제 프로그램"></div>
 
-    <div class="panes">
-      <div class="pane">
-        <div class="pane-head"><strong>내 프로그램</strong><span>.nme</span></div>
+    <div class="play-tabs" role="tablist" aria-label="어느 쪽을 볼지">
+      <button type="button" role="tab" data-view="nme" aria-selected="true">내 프로그램</button>
+      <button type="button" role="tab" data-view="python" aria-selected="false">파이썬</button>
+    </div>
+
+    <div class="panes" data-view="nme">
+      <div class="pane pane-nme">
+        <div class="pane-head"><strong>내 프로그램</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>복사</button><button class="copy-btn" type="button" data-download-editor>내려받기</button></span></div>
         <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
                   autocorrect="off" aria-label="NME 프로그램"></textarea>
       </div>
-      <div class="pane">
-        <div class="pane-head"><strong id="python-state">Python</strong><span>컴파일러가 만든 결과</span></div>
+      <div class="pane pane-python">
+        <div class="pane-head"><strong id="python-state">Python</strong><span>컴파일러가 만든 결과</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-python>복사</button><button class="copy-btn" type="button" data-download-python>내려받기</button></span></div>
         <pre class="readout" id="python" data-state="ok" aria-live="polite"></pre>
       </div>
     </div>
@@ -101,6 +118,7 @@ for _ in range(3): print("Welcome to NME")</pre>
     <div class="run-bar">
       <button class="btn btn-primary" id="run" type="button" disabled>실행</button>
       <button class="btn btn-ghost" id="stop" type="button" disabled>멈춤</button>
+      <span class="status-dot" id="engine-dot" aria-hidden="true"></span>
       <span class="run-note" id="engine-note" aria-live="polite"></span>
       <div class="progress" id="boot-progress" role="progressbar" aria-valuemin="0"
            aria-valuemax="100" aria-label="내려받기 진행률" data-mode="loading" hidden><i></i></div>
@@ -112,6 +130,16 @@ for _ in range(3): print("Welcome to NME")</pre>
     </div>
 
     <div class="terminal" id="terminal" data-placeholder="결과가 여기에 나옵니다." aria-live="polite" aria-label="프로그램 출력"></div>
+
+    <div class="slots">
+      <div class="slot-bar">
+        <span class="slot-title">저장 슬롯</span>
+        <span class="saved-flash" id="slot-flash" aria-live="polite"></span>
+        <button class="btn btn-ghost" id="slot-save" type="button">이 코드 저장</button>
+        <button class="btn btn-ghost" id="slot-new" type="button">새 슬롯</button>
+      </div>
+      <ul class="slot-list" id="slot-list" data-empty="아직 저장한 코드가 없습니다. 저장한 코드는 이 브라우저에만 남습니다."></ul>
+    </div>
 
     <div class="term-input-row" id="input-row" hidden>
       <input class="term-input" id="term-input" type="text" autocomplete="off"

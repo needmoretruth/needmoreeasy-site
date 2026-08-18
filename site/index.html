@@ -14,9 +14,16 @@
 <meta property="og:title" content="NeedMoreEasy — start with a sentence, grow into Python">
 <meta property="og:description" content="A language that compiles sentences, in English or Korean, into ordinary Python. The compiler runs in your browser on this page.">
 <meta property="og:url" content="https://needmoreeasy.com/">
+<script src="/assets/theme.js"></script>
 <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
+
+<div class="stage" aria-hidden="true">
+  <i class="orb"></i><i class="orb"></i><i class="orb"></i><i class="orb"></i>
+</div>
+
+<a class="skip-link" href="#playground">Skip to the playground</a>
 
 <header class="site-head">
   <div class="wrap">
@@ -26,11 +33,16 @@
       <a href="#install">Install</a>
       <a href="/learn/">Learn</a>
       <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
+    </nav>
+      <span class="theme-toggle" role="group" aria-label="Theme">
+        <button type="button" data-theme-choice="light" aria-pressed="false" title="Light" aria-label="Light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg></button>
+        <button type="button" data-theme-choice="system" aria-pressed="true" title="Match the system" aria-label="Match the system"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 3.6a8.4 8.4 0 0 1 0 16.8z" fill="currentColor" stroke="none"/></svg></button>
+        <button type="button" data-theme-choice="dark" aria-pressed="false" title="Dark" aria-label="Dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.4A8.6 8.6 0 0 1 9.6 4a8.6 8.6 0 1 0 10.4 10.4z"/></svg></button>
+      </span>
       <span class="lang-toggle">
         <a href="/" aria-current="true" data-lang-choice="en">EN</a>
         <a href="/ko/" data-lang-choice="ko">한국어</a>
       </span>
-    </nav>
   </div>
 </header>
 
@@ -86,14 +98,19 @@ for _ in range(3): print("Welcome to NME")</pre>
 
     <div class="examples" id="examples" role="group" aria-label="Example programs"></div>
 
-    <div class="panes">
-      <div class="pane">
-        <div class="pane-head"><strong>Your program</strong><span>.nme</span></div>
+    <div class="play-tabs" role="tablist" aria-label="Which panel to show">
+      <button type="button" role="tab" data-view="nme" aria-selected="true">Your program</button>
+      <button type="button" role="tab" data-view="python" aria-selected="false">Python</button>
+    </div>
+
+    <div class="panes" data-view="nme">
+      <div class="pane pane-nme">
+        <div class="pane-head"><strong>Your program</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>copy</button><button class="copy-btn" type="button" data-download-editor>download</button></span></div>
         <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
                   autocorrect="off" aria-label="NME program"></textarea>
       </div>
-      <div class="pane">
-        <div class="pane-head"><strong id="python-state">Python</strong><span>what the compiler produced</span></div>
+      <div class="pane pane-python">
+        <div class="pane-head"><strong id="python-state">Python</strong><span>what the compiler produced</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-python>copy</button><button class="copy-btn" type="button" data-download-python>download</button></span></div>
         <pre class="readout" id="python" data-state="ok" aria-live="polite"></pre>
       </div>
     </div>
@@ -101,6 +118,7 @@ for _ in range(3): print("Welcome to NME")</pre>
     <div class="run-bar">
       <button class="btn btn-primary" id="run" type="button" disabled>Run</button>
       <button class="btn btn-ghost" id="stop" type="button" disabled>Stop</button>
+      <span class="status-dot" id="engine-dot" aria-hidden="true"></span>
       <span class="run-note" id="engine-note" aria-live="polite"></span>
       <div class="progress" id="boot-progress" role="progressbar" aria-valuemin="0"
            aria-valuemax="100" aria-label="Download progress" data-mode="loading" hidden><i></i></div>
@@ -112,6 +130,16 @@ for _ in range(3): print("Welcome to NME")</pre>
     </div>
 
     <div class="terminal" id="terminal" data-placeholder="Output appears here." aria-live="polite" aria-label="Program output"></div>
+
+    <div class="slots">
+      <div class="slot-bar">
+        <span class="slot-title">Save slots</span>
+        <span class="saved-flash" id="slot-flash" aria-live="polite"></span>
+        <button class="btn btn-ghost" id="slot-save" type="button">Save this code</button>
+        <button class="btn btn-ghost" id="slot-new" type="button">New slot</button>
+      </div>
+      <ul class="slot-list" id="slot-list" data-empty="Nothing saved yet. Anything you save stays in this browser."></ul>
+    </div>
 
     <div class="term-input-row" id="input-row" hidden>
       <input class="term-input" id="term-input" type="text" autocomplete="off"

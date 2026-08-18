@@ -40,6 +40,15 @@ const TEXT = {
     copy: 'copy',
     copied: 'copied',
     fixFirst: 'Fix the program first — the compiler could not read it.',
+    slotSaved: 'saved',
+    slotName: 'Name for this slot',
+    slotFirst: 'My program',
+    slotDelete: 'delete for good?',
+    slotSave: 'Save',
+    slotCancel: 'Cancel',
+    rename: 'rename',
+    remove: 'delete',
+    untitled: 'untitled',
   },
   ko: {
     compiled: 'Python',
@@ -63,6 +72,15 @@ const TEXT = {
     copy: '복사',
     copied: '복사했습니다',
     fixFirst: '먼저 프로그램을 고쳐 주세요. 컴파일러가 읽지 못했습니다.',
+    slotSaved: '저장했습니다',
+    slotName: '이 슬롯의 이름',
+    slotFirst: '내 프로그램',
+    slotDelete: '정말 지울까요?',
+    slotSave: '저장',
+    slotCancel: '취소',
+    rename: '이름 바꾸기',
+    remove: '지우기',
+    untitled: '이름 없음',
   },
 }[LANG];
 
@@ -96,6 +114,122 @@ function forwardKoreanSpeakersOnce() {
     .some((tag) => String(tag).toLowerCase().startsWith('ko'));
   if (!wantsKorean) return;
   location.replace('/ko/' + location.hash);
+}
+
+/* --- theme, motion, depth ------------------------------------------------ */
+
+const THEME_KEY = 'nme-theme';
+
+/* Three states, not two. "System" is a real choice: it is what a visitor who
+ * set their phone to switch at sunset already asked for, so it stays the
+ * default and the toggle can always get back to it. */
+function wireTheme() {
+  const buttons = [...document.querySelectorAll('[data-theme-choice]')];
+  if (!buttons.length) return;
+
+  const current = () => {
+    const attribute = document.documentElement.getAttribute('data-theme');
+    return attribute === 'dark' || attribute === 'light' ? attribute : 'system';
+  };
+  const paint = () => {
+    const now = current();
+    buttons.forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.themeChoice === now));
+    });
+  };
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const choice = button.dataset.themeChoice;
+      if (choice === 'system') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', choice);
+      try {
+        if (choice === 'system') localStorage.removeItem(THEME_KEY);
+        else localStorage.setItem(THEME_KEY, choice);
+      } catch {
+        /* private mode: the choice lasts for this page only */
+      }
+      paint();
+    });
+  });
+  paint();
+}
+
+/* Panels rise into place as they are reached. Everything starts visible in the
+ * markup; the hidden state is added here, so a reader without script — or one
+ * who asked for less motion — sees a complete page either way. */
+function wireReveal() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!('IntersectionObserver' in window)) return;
+
+  const targets = document.querySelectorAll(
+    '.hero-text, .hero-figure, .play-head, .card, .split > div, .links li, .prompt-card, .notice');
+  if (!targets.length) return;
+
+  const seen = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      entry.target.classList.add('in');
+      seen.unobserve(entry.target);
+    }
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+
+  targets.forEach((node, index) => {
+    node.classList.add('reveal');
+    // A short stagger between siblings reads as one movement rather than
+    // several. Anything longer than a fifth of a second feels like a delay.
+    node.style.setProperty('transition-delay', `${Math.min(index % 6, 5) * 35}ms`);
+    seen.observe(node);
+  });
+}
+
+/* The header is part of the page until the page moves under it. */
+function wireHeaderEdge() {
+  const head = document.querySelector('.site-head');
+  if (!head) return;
+  const sync = () => head.setAttribute('data-scrolled', String(window.scrollY > 8));
+  sync();
+  addEventListener('scroll', sync, { passive: true });
+}
+
+/* Glass has a highlight where the light hits it, and here the light is the
+ * pointer. Touch screens have no pointer to follow, so they never pay for it. */
+function wirePointerSheen() {
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  for (const panel of document.querySelectorAll('.hero-figure, .card, .prompt-card')) {
+    panel.addEventListener('pointermove', (event) => {
+      const box = panel.getBoundingClientRect();
+      panel.style.setProperty('--mx', `${event.clientX - box.left}px`);
+      panel.style.setProperty('--my', `${event.clientY - box.top}px`);
+    });
+  }
+}
+
+/* --- saving what you wrote ----------------------------------------------- */
+
+/* A download the browser makes itself: no server sees the program, which is
+ * the same promise the rest of the playground makes. */
+function downloadText(filename, text) {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /* --- copy buttons -------------------------------------------------------- */
@@ -247,6 +381,8 @@ async function fetchWithProgress(url, expected, onProgress) {
 /* --- the playground ------------------------------------------------------ */
 
 const ANSWER_CAPACITY = 4096;
+const SLOT_KEY = 'nme-slots-v1';
+const DRAFT_KEY = 'nme-draft-v1';
 
 class Playground {
   constructor(root) {
@@ -263,6 +399,11 @@ class Playground {
     this.note = root.querySelector('#engine-note');
     this.answersWrap = root.querySelector('#answers-wrap');
     this.answers = root.querySelector('#answers');
+    this.dot = root.querySelector('#engine-dot');
+    this.panes = root.querySelector('.panes');
+    this.tabs = [...root.querySelectorAll('.play-tabs [data-view]')];
+    this.slotList = root.querySelector('#slot-list');
+    this.slotFlash = root.querySelector('#slot-flash');
     this.progress = root.querySelector('#boot-progress');
     this.progressFill = this.progress.querySelector('i');
     this.alert = root.querySelector('#boot-alert');
@@ -278,10 +419,16 @@ class Playground {
     this.running = false;
     this.sharedMemory = this.makeSharedMemory();
 
+    this.slots = this.readSlots();
+
     this.buildChips();
     this.wire();
+    this.drawSlots();
     this.runButton.disabled = true;
-    if (!this.loadFromHash()) this.load(EXAMPLES[LANG][0]);
+    this.setStatus('busy');
+    // What the visitor last had on screen outranks the tour, and a link that
+    // carries a program outranks both.
+    if (!this.loadFromHash() && !this.restoreDraft()) this.load(EXAMPLES[LANG][0]);
   }
 
   /* A guide links here with the program it is teaching in the URL, so a
@@ -309,6 +456,12 @@ class Playground {
     }
   }
 
+  /* One dot, three states, and they are the only colours the page spends:
+   * green it can run, yellow something is still arriving, red it failed. */
+  setStatus(state) {
+    if (this.dot) this.dot.dataset.state = state;
+  }
+
   setProgress(loaded, total) {
     this.progress.hidden = false;
     if (!total) {
@@ -330,6 +483,7 @@ class Playground {
   /* Every failure a visitor can hit here is a failed download, so the notice
    * always carries the one action that can fix it. */
   showAlert(text, retry) {
+    this.setStatus('bad');
     this.alertText.textContent = text;
     this.alert.hidden = false;
     this.retryButton.hidden = !retry;
@@ -376,8 +530,24 @@ class Playground {
   wire() {
     this.editor.addEventListener('input', () => {
       clearTimeout(this.debounce);
-      this.debounce = setTimeout(() => this.compileNow(), 180);
+      this.debounce = setTimeout(() => {
+        this.compileNow();
+        this.saveDraft();
+      }, 180);
     });
+
+    // On a phone the two code panes become two tabs over one panel.
+    for (const tab of this.tabs) {
+      tab.addEventListener('click', () => {
+        this.panes.dataset.view = tab.dataset.view;
+        this.tabs.forEach((other) => {
+          other.setAttribute('aria-selected', String(other === tab));
+        });
+      });
+    }
+
+    this.wireTools();
+    this.wireSlots();
     this.runButton.addEventListener('click', () => this.run());
     this.retryButton.addEventListener('click', () => {
       const action = this.retryAction;
@@ -394,13 +564,259 @@ class Playground {
     });
   }
 
+  /* --- taking the code away --------------------------------------------- */
+
+  wireTools() {
+    const flash = async (button, ok) => {
+      const original = button.textContent;
+      button.textContent = ok ? TEXT.copied : original;
+      setTimeout(() => { button.textContent = original; }, 1400);
+    };
+    const on = (selector, act) => {
+      const button = document.querySelector(selector);
+      if (button) button.addEventListener('click', () => act(button));
+    };
+
+    on('[data-copy-editor]', async (button) => flash(button, await copyText(this.editor.value)));
+    on('[data-copy-python]', async (button) => flash(button, await copyText(this.compiled || this.python.textContent)));
+    on('[data-download-editor]', () => downloadText(`${this.fileStem()}.nme`, this.editor.value));
+    on('[data-download-python]', () => {
+      if (this.compiled) downloadText(`${this.fileStem()}.py`, this.compiled);
+    });
+  }
+
+  /* Named after the slot when there is one, so a folder of downloads still
+   * says which program is which. */
+  fileStem() {
+    const slot = this.slots.list.find((one) => one.id === this.slots.current);
+    const name = (slot ? slot.name : 'program').trim().replace(/[\\/:*?"<>|\s]+/g, '-');
+    return name.slice(0, 48) || 'program';
+  }
+
+  /* --- save slots -------------------------------------------------------- */
+
+  readSlots() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(SLOT_KEY) || 'null');
+      if (raw && Array.isArray(raw.list)) {
+        return { list: raw.list.filter((one) => one && typeof one.source === 'string'), current: raw.current ?? null };
+      }
+    } catch {
+      /* unreadable or blocked storage behaves like an empty shelf */
+    }
+    return { list: [], current: null };
+  }
+
+  writeSlots() {
+    try {
+      localStorage.setItem(SLOT_KEY, JSON.stringify(this.slots));
+    } catch {
+      /* full or private storage: the slots live for this page only */
+    }
+  }
+
+  saveDraft() {
+    try {
+      localStorage.setItem(DRAFT_KEY, this.editor.value);
+    } catch {
+      /* nothing to do: the text is still on screen */
+    }
+  }
+
+  restoreDraft() {
+    let draft = null;
+    try {
+      draft = localStorage.getItem(DRAFT_KEY);
+    } catch {
+      return false;
+    }
+    if (!draft) return false;
+    this.editor.value = draft;
+    this.compileNow();
+    return true;
+  }
+
+  drawSlots() {
+    if (!this.slotList) return;
+    this.slotList.textContent = '';
+    for (const slot of this.slots.list) {
+      const item = document.createElement('li');
+      item.className = 'slot';
+      item.dataset.current = String(slot.id === this.slots.current);
+
+      const open = document.createElement('button');
+      open.type = 'button';
+      open.className = 'slot-open';
+      open.textContent = slot.name || TEXT.untitled;
+      open.addEventListener('click', () => this.openSlot(slot.id));
+
+      const rename = document.createElement('button');
+      rename.type = 'button';
+      rename.className = 'slot-edit';
+      rename.title = TEXT.rename;
+      rename.setAttribute('aria-label', `${TEXT.rename}: ${slot.name}`);
+      rename.textContent = '✎';
+      rename.addEventListener('click', () => this.renameSlot(slot.id));
+
+      const drop = document.createElement('button');
+      drop.type = 'button';
+      drop.className = 'slot-drop';
+      drop.title = TEXT.remove;
+      drop.setAttribute('aria-label', `${TEXT.remove}: ${slot.name}`);
+      drop.textContent = '×';
+      drop.addEventListener('click', () => this.deleteSlot(slot.id, drop));
+
+      item.append(open, rename, drop);
+      this.slotList.append(item);
+    }
+  }
+
+  wireSlots() {
+    const save = document.querySelector('#slot-save');
+    const fresh = document.querySelector('#slot-new');
+    if (save) save.addEventListener('click', () => this.saveIntoSlot());
+    if (fresh) fresh.addEventListener('click', () => this.saveIntoSlot(true));
+    this.buildNameRow();
+  }
+
+  /* The name is asked for inside the page rather than in a browser dialog:
+   * one look, one place, and it can be styled like everything else here. */
+  buildNameRow() {
+    const box = document.querySelector('.slots');
+    if (!box) return;
+    const row = document.createElement('form');
+    row.className = 'slot-name-row';
+    row.hidden = true;
+
+    const label = document.createElement('label');
+    label.className = 'slot-name-label';
+    label.textContent = TEXT.slotName;
+    label.htmlFor = 'slot-name-input';
+
+    const field = document.createElement('input');
+    field.type = 'text';
+    field.id = 'slot-name-input';
+    field.className = 'term-input';
+    field.maxLength = 60;
+    field.autocomplete = 'off';
+
+    const confirm = document.createElement('button');
+    confirm.type = 'submit';
+    confirm.className = 'btn btn-primary';
+    confirm.textContent = TEXT.slotSave;
+
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'btn btn-ghost';
+    cancel.textContent = TEXT.slotCancel;
+    cancel.addEventListener('click', () => { row.hidden = true; });
+
+    row.append(label, field, confirm, cancel);
+    row.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = field.value.trim();
+      if (!name) { field.focus(); return; }
+      row.hidden = true;
+      if (this.naming) this.naming(name);
+    });
+
+    box.append(row);
+    this.nameRow = row;
+    this.nameField = field;
+  }
+
+  askName(suggested, done) {
+    if (!this.nameRow) { done(suggested); return; }
+    this.naming = done;
+    this.nameField.value = suggested;
+    this.nameRow.hidden = false;
+    this.nameField.focus();
+    this.nameField.select();
+  }
+
+  saveIntoSlot(forceNew) {
+    const existing = this.slots.list.find((one) => one.id === this.slots.current);
+    if (!forceNew && existing) {
+      existing.source = this.editor.value;
+      existing.updated = Date.now();
+      this.writeSlots();
+      this.drawSlots();
+      this.flashSaved();
+      return;
+    }
+    const suggested = this.slots.list.length
+      ? `${TEXT.slotFirst} ${this.slots.list.length + 1}`
+      : TEXT.slotFirst;
+    this.askName(suggested, (name) => {
+      const slot = { id: `s${Date.now().toString(36)}`, name, source: this.editor.value, updated: Date.now() };
+      this.slots.list.push(slot);
+      this.slots.current = slot.id;
+      this.writeSlots();
+      this.drawSlots();
+      this.flashSaved();
+    });
+  }
+
+  openSlot(id) {
+    const slot = this.slots.list.find((one) => one.id === id);
+    if (!slot) return;
+    this.slots.current = id;
+    this.editor.value = slot.source;
+    this.terminal.textContent = '';
+    this.chips.querySelectorAll('.chip').forEach((chip) => chip.setAttribute('aria-pressed', 'false'));
+    this.writeSlots();
+    this.drawSlots();
+    this.compileNow();
+    this.saveDraft();
+  }
+
+  renameSlot(id) {
+    const slot = this.slots.list.find((one) => one.id === id);
+    if (!slot) return;
+    this.askName(slot.name, (name) => {
+      slot.name = name;
+      this.writeSlots();
+      this.drawSlots();
+    });
+  }
+
+  /* Deleting asks once, in place: the first press turns the cross into the
+   * question, the second answers it, and walking away answers no. */
+  deleteSlot(id, button) {
+    if (button.dataset.sure !== 'true') {
+      button.dataset.sure = 'true';
+      button.textContent = TEXT.slotDelete;
+      clearTimeout(button.timer);
+      button.timer = setTimeout(() => {
+        button.dataset.sure = 'false';
+        button.textContent = '×';
+      }, 4000);
+      return;
+    }
+    this.slots.list = this.slots.list.filter((one) => one.id !== id);
+    if (this.slots.current === id) this.slots.current = null;
+    this.writeSlots();
+    this.drawSlots();
+  }
+
+  flashSaved() {
+    if (!this.slotFlash) return;
+    this.slotFlash.textContent = TEXT.slotSaved;
+    this.slotFlash.dataset.on = 'true';
+    clearTimeout(this.flashTimer);
+    this.flashTimer = setTimeout(() => { this.slotFlash.dataset.on = 'false'; }, 1600);
+  }
+
   load(example) {
+    this.slots.current = null;
     this.editor.value = example.source;
     this.chips.querySelectorAll('.chip').forEach((chip) => {
       chip.setAttribute('aria-pressed', String(chip.textContent === example.label));
     });
     this.terminal.textContent = '';
+    this.drawSlots();
     this.compileNow();
+    this.saveDraft();
   }
 
   compileNow() {
@@ -521,6 +937,7 @@ class Playground {
 
     this.terminal.textContent = '';
     this.note.textContent = TEXT.running;
+    this.setStatus('busy');
     this.running = true;
     this.runButton.disabled = true;
     this.stopButton.disabled = false;
@@ -548,6 +965,7 @@ class Playground {
         this.engineReady = true;
         this.hideProgress();
         this.hideAlert();
+        this.setStatus('ready');
         if (this.pendingRun) {
           this.pendingRun = false;
           this.run();
@@ -610,6 +1028,7 @@ class Playground {
 
   finish(note) {
     this.note.textContent = note;
+    this.setStatus(note === TEXT.failed ? 'bad' : (this.engineReady ? 'ready' : 'busy'));
     this.inputRow.hidden = true;
     this.running = false;
     this.runButton.disabled = !this.compiled;
@@ -634,6 +1053,10 @@ class Playground {
 
 forwardKoreanSpeakersOnce();
 rememberLanguageChoice();
+wireTheme();
+wireHeaderEdge();
+wireReveal();
+wirePointerSheen();
 wireCopyButtons();
 wireFileCopyButtons();
 wireDocRail();

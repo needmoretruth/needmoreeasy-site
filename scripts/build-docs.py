@@ -75,6 +75,10 @@ STRINGS = {
         "syntax": "Syntax list",
         "prompts": "AI prompts",
         "skip": "Skip to the page",
+        "theme": "Theme",
+        "light": "Light",
+        "system": "Match the system",
+        "dark": "Dark",
         "contents": "On this page",
         "previous": "Previous",
         "next": "Next",
@@ -110,6 +114,10 @@ STRINGS = {
         "syntax": "문법 목록",
         "prompts": "AI 프롬프트",
         "skip": "본문으로 건너뛰기",
+        "theme": "화면 테마",
+        "light": "밝게",
+        "system": "기기 설정 따르기",
+        "dark": "어둡게",
         "contents": "이 문서 안에서",
         "previous": "이전",
         "next": "다음",
@@ -378,7 +386,10 @@ def decorate_snippets(body: str, page: Page, compiler: Compiler) -> str:
         tools = [
             f'<button type="button" data-copy="{block_id}">{words["copy"]}</button>'
         ]
-        if language in ("text", "nme") and compiler.accepts(source):
+        # Only a block fenced as ```nme is a program. A ```text block is what
+        # the program prints, or a data file, and offering to run it would
+        # teach the wrong thing even when it happens to compile.
+        if language == "nme" and compiler.accepts(source):
             carried = base64.urlsafe_b64encode(source.encode("utf-8")).decode("ascii")
             carried = carried.rstrip("=")
             tools.append(
@@ -488,6 +499,26 @@ def contents(text: str) -> str:
     return items
 
 
+THEME_ICONS = {
+    "light": (
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"'
+        ' stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/>'
+        '<path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6'
+        'M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg>'
+    ),
+    "system": (
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"'
+        ' aria-hidden="true"><circle cx="12" cy="12" r="8.4"/>'
+        '<path d="M12 3.6a8.4 8.4 0 0 1 0 16.8z" fill="currentColor" stroke="none"/></svg>'
+    ),
+    "dark": (
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"'
+        ' stroke-linejoin="round" aria-hidden="true">'
+        '<path d="M20 14.4A8.6 8.6 0 0 1 9.6 4a8.6 8.6 0 1 0 10.4 10.4z"/></svg>'
+    ),
+}
+
+
 def page_shell(
     page_lang: str,
     title: str,
@@ -518,9 +549,14 @@ def page_shell(
 <link rel="canonical" href="https://needmoreeasy.com{canonical}">
 <link rel="alternate" hreflang="{other["lang"]}" href="https://needmoreeasy.com{twin}">
 <link rel="alternate" hreflang="{page_lang}" href="https://needmoreeasy.com{canonical}">
+<script src="/assets/theme.js"></script>
 <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
+
+<div class="stage" aria-hidden="true">
+  <i class="orb"></i><i class="orb"></i><i class="orb"></i><i class="orb"></i>
+</div>
 
 <a class="skip-link" href="#doc">{escape(words["skip"])}</a>
 
@@ -532,11 +568,16 @@ def page_shell(
       <a href="{words["learn"]}">{escape(words["docs"])}</a>
       <a class="nav-hide-sm" href="{words["learn"]}guides.html">{escape(words["guides"])}</a>
       <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
+    </nav>
+      <span class="theme-toggle" role="group" aria-label="{escape(words["theme"])}">
+        <button type="button" data-theme-choice="light" aria-pressed="false" title="{escape(words["light"])}" aria-label="{escape(words["light"])}">{THEME_ICONS["light"]}</button>
+        <button type="button" data-theme-choice="system" aria-pressed="true" title="{escape(words["system"])}" aria-label="{escape(words["system"])}">{THEME_ICONS["system"]}</button>
+        <button type="button" data-theme-choice="dark" aria-pressed="false" title="{escape(words["dark"])}" aria-label="{escape(words["dark"])}">{THEME_ICONS["dark"]}</button>
+      </span>
       <span class="lang-toggle">
         <a href="{canonical if page_lang == 'en' else twin}" {'aria-current="true" ' if page_lang == 'en' else ''}data-lang-choice="en">EN</a>
         <a href="{twin if page_lang == 'en' else canonical}" {'aria-current="true" ' if page_lang == 'ko' else ''}data-lang-choice="ko">한국어</a>
       </span>
-    </nav>
   </div>
 </header>
 
