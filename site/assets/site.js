@@ -1074,6 +1074,7 @@ class Playground {
     this.note.textContent = TEXT.running;
     this.setStatus('busy');
     this.running = true;
+    this.terminal.dataset.running = 'true';
     this.runButton.disabled = true;
     this.stopButton.disabled = false;
 
@@ -1162,6 +1163,7 @@ class Playground {
   }
 
   finish(note) {
+    this.terminal.dataset.running = 'false';
     this.note.textContent = note;
     this.setStatus(note === TEXT.failed ? 'bad' : (this.engineReady ? 'ready' : 'busy'));
     this.inputRow.hidden = true;
