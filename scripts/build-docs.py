@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Renders the language repository's documentation into the site.
 
-Everything a beginner needs — the five-minute start, the syntax list, all 88
-guides and the AI prompts — is published here so that reading and writing NME
+Everything a beginner needs — the five-minute start, the syntax list, every
+guide and the AI prompts — is published here so that reading and writing NME
 never requires a GitHub account or a desktop. Each page is the same Markdown
 that ships in the repository, so there is one source of truth and no second
 copy to drift.
@@ -99,7 +99,7 @@ STRINGS = {
         "topic": "Topic",
         "toggle": "한국어",
         "toggle_url": "/ko/learn/",
-        "guides_heading": "All 88 guides",
+        "guides_heading": "All {count} guides",
         "back": "Learn",
     },
     "ko": {
@@ -138,7 +138,7 @@ STRINGS = {
         "topic": "주제",
         "toggle": "English",
         "toggle_url": "/learn/",
-        "guides_heading": "가이드 88편 전체",
+        "guides_heading": "가이드 {count}편 전체",
         "back": "배우기",
     },
 }
@@ -489,7 +489,7 @@ def rail(page: Page, pages: list[Page], guides: list[Page]) -> str:
 <div class="rail-group"><h3>{escape(words["rail_prompts"])}</h3><ul>{group_links("prompts")}</ul></div>
 <div class="rail-group"><h3>{escape(words["rail_deeper"])}</h3><ul>{group_links("deeper")}</ul></div>
 <div class="rail-group"><h3>{escape(words["rail_guides"])}</h3><ul>
-<li><a href="{hub}guides">{escape(words["guides_heading"])}</a></li>
+<li><a href="{hub}guides">{escape(guides_heading(words))}</a></li>
 </ul></div>
 {"".join(guide_groups)}
 </details>"""
@@ -549,7 +549,7 @@ def page_shell(
 <html lang="{page_lang}">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>{escape(title)} · NeedMoreEasy</title>
 <meta name="description" content="{escape(description)}">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -714,7 +714,7 @@ def guides_hub(lang: str, guides: list[Page], index_text: str | None) -> str:
         )
     intro = index_text or ""
     return f"""{intro}
-<h2 id="all">{escape(words["guides_heading"])}</h2>
+<h2 id="all">{escape(guides_heading(words))}</h2>
 <div class="filter-row">
   <input class="filter-input" id="guide-filter" type="search"
          placeholder="{escape(words["filter"])}" aria-label="{escape(words["filter"])}">
@@ -747,7 +747,7 @@ def learn_hub(lang: str, pages: list[Page]) -> str:
             f"<span>{escape(blurb)}</span></li>"
         )
     guides_line = (
-        f'<li><a href="{words["learn"]}guides">{escape(words["guides_heading"])}</a>'
+        f'<li><a href="{words["learn"]}guides">{escape(guides_heading(words))}</a>'
         f'<span>{"One short guide per idea, in order." if lang == "en" else "한 편에 한 가지씩, 순서대로 읽는 가이드입니다."}</span></li>'
     )
     deeper = "".join(
@@ -935,6 +935,16 @@ def first_sentence(text: str) -> str:
     return ""
 
 
+# How many guides there are is a fact about the repository, not something to
+# keep in step by hand: an earlier version said "88" in four places and two of
+# them were already wrong.
+GUIDE_COUNT = 0
+
+
+def guides_heading(words: dict[str, str]) -> str:
+    return words["guides_heading"].format(count=GUIDE_COUNT)
+
+
 # The three prompts, as plain text, for the copy buttons at the top of the home
 # page. The rendered pages keep their headings and their "how to use this"
 # note; what a visitor pastes into a chat window must be the prompt alone, so
@@ -973,6 +983,8 @@ def build(docs: Path, binary: Path | None) -> None:
     pages = collect(docs)
     by_key = {(page.key, page.lang): page for page in pages}
     guides = [page for page in pages if page.group == "guides"]
+    global GUIDE_COUNT
+    GUIDE_COUNT = len({page.key for page in guides})
     compiler = Compiler(binary)
 
     written = write_prompt_texts(docs)
@@ -1006,7 +1018,9 @@ def build(docs: Path, binary: Path | None) -> None:
                 compiler,
             )
         hub = guides_hub(lang, guides, index_body)
-        written += write_hub(lang, "guides", words["guides_heading"], hub, pages, guides)
+        written += write_hub(
+            lang, "guides", guides_heading(words), hub, pages, guides
+        )
 
         prompts_page = by_key.get(("prompts/README", lang))
         if prompts_page is not None:

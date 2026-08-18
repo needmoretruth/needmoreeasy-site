@@ -1676,6 +1676,16 @@ table.syntax tr:last-child td { border-bottom: 0; }
 .slots[open] > summary::after { transform: rotate(-135deg); }
 .slots[open] > summary { margin-bottom: 0.85rem; }
 
+/* --- touch screens ------------------------------------------------------- */
+
+/* Anything smaller than 16px makes Safari on iOS zoom the page the moment a
+ * text box takes focus, and it never zooms back. On a site whose whole point
+ * is typing a program on a phone that is not a detail. Code stays at 0.86rem
+ * where it is only read; the boxes you type into go up to 16px. */
+@media (pointer: coarse) {
+  .editor, .term-input, .answers-box { font-size: 16px; }
+}
+
 @media (max-width: 819px) {
   .panes[data-view="nme"] .pane-python,
   .panes[data-view="python"] .pane-nme { display: none; }
@@ -1693,6 +1703,20 @@ table.syntax tr:last-child td { border-bottom: 0; }
   .doc-rail { position: static; max-height: none; }
   .site-foot .wrap { flex-direction: column; align-items: flex-start; }
   .foot-spacer { display: none; }
+  /* Run has to stay reachable while you are scrolling through your own
+   * program, so on a narrow screen the bar rides the bottom of the section. */
+  .run-bar {
+    position: sticky;
+    bottom: 0.6rem;
+    z-index: 5;
+    padding: 0.5rem 0.65rem;
+    background: var(--glass-2);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(150%);
+    box-shadow: var(--shadow-2);
+  }
 }
 
 @media (max-width: 700px) {
