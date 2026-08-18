@@ -273,6 +273,38 @@ show The door opened
 show elapsed`,
     },
     {
+      id: 'reaction',
+      label: 'How fast are you?',
+      answers: [''],
+      expect: 'Your time',
+      source: `# The stopwatch, used for the thing stopwatches are for.
+show Get ready
+wait 2 seconds
+show NOW, press enter
+start the timer
+ask pressed press enter
+show Your time in seconds
+show elapsed`,
+    },
+    {
+      id: 'rps',
+      label: 'Rock, paper, scissors',
+      answers: ['rock'],
+      expect: 'Thanks for playing',
+      source: `# A whole game: a random choice, a question and three answers.
+set mine to rock or paper or scissors chosen at random
+ask yours rock, paper or scissors?
+
+show I chose mine
+
+if yours equals mine
+show A draw
+else
+show One of us won
+end
+show Thanks for playing`,
+    },
+    {
       id: 'levels',
       label: 'Three levels at once',
       answers: [],
@@ -633,6 +665,38 @@ print(word)`,
 문 쿨타임 끝날때까지 기다려
 문이 열렸습니다 말해줘
 잰시간 말해줘`,
+    },
+    {
+      id: 'reaction',
+      label: '반응 속도 재기',
+      answers: [''],
+      expect: '걸린 시간',
+      source: `# 시간 재기를 원래 쓰라고 만든 곳에 씁니다.
+준비하세요 말해줘
+2초 기다려
+지금! 엔터를 누르세요 말해줘
+시간 재기 시작해
+입력을 물어봐 엔터
+걸린 시간(초) 말해줘
+잰시간 말해줘`,
+    },
+    {
+      id: 'rps',
+      label: '가위바위보',
+      answers: ['바위'],
+      expect: '재미있었습니다',
+      source: `# 게임 하나가 통째로: 무작위 하나, 질문 하나, 대답 셋.
+내것은 바위 또는 보 또는 가위 중에서 랜덤선택
+네것을 물어봐 바위, 보, 가위 중 하나를 골라 주세요
+
+나는 내것 냈습니다 말해줘
+
+만약에 네것이 내것과 같으면
+비겼습니다 말해줘
+아니면
+둘 중 하나가 이겼습니다 말해줘
+끝
+재미있었습니다 말해줘`,
     },
     {
       id: 'levels',
