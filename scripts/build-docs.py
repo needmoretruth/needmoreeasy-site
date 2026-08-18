@@ -983,6 +983,12 @@ def build(docs: Path, binary: Path | None) -> None:
     pages = collect(docs)
     by_key = {(page.key, page.lang): page for page in pages}
     guides = [page for page in pages if page.group == "guides"]
+    # Everything under these two trees is written by this script, so they are
+    # cleared first. Without this, a renamed page stays published for ever:
+    # renumbering the guides on 2026-08-18 left 88 pages at their old numbers
+    # sitting in the output beside the new ones.
+    for stale in (SITE / "learn", SITE / "ko" / "learn"):
+        shutil.rmtree(stale, ignore_errors=True)
     global GUIDE_COUNT
     GUIDE_COUNT = len({page.key for page in guides})
     compiler = Compiler(binary)
