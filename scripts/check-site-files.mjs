@@ -88,12 +88,77 @@ await page.waitForTimeout(300);
 ok('두 번째로 누르면 덮어씀', (await page.textContent('#editor-title')).includes('파일 2'));
 
 /* --- a link somebody sent ------------------------------------------------ */
+/* The step below must be a real navigation, not a hash change.
+ *
+ * This check used to `goto` the same address with only `#code=…` added, which
+ * Chrome treats as a same-document navigation: the page never reloads, the
+ * playground is never constructed again, and the check quietly exercised the
+ * `hashchange` path instead. Meanwhile the real path — arriving at the site
+ * from one of the 885 "run this" links in the guides — wiped all three files,
+ * and this check stayed green through it. Leaving the page first is what makes
+ * the next `goto` a fresh load. */
+await page.goto('about:blank');
 await page.goto(BASE + '/ko/index.html#code=7JWI64WV7ZWY7IS47JqUISDrp5DtlbTspJgK', { waitUntil: 'load' });
-await page.waitForTimeout(1200);
+await page.waitForTimeout(1500);
 ok('링크로 온 프로그램도 예제 칸에서 열림', (await page.textContent('#editor-title')).includes('예제'));
 await page.click('.file-tabs [data-file="1"]');
 await page.waitForTimeout(300);
 ok('링크로 들어와도 파일 1은 안전', (await page.inputValue('#editor')) === MINE);
+await page.click('.file-tabs [data-file="2"]');
+await page.waitForTimeout(300);
+ok('링크로 들어와도 파일 2는 안전', (await page.inputValue('#editor')).trim() !== '');
+
+/* --- the saved-programs drawer must not write into a file ----------------- */
+await page.click('.file-tabs [data-file="3"]');
+await page.fill('#editor', '파일 3의 내 코드 말해줘');
+await page.waitForTimeout(400);
+await page.click('.file-tabs [data-file="example"]');
+await page.waitForTimeout(200);
+await page.fill('#editor', '보관함에 넣을 것 말해줘');
+await page.waitForTimeout(400);
+const drawer = await page.$('details.slots');
+if (drawer) await page.evaluate(() => { document.querySelector('details.slots')?.setAttribute('open', ''); });
+await page.click('#slot-save');
+await page.waitForTimeout(300);
+const nameField = await page.$('.slots input[type="text"]');
+if (nameField) {
+  await nameField.fill('보관1');
+  const save = await page.$('.slots form button[type="submit"], .slots form .btn-primary');
+  if (save) await save.click();
+  await page.waitForTimeout(300);
+}
+await page.click('.file-tabs [data-file="3"]');
+await page.waitForTimeout(300);
+const slotOpen = await page.$('.slot-open');
+if (slotOpen) {
+  await slotOpen.click();
+  await page.waitForTimeout(400);
+}
+await page.click('.file-tabs [data-file="3"]');
+await page.waitForTimeout(300);
+ok('보관함에서 열어도 파일 3은 그대로', (await page.inputValue('#editor')) === '파일 3의 내 코드 말해줘');
+
+/* --- an armed "overwrite?" must not survive a tab switch ------------------ */
+await page.click('.file-tabs [data-file="example"]');
+await page.waitForTimeout(200);
+await page.fill('#editor', '덮어쓰기 확인 시험');
+await page.waitForTimeout(400);
+await page.click('[data-copy-to="3"]');
+await page.waitForTimeout(200);
+await page.click('.file-tabs [data-file="1"]');
+await page.waitForTimeout(300);
+const armed = await page.$eval('[data-copy-to="3"]', (element) => element.textContent ?? '');
+ok('칸을 옮기면 「덮어쓸까요」가 풀림', !armed.includes('덮어쓸까요'), armed.trim());
+
+/* --- a copy button keeps its own name ------------------------------------ */
+const linkLabel = await page.$eval('[data-copy-link]', (element) => element.textContent ?? '');
+await page.click('[data-copy-link]');
+await page.waitForTimeout(150);
+await page.click('[data-copy-link]');
+await page.waitForTimeout(2200);
+ok('복사 단추가 제 이름을 되찾음',
+   (await page.$eval('[data-copy-link]', (element) => element.textContent ?? '')) === linkLabel,
+   linkLabel.trim());
 
 ok('콘솔 오류 없음', errors.length === 0, errors.slice(0, 2).join(' / '));
 

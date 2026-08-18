@@ -63,6 +63,8 @@ const TEXT = {
     fileNote: 'This file stays in this browser. Nothing else ever writes to it.',
     overwrite: 'overwrite?',
     promptFailed: 'The message could not be fetched. Open it as a page instead.',
+    storageRefused:
+      'This browser is refusing to store anything, so these files last only until you leave the page. Copy or download anything you want to keep.',
   },
   ko: {
     compiled: 'Python',
@@ -105,6 +107,8 @@ const TEXT = {
     fileNote: '이 파일은 이 브라우저에 남습니다. 다른 것이 여기에 쓰는 일은 없습니다.',
     overwrite: '덮어쓸까요?',
     promptFailed: '글을 가져오지 못했습니다. 문서로 열어 보세요.',
+    storageRefused:
+      '이 브라우저가 저장을 막고 있어서, 이 파일들은 창을 닫으면 사라집니다. 남기고 싶은 것은 복사하거나 내려받아 두세요.',
   },
 }[LANG];
 
@@ -355,9 +359,7 @@ function wireCopyButtons(): void {
       if (!target) return;
       try {
         await navigator.clipboard.writeText(target.innerText);
-        const original = button.textContent;
-        button.textContent = TEXT.copied;
-        setTimeout(() => { button.textContent = original; }, 1400);
+        flashLabel(button, TEXT.copied);
       } catch {
         /* clipboard blocked — the text is on screen and selectable anyway */
       }
@@ -417,9 +419,8 @@ function wireAiPrompts(): void {
       copy.addEventListener('click', () => {
         void (async () => {
           const text = await load();
-          const original = copy.textContent;
-          copy.textContent = text !== null && (await copyText(text)) ? TEXT.copied : TEXT.promptFailed;
-          setTimeout(() => { copy.textContent = original; }, 1600);
+          const worked = text !== null && (await copyText(text));
+          flashLabel(copy, worked ? TEXT.copied : TEXT.promptFailed, 1600);
         })();
       });
     }
@@ -427,7 +428,14 @@ function wireAiPrompts(): void {
       save.addEventListener('click', () => {
         void (async () => {
           const text = await load();
-          if (text !== null) downloadText(`nme-${name}-prompt.${lang}.txt`, text);
+          if (text === null) {
+            // Pressing a button and having nothing at all happen is worse than
+            // an error: the visitor cannot tell it from a browser that ate the
+            // download.
+            flashLabel(save, TEXT.promptFailed, 1600);
+            return;
+          }
+          downloadText(`nme-${name}-prompt.${lang}.txt`, text);
         })();
       });
     }
@@ -441,16 +449,14 @@ function wireFileCopyButtons(): void {
     button.addEventListener('click', async () => {
       const file = button.dataset.copyFile;
       if (file === undefined) return;
-      const original = button.textContent;
       try {
         const response = await fetch(file);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         await navigator.clipboard.writeText(await response.text());
-        button.textContent = label;
+        flashLabel(button, label, 1600);
       } catch {
-        button.textContent = failed;
+        flashLabel(button, failed, 1600);
       }
-      setTimeout(() => { button.textContent = original; }, 1600);
     });
   });
 }
@@ -694,6 +700,36 @@ function asArray(value: unknown): readonly unknown[] | null {
 const slotDeleteTimers = new WeakMap<HTMLElement, number>();
 const fileOverwriteTimers = new WeakMap<HTMLElement, number>();
 
+/* A button's own words, kept from the first time they are replaced.
+ * Reading `button.textContent` at replacement time looked right and was not:
+ * press a copy button twice inside its 1.4-second window and the second press
+ * saved "copied" as the original, so the button read "copied" for the rest of
+ * the visit — and on the playground toolbar, where the buttons differ, that
+ * left two identical buttons. */
+const originalLabels = new WeakMap<HTMLElement, string>();
+
+function labelOf(button: HTMLElement): string {
+  const held = originalLabels.get(button);
+  if (held !== undefined) return held;
+  const original = button.textContent ?? '';
+  originalLabels.set(button, original);
+  return original;
+}
+
+/* Says one word on a button and puts its own word back afterwards. */
+function flashLabel(button: HTMLElement, text: string, milliseconds = 1400): void {
+  const original = labelOf(button);
+  const waiting = labelTimers.get(button);
+  if (waiting !== undefined) clearTimeout(waiting);
+  button.textContent = text;
+  labelTimers.set(button, setTimeout(() => {
+    labelTimers.delete(button);
+    button.textContent = original;
+  }, milliseconds));
+}
+
+const labelTimers = new WeakMap<HTMLElement, number>();
+
 class Playground {
   readonly editor: HTMLTextAreaElement;
   readonly python: HTMLElement;
@@ -736,6 +772,10 @@ class Playground {
   slots: SlotShelf;
   files: FileShelf;
   activeFile: FileId;
+  /* False once a write to the browser's storage has been refused. Safari in
+   * private browsing and a full origin quota both throw, and the page used to
+   * swallow that and go on saying "this file stays in this browser". */
+  storageWorks = true;
 
   retryAction: (() => void) | null = null;
   naming: ((name: string) => void) | null = null;
@@ -796,8 +836,11 @@ class Playground {
     this.setStatus('busy');
     // What the visitor last had on screen outranks the tour, and a link that
     // carries a program outranks both.
+    // The shelf is read first and unconditionally; only then may a link in the
+    // address bar decide what is on screen.
+    this.readShelf();
     const first = EXAMPLES[LANG][0];
-    if (!this.loadFromHash() && !this.restoreFiles() && first) this.load(first);
+    if (!this.loadFromHash() && !this.showActiveFile() && first) this.load(first);
     this.drawFiles();
   }
 
@@ -925,7 +968,15 @@ class Playground {
 
     this.wireTools();
     this.wireFiles();
+    this.wireOtherTabs();
     this.wireSlots();
+    // Closing the tab inside the 180 ms typing debounce used to lose the last
+    // burst of typing. `pagehide` fires for a close, a reload and a back-forward
+    // cache entry alike, which `beforeunload` does not.
+    addEventListener('pagehide', () => {
+      clearTimeout(this.debounce);
+      this.writeFiles();
+    });
     this.wireEditorHeight();
     this.wireChipStrip();
     this.runButton.addEventListener('click', () => this.run());
@@ -998,9 +1049,7 @@ class Playground {
 
   wireTools(): void {
     const flash = (button: HTMLElement, ok: boolean): void => {
-      const original = button.textContent;
-      button.textContent = ok ? TEXT.copied : original;
-      setTimeout(() => { button.textContent = original; }, 1400);
+      if (ok) flashLabel(button, TEXT.copied);
     };
     const on = (selector: string, act: (button: HTMLElement) => void): void => {
       const button = queryMaybe(document, selector, HTMLElement);
@@ -1076,35 +1125,32 @@ class Playground {
         JSON.stringify({ files: this.files, active: this.activeFile }),
       );
     } catch {
-      /* full or private storage: the files live for this page only */
+      // Full or blocked storage. The files still work for this visit, but the
+      // page must stop claiming they will survive it.
+      if (this.storageWorks) {
+        this.storageWorks = false;
+        this.drawFiles();
+      }
     }
   }
 
-  restoreFiles(): boolean {
+  /* Reads the shelf off the browser and into `this.files`, and nothing else.
+   *
+   * This is split from "put something in the editor" on purpose. It used to do
+   * both, and the constructor called it as `loadFromHash() || restoreFiles()`,
+   * so arriving from any guide's "run this" link short-circuited it — the shelf
+   * was never read, the empty one stayed in memory, and the next save wrote
+   * that emptiness over three files of somebody's work. There are 885 of those
+   * links on this site. Reading the shelf now happens first and always. */
+  readShelf(): void {
     let raw: string | null = null;
     try {
       raw = localStorage.getItem(FILES_KEY);
     } catch {
-      return false;
+      this.storageWorks = false;
+      return;
     }
-    if (raw !== null) {
-      try {
-        const stored: unknown = JSON.parse(raw);
-        if (typeof stored === 'object' && stored !== null && 'files' in stored) {
-          const shelf: unknown = stored.files;
-          if (typeof shelf === 'object' && shelf !== null) {
-            for (const id of FILE_IDS) {
-              const value: unknown = id in shelf ? Reflect.get(shelf, id) : '';
-              this.files[id] = typeof value === 'string' ? value : '';
-            }
-          }
-          const active: unknown = 'active' in stored ? stored.active : '';
-          if (typeof active === 'string' && isFileId(active)) this.activeFile = active;
-        }
-      } catch {
-        /* unreadable storage behaves like empty files */
-      }
-    } else {
+    if (raw === null) {
       // Before there were files there was one draft. It was whatever the
       // editor last held, which is what the example tab now holds.
       try {
@@ -1113,13 +1159,69 @@ class Playground {
       } catch {
         /* no draft to carry over */
       }
+      return;
     }
+    try {
+      const stored: unknown = JSON.parse(raw);
+      if (typeof stored === 'object' && stored !== null && 'files' in stored) {
+        const shelf: unknown = stored.files;
+        if (typeof shelf === 'object' && shelf !== null) {
+          for (const id of FILE_IDS) {
+            const value: unknown = id in shelf ? Reflect.get(shelf, id) : '';
+            this.files[id] = typeof value === 'string' ? value : '';
+          }
+        }
+        const active: unknown = 'active' in stored ? stored.active : '';
+        if (typeof active === 'string' && isFileId(active)) this.activeFile = active;
+        return;
+      }
+    } catch {
+      /* falls through to the rescue below */
+    }
+    // Unreadable. Do not write the empty shelf over it — a person may still be
+    // able to get their text out of it by hand, and overwriting is the one
+    // thing that makes that impossible.
+    try {
+      localStorage.setItem(`${FILES_KEY}.unreadable`, raw);
+      localStorage.removeItem(FILES_KEY);
+    } catch {
+      /* nothing more can be done for it */
+    }
+  }
+
+  /* Puts the open file into the editor. False when there was nothing to put. */
+  showActiveFile(): boolean {
     const carried = this.files[this.activeFile];
     if (!carried) return false;
     this.editor.value = carried;
     this.compileNow();
     if (this.grow) this.grow();
     return true;
+  }
+
+  /* Another tab on the same site holds its own copy of the shelf, and both
+   * write the whole thing. Without this, whichever tab saved last erased the
+   * other one's work with no sign on screen. A file this tab is not editing is
+   * taken from the other tab; the open one is left alone, because the person
+   * is looking at it. */
+  wireOtherTabs(): void {
+    addEventListener('storage', (event) => {
+      if (event.key !== FILES_KEY || event.newValue === null) return;
+      try {
+        const stored: unknown = JSON.parse(event.newValue);
+        if (typeof stored !== 'object' || stored === null || !('files' in stored)) return;
+        const shelf: unknown = stored.files;
+        if (typeof shelf !== 'object' || shelf === null) return;
+        for (const id of FILE_IDS) {
+          if (id === this.activeFile) continue;
+          const value: unknown = id in shelf ? Reflect.get(shelf, id) : '';
+          if (typeof value === 'string') this.files[id] = value;
+        }
+        this.drawFiles();
+      } catch {
+        /* another tab wrote something unreadable; keep what we have */
+      }
+    });
   }
 
   /* Which tab is open, which files have something in them, what the editor
@@ -1139,9 +1241,13 @@ class Playground {
           : `${TEXT.fileWord} ${this.activeFile}`;
     }
     if (this.fileNoteText) {
-      this.fileNoteText.textContent =
-        this.activeFile === 'example' ? TEXT.exampleNote : TEXT.fileNote;
+      this.fileNoteText.textContent = !this.storageWorks
+        ? TEXT.storageRefused
+        : this.activeFile === 'example'
+          ? TEXT.exampleNote
+          : TEXT.fileNote;
     }
+    if (this.fileNote) this.fileNote.dataset.state = this.storageWorks ? 'ok' : 'warn';
     if (this.fileNote) this.fileNote.hidden = false;
     for (const button of queryAll(document, '[data-copy-to]', HTMLElement)) {
       button.hidden = button.dataset.copyTo === this.activeFile;
@@ -1150,6 +1256,8 @@ class Playground {
 
   switchFile(id: FileId): void {
     if (id === this.activeFile) return;
+    clearTimeout(this.debounce);
+    this.disarmOverwrites();
     this.writeFiles();
     this.activeFile = id;
     this.editor.value = this.files[id];
@@ -1165,11 +1273,32 @@ class Playground {
   /* Moving what is on screen into one of the three files. A file that already
    * holds something asks once, in the button itself, before it is replaced —
    * the same two-press shape the delete button uses. */
+  /* Puts down any armed "overwrite?" confirmation. A confirmation is about one
+   * program going into one file; if either changes, the answer no longer means
+   * what it meant, so it must not survive. */
+  disarmOverwrites(except?: HTMLElement): void {
+    for (const button of queryAll(document, '[data-copy-to]', HTMLElement)) {
+      if (button === except) continue;
+      const waiting = fileOverwriteTimers.get(button);
+      if (waiting === undefined) continue;
+      clearTimeout(waiting);
+      fileOverwriteTimers.delete(button);
+      const original = originalLabels.get(button);
+      if (original !== undefined) button.textContent = original;
+    }
+  }
+
   putInFile(id: FileId, button: HTMLElement): void {
+    // The last keystrokes are still sitting in the typing debounce; without
+    // this they stay in the file being left instead of travelling with the text.
+    clearTimeout(this.debounce);
+    this.files[this.activeFile] = this.editor.value;
+    this.disarmOverwrites(button);
     const source = this.editor.value;
     const waiting = fileOverwriteTimers.get(button);
     if (this.files[id].trim() !== '' && waiting === undefined) {
-      const original = button.textContent;
+      const original = originalLabels.get(button) ?? button.textContent ?? '';
+      originalLabels.set(button, original);
       button.textContent = `${TEXT.fileWord} ${id} ${TEXT.overwrite}`;
       fileOverwriteTimers.set(
         button,
@@ -1331,10 +1460,21 @@ class Playground {
     });
   }
 
+  /* A saved program opens where examples open, not into whichever file happens
+   * to be in front. It used to land in the open file and quietly replace what
+   * was there — the drawer writing into File 3 is exactly the thing the three
+   * files promise cannot happen. */
   openSlot(id: string): void {
     const slot = this.slots.list.find((one) => one.id === id);
     if (!slot) return;
+    clearTimeout(this.debounce);
+    this.disarmOverwrites();
+    if (this.activeFile !== 'example') {
+      this.files[this.activeFile] = this.editor.value;
+      this.activeFile = 'example';
+    }
     this.slots.current = id;
+    this.files.example = slot.source;
     this.editor.value = slot.source;
     this.terminal.textContent = '';
     this.chips.querySelectorAll('.chip').forEach((chip) => chip.setAttribute('aria-pressed', 'false'));
@@ -1387,6 +1527,8 @@ class Playground {
   /* An example opens in its own tab. It can never land in one of the three
    * files, because that is where the visitor's own work is. */
   load(example: Example): void {
+    clearTimeout(this.debounce);
+    this.disarmOverwrites();
     if (this.activeFile !== 'example') {
       this.writeFiles();
       this.activeFile = 'example';

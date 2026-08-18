@@ -26,7 +26,7 @@ wasm-opt = [
 # The real compiler, pinned to one upstream commit so the site never silently
 # changes language behaviour when the language repository moves. Bump the rev
 # deliberately, rebuild, and re-verify the playground.
-nme-core = { git = "https://github.com/needmoretruth/needmoreeasy", rev = "d7d72962cd7f3f0cfd9923357fd81a6066afafd8" }
+nme-core = { git = "https://github.com/needmoretruth/needmoreeasy", rev = "a696753f6ffad20a6145e0d697ba2ad6494d9c12" }
 wasm-bindgen = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
