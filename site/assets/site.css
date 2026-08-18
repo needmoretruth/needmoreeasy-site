@@ -462,6 +462,14 @@ p code, li code, td code, th code {
   overflow-wrap: anywhere;
 }
 
+/* In a table, breaking mid-word turns the syntax list into confetti. Cells
+ * keep their words whole and the table scrolls sideways inside its own box
+ * instead — see `.table-scroll`. */
+td code, th code {
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
 pre.code, .readout, .terminal, .editor {
   font-family: var(--mono);
   font-size: 0.86rem;
@@ -1327,7 +1335,7 @@ pre code {
   background: var(--glass-sunk);
   -webkit-overflow-scrolling: touch;
 }
-.table-scroll table { margin: 0; }
+.table-scroll table { margin: 0; min-width: 34rem; }
 
 .prose pre.code { margin: 0 0 1.3rem; }
 
@@ -1416,7 +1424,11 @@ table.syntax th, table.syntax td {
   border-bottom: 1px solid var(--hairline);
   vertical-align: top;
 }
-table.syntax code { white-space: pre-wrap; word-break: break-word; }
+/* Wide enough that a spelling and the Python it becomes each read on one or
+ * two lines. Narrower and every cell becomes a column of single words. */
+table.syntax { min-width: 42rem; }
+table.syntax td:nth-child(2) { min-width: 11rem; }
+table.syntax code { white-space: pre-wrap; overflow-wrap: normal; word-break: keep-all; }
 table.syntax tr:last-child td { border-bottom: 0; }
 
 .copy-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.2rem 0 2rem; }
