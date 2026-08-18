@@ -97,6 +97,19 @@ for (const [language, list] of Object.entries(EXAMPLES)) {
       continue;
     }
 
+    /* A word inside an ordinary message must never turn into a language
+     * feature. `따라` means "along" far more often than it means "pick one",
+     * and it silently turned a story line into a random choice once. */
+    for (const [marker, hint] of [['__import__("random")', 'random'], ['input(', 'a question']]) {
+      const usesIt = compiled.python.includes(marker);
+      const asksForIt = marker.includes('random')
+        ? /random|랜덤|골라|뽑아|따라|주사위/.test(example.source)
+        : /ask|물어|input|\?/.test(example.source);
+      if (usesIt && !asksForIt) {
+        fail(`${language}/${example.id}`, `compiles to ${hint} but never asks for it`, compiled.python);
+      }
+    }
+
     const outcome = JSON.parse(engine.run(compiled.python));
     if (!outcome.ok) {
       fail(`${language}/${example.id}`, 'ran with an error', outcome.error);

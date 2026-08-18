@@ -1613,3 +1613,18 @@ main > section + section::before {
 @media (prefers-reduced-motion: reduce) {
   .figure-arrow::after { animation: none; background-image: none; }
 }
+
+/* Hero code lines arrive one after another: the sentences first, then the
+ * Python they became. Once, on load — nothing loops. */
+.code-line {
+  display: inline-block;
+  animation: line-in 0.5s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 0.11s + 0.25s);
+}
+@keyframes line-in {
+  from { opacity: 0; transform: translateY(6px); filter: blur(3px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .code-line { animation: none; }
+}

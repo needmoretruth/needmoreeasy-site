@@ -207,6 +207,26 @@ function wirePointerSheen() {
   }
 }
 
+/* The hero says "you write this, it becomes that". Revealing the second block
+ * a beat after the first makes the page say it too, once, on arrival. */
+function wireHeroLines() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const blocks = document.querySelectorAll('.hero-figure pre.code');
+  if (blocks.length !== 2) return;
+
+  blocks.forEach((block, blockIndex) => {
+    const lines = block.textContent.replace(/\n$/, '').split('\n');
+    block.textContent = '';
+    lines.forEach((text, index) => {
+      const line = document.createElement('span');
+      line.className = 'code-line';
+      line.textContent = text;
+      line.style.setProperty('--i', String(index + blockIndex * 4.5));
+      block.append(line, document.createTextNode(index === lines.length - 1 ? '' : '\n'));
+    });
+  });
+}
+
 /* --- saving what you wrote ----------------------------------------------- */
 
 /* A download the browser makes itself: no server sees the program, which is
@@ -1054,6 +1074,7 @@ class Playground {
 forwardKoreanSpeakersOnce();
 rememberLanguageChoice();
 wireTheme();
+wireHeroLines();
 wireHeaderEdge();
 wireReveal();
 wirePointerSheen();
