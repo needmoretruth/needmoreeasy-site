@@ -556,6 +556,14 @@ def page_shell(
 <link rel="canonical" href="https://needmoreeasy.com{canonical}">
 <link rel="alternate" hreflang="{other["lang"]}" href="https://needmoreeasy.com{twin}">
 <link rel="alternate" hreflang="{page_lang}" href="https://needmoreeasy.com{canonical}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="{escape(title)} · NeedMoreEasy">
+<meta property="og:description" content="{escape(description)}">
+<meta property="og:url" content="https://needmoreeasy.com{canonical}">
+<meta property="og:image" content="https://needmoreeasy.com/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <script src="/assets/theme.js"></script>
 <link rel="stylesheet" href="/assets/site.css">
 </head>

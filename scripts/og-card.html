@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  /* The film grain is what makes this PNG ten times bigger than it needs
+     to be, and nobody sees it at preview size. */
+  body::after { display: none; }
+  body { display: grid; place-items: center; }
+  .og { width: 1200px; height: 630px; padding: 72px; display: grid; align-content: center; gap: 26px; position: relative; }
+  .og .brand { font-size: 26px; font-weight: 700; letter-spacing: -0.04em; }
+  .og h1 { font-size: 62px; line-height: 1.06; margin: 0; max-width: 20ch; }
+  .og .sub { font-size: 24px; color: var(--ink-soft); margin: 0; }
+  .og .code { font-size: 21px; padding: 22px 26px; max-width: 780px; }
+  .og .row { display: flex; gap: 14px; align-items: center; }
+  .og .pill { font-size: 18px; padding: 8px 18px; border-radius: 999px; background: var(--glass); border: 1px solid var(--hairline); color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="stage" aria-hidden="true"><i class="orb"></i><i class="orb"></i><i class="orb"></i><i class="orb"></i></div>
+<div class="og">
+  <div class="brand">need<span style="color:var(--ink-faint)">more</span>easy</div>
+  <h1>Start with a sentence. Grow into Python.</h1>
+  <p class="sub">한국어로 써도 되고, 영어로 써도 됩니다. 브라우저에서 바로 실행됩니다.</p>
+  <pre class="code glass">3번 반복해서 안녕하세요 말해줘
+for _ in range(3): print("안녕하세요")</pre>
+  <div class="row"><span class="pill">needmoreeasy.com</span><span class="pill">no install</span><span class="pill">English &amp; 한국어</span></div>
+</div>
+</body>
+</html>
