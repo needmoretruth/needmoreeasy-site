@@ -5,7 +5,9 @@
 import { chromium } from 'playwright';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8931';
-const WIDTHS = [320, 390, 768, 1280, 1920];
+// 320 is the narrowest phone still in use, 360 and 430 bracket the common
+// ones, 768 is a tablet, 1280 a laptop, 1920 the desktop the owner uses.
+const WIDTHS = [320, 360, 390, 430, 768, 1280, 1920];
 const PAGES = [
   '/index.html',
   '/ko/index.html',
