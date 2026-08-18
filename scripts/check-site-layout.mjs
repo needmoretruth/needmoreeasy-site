@@ -68,6 +68,31 @@ for (const theme of ['light', 'dark']) {
   await context.close();
 }
 
+/* The theme toggle has to do two things a screenshot cannot prove: change the
+ * painted colour, and still be in force after a reload. */
+{
+  const context = await browser.newContext({ colorScheme: 'light' });
+  const page = await context.newPage();
+  await page.goto(BASE + '/index.html', { waitUntil: 'domcontentloaded' });
+  const before = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  await page.click('[data-theme-choice="dark"]');
+  const after = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  if (before === after) note('테마 단추를 눌러도 배경색이 그대로');
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  const kept = await page.evaluate(() => ({
+    attr: document.documentElement.getAttribute('data-theme'),
+    bg: getComputedStyle(document.body).backgroundColor,
+    pressed: document.querySelector('[data-theme-choice="dark"]').getAttribute('aria-pressed'),
+  }));
+  if (kept.attr !== 'dark') note('다시 열면 어두운 테마가 풀림');
+  if (kept.bg !== after) note('다시 열면 배경색이 달라짐');
+  if (kept.pressed !== 'true') note('다시 열면 어두움 단추가 눌린 상태가 아님');
+  await page.click('[data-theme-choice="system"]');
+  const back = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+  if (back !== null) note('기기 설정으로 되돌아가지 않음');
+  await context.close();
+}
+
 await browser.close();
-console.log(failures ? `\n${failures}건 실패` : '\n모든 폭·모든 테마에서 문제 없음');
+console.log(failures ? `\n${failures}건 실패` : '\n모든 폭·모든 테마에서 문제 없음, 테마 단추도 실제로 바뀌고 유지됨');
 process.exit(failures ? 1 : 0);
