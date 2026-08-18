@@ -147,6 +147,92 @@ if tired or hour is greater than or equal to 23 then show Time for bed
 if hour is not equal to 12 then show It is not noon`,
     },
     {
+      id: 'story',
+      label: 'A short story',
+      answers: ['left'],
+      expect: 'That is the end.',
+      source: `# A story that asks which way you go.
+show The path splits in two.
+ask way Left or right?
+
+if way equals left
+show A river. You follow it home.
+else
+show A cave. Something inside is asleep.
+end
+show That is the end.`,
+    },
+    {
+      id: 'menu',
+      label: 'A tiny menu',
+      answers: ['2'],
+      expect: 'One tea',
+      source: `# A menu is a question and three answers.
+show Today we have coffee and tea.
+ask number pick Type 1 for coffee or 2 for tea
+
+if pick equals 1
+show One coffee, coming up.
+else if pick equals 2
+show One tea, coming up.
+else
+show We only have those two.
+end`,
+    },
+    {
+      id: 'table',
+      label: 'Five times table',
+      answers: [],
+      expect: '25',
+      source: `# The five times table, built by adding.
+set total to 0
+repeat 5 times
+add 5 to total
+show total
+end`,
+    },
+    {
+      id: 'sum',
+      label: 'Add three numbers',
+      answers: ['2', '3', '4'],
+      expect: 'Altogether that is 9',
+      source: `# Three answers, one total.
+ask number first First number
+ask number second Second number
+ask number third Third number
+
+set total to first
+add second to total
+add third to total
+show Altogether that is total`,
+    },
+    {
+      id: 'password',
+      label: 'Until it is right',
+      answers: ['please', 'open'],
+      expect: 'The door swings open.',
+      source: `# Keep asking until the answer is the right one.
+set word to nothing
+while word is not equal to open
+ask word Say the magic word
+end
+show The door swings open.`,
+    },
+    {
+      id: 'countdown',
+      label: 'Leave a loop early',
+      answers: [],
+      expect: 'Stopped early',
+      source: `# Count down, and leave the loop before it finishes.
+set left to 5
+while left is greater than 0
+show left
+subtract 1 from left
+if left equals 2 then break
+end
+show Stopped early`,
+    },
+    {
       id: 'levels',
       label: 'Three levels at once',
       answers: [],
@@ -381,6 +467,92 @@ print(word)`,
 만약 이름이 있으면 그리고 시각이 18보다 크면 좋은 저녁이에요 이름! 말해줘
 만약 피곤 또는 시각이 23보다 크거나 같으면 안녕히 주무세요 말해줘
 만약에 시각이 12와 같지 않으면 정오가 아니에요 말해줘`,
+    },
+    {
+      id: 'story',
+      label: '짧은 이야기',
+      answers: ['왼쪽'],
+      expect: '여기까지입니다',
+      source: `# 어느 쪽으로 갈지 물어보는 이야기.
+두 갈래 길 앞에 서 있습니다 말해줘
+길을 물어봐 왼쪽인가요 오른쪽인가요?
+
+만약에 길이 왼쪽과 같으면
+강이 나옵니다. 강을 따라 집으로 갑니다 말해줘
+아니면
+동굴이 나옵니다. 안에서 무언가 자고 있습니다 말해줘
+끝
+여기까지입니다 말해줘`,
+    },
+    {
+      id: 'menu',
+      label: '작은 차림표',
+      answers: ['2'],
+      expect: '차 한 잔',
+      source: `# 차림표는 질문 하나와 대답 셋입니다.
+오늘은 커피와 차가 있습니다 말해줘
+고른것을 숫자로 물어봐 커피는 1, 차는 2를 눌러 주세요
+
+만약에 고른것이 1과 같으면
+커피 한 잔 드릴게요 말해줘
+아니면 만약에 고른것이 2와 같으면
+차 한 잔 드릴게요 말해줘
+아니면
+그 둘만 있습니다 말해줘
+끝`,
+    },
+    {
+      id: 'table',
+      label: '5단 만들기',
+      answers: [],
+      expect: '25',
+      source: `# 5단을 더하기만으로 만듭니다.
+합계는 0
+5번 반복해
+합계에 5 더해
+합계 말해줘
+끝`,
+    },
+    {
+      id: 'sum',
+      label: '숫자 세 개 더하기',
+      answers: ['2', '3', '4'],
+      expect: '9',
+      source: `# 대답 셋을 받아 하나로 더합니다.
+첫째를 숫자로 물어봐 첫 번째 숫자
+둘째를 숫자로 물어봐 두 번째 숫자
+셋째를 숫자로 물어봐 세 번째 숫자
+
+합계는 첫째
+합계에 둘째 더해
+합계에 셋째 더해
+합계 말해줘`,
+    },
+    {
+      id: 'password',
+      label: '맞을 때까지',
+      answers: ['수리수리', '열려라'],
+      expect: '문이 열렸습니다',
+      source: `# 맞는 대답이 나올 때까지 계속 물어봅니다.
+주문은 아직
+주문이 열려라와 같지 않을 동안
+주문을 물어봐 마법의 주문을 말해 보세요
+끝
+문이 열렸습니다 말해줘`,
+    },
+    {
+      id: 'countdown',
+      label: '반복 중간에 빠져나오기',
+      answers: [],
+      expect: '여기서 멈췄습니다',
+      source: `# 거꾸로 세다가 끝나기 전에 빠져나옵니다.
+남은수는 5
+남은수가 0보다 클 동안
+남은수 말해줘
+남은수에서 1 빼
+만약에 남은수가 2와 같으면 멈춰
+끝
+여기서 멈췄습니다 말해줘`,
     },
     {
       id: 'levels',
