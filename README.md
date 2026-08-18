@@ -36,12 +36,14 @@ node scripts/check-site-links.mjs  # every internal link resolves, none redirect
 node scripts/check-site-layout.mjs # 5 widths x 2 themes: overflow, console, theme toggle
 node scripts/check-site-playground.mjs  # run a program, answer a question, download it
 node scripts/check-site-structure.mjs   # ids, alt text, heading levels, page language
+node scripts/check-site-boot-failures.mjs  # what a visitor sees when a download fails
+node scripts/check-site-slow-engine.mjs    # a guide's run-it link, and Run before the engine lands
 node scripts/check-live.mjs        # open the published site and check it from outside
 node scripts/make-og-image.mjs     # redraw the link-preview card from the site's own CSS
 bash scripts/deploy.sh             # build both wasm modules, run every check, publish, verify
 ```
 
-The four `check-site-*` scripts need a preview server running (they take its
+The six `check-site-*` scripts need a preview server running (they take its
 address as an argument) and Playwright, which lives in `~/nmt/web/scripts` and
 is reachable here through the `node_modules` symlink. `deploy.sh` starts and
 stops its own server and refuses to publish if any check fails.
