@@ -42,6 +42,7 @@ const TEXT = {
     copy: 'copy',
     copied: 'copied',
     fixFirst: 'Fix the program first — the compiler could not read it.',
+    runHint: 'Run (Ctrl+Enter)',
     slotSaved: 'saved',
     slotName: 'Name for this slot',
     slotFirst: 'My program',
@@ -76,6 +77,7 @@ const TEXT = {
     copy: '복사',
     copied: '복사했습니다',
     fixFirst: '먼저 프로그램을 고쳐 주세요. 컴파일러가 읽지 못했습니다.',
+    runHint: '실행 (Ctrl+Enter)',
     slotSaved: '저장했습니다',
     slotName: '이 슬롯의 이름',
     slotFirst: '내 프로그램',
@@ -615,6 +617,15 @@ class Playground {
     this.wireSlots();
     this.wireEditorHeight();
     this.runButton.addEventListener('click', () => this.run());
+    // Ctrl/Cmd + Enter runs, the way every editor a programmer will meet next
+    // already does. The button carries the same shortcut in its tooltip.
+    this.editor.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        if (!this.runButton.disabled) this.run();
+      }
+    });
+    this.runButton.title = TEXT.runHint;
     this.retryButton.addEventListener('click', () => {
       const action = this.retryAction;
       this.hideAlert();
