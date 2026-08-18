@@ -40,6 +40,19 @@ python3 scripts/build-docs.py
 echo "== 예제 회귀 시험 =="
 node scripts/check-examples.mjs
 
+# The layout check needs a server with the same cross-origin headers Pages
+# sends, so it starts one, checks every page at five widths in both themes,
+# and stops it again. A layout that overflows a phone must not reach the web.
+echo "== 화면 폭·테마 회귀 시험 =="
+node scripts/serve.mjs 8788 >/dev/null 2>&1 &
+SERVE_PID=$!
+trap 'kill "$SERVE_PID" 2>/dev/null || true' EXIT
+sleep 1
+node scripts/check-site-layout.mjs http://127.0.0.1:8788
+node scripts/check-site-playground.mjs http://127.0.0.1:8788
+kill "$SERVE_PID" 2>/dev/null || true
+trap - EXIT
+
 echo "== 3/3  Cloudflare Pages 배포 =="
 set -a
 # shellcheck disable=SC1090

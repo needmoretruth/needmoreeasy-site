@@ -2,7 +2,7 @@
  * asks a question, press Run, answer it, and read the output. Proves the
  * SharedArrayBuffer input path, the tabs, save slots and download. */
 import { chromium } from 'playwright';
-const BASE = 'http://127.0.0.1:8931';
+const BASE = process.argv[2] || 'http://127.0.0.1:8931';
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
 const page = await context.newPage();
