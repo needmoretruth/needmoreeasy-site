@@ -69,6 +69,16 @@ for (const file of pages) {
   }
 }
 
+// Cloudflare Pages serves the root index with HTTP 200 for any address it does
+// not recognise unless a 404.html exists, which turns every typo into a silent
+// copy of the home page. This file is what makes a wrong address say so.
+try {
+  await readFile(join(SITE, '404.html'));
+} catch {
+  failures += 1;
+  console.log('FAIL site/404.html이 없습니다 — 없는 주소가 홈으로 200을 돌려줍니다');
+}
+
 console.log(failures
   ? `\n${failures}건 실패 (검사한 링크 ${seen.size}개, 페이지 ${pages.length}쪽)`
   : `\n내부 링크 ${seen.size}개 전부 살아 있고 재지정도 없습니다 (${pages.length}쪽)`);
