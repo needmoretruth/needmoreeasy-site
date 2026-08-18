@@ -608,6 +608,7 @@ class Playground {
 
     this.wireTools();
     this.wireSlots();
+    this.wireEditorHeight();
     this.runButton.addEventListener('click', () => this.run());
     this.retryButton.addEventListener('click', () => {
       const action = this.retryAction;
@@ -622,6 +623,27 @@ class Playground {
         this.answer();
       }
     });
+  }
+
+  /* On a phone the editor is the whole screen's worth of space there is, so
+   * it grows with the program instead of making the writer scroll inside a
+   * box eight lines tall. On a wide screen the two panes stay level. */
+  wireEditorHeight() {
+    const narrow = matchMedia('(max-width: 859px)');
+    const grow = () => {
+      if (!narrow.matches) {
+        this.editor.style.height = '';
+        return;
+      }
+      this.editor.style.height = 'auto';
+      this.editor.style.height =
+        `${Math.min(this.editor.scrollHeight + 4, Math.round(window.innerHeight * 0.55))}px`;
+    };
+    this.grow = grow;
+    this.editor.addEventListener('input', grow);
+    addEventListener('resize', grow);
+    narrow.addEventListener('change', grow);
+    grow();
   }
 
   /* --- taking the code away --------------------------------------------- */
@@ -693,6 +715,7 @@ class Playground {
     if (!draft) return false;
     this.editor.value = draft;
     this.compileNow();
+    if (this.grow) this.grow();
     return true;
   }
 
@@ -828,6 +851,7 @@ class Playground {
     this.drawSlots();
     this.compileNow();
     this.saveDraft();
+    if (this.grow) this.grow();
   }
 
   renameSlot(id) {
@@ -877,6 +901,7 @@ class Playground {
     this.drawSlots();
     this.compileNow();
     this.saveDraft();
+    if (this.grow) this.grow();
   }
 
   compileNow() {
