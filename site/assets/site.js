@@ -660,11 +660,25 @@ class Playground {
     };
 
     on('[data-copy-editor]', async (button) => flash(button, await copyText(this.editor.value)));
+    // A link that carries the program itself. The guides already use this
+    // shape, so sharing what you wrote costs no server and no account.
+    on('[data-copy-link]', async (button) => flash(button, await copyText(this.shareLink())));
     on('[data-copy-python]', async (button) => flash(button, await copyText(this.compiled || this.python.textContent)));
     on('[data-download-editor]', () => downloadText(`${this.fileStem()}.nme`, this.editor.value));
     on('[data-download-python]', () => {
       if (this.compiled) downloadText(`${this.fileStem()}.py`, this.compiled);
     });
+  }
+
+  /* base64url of the UTF-8 bytes, which is what `loadFromHash` reads back. */
+  shareLink() {
+    const bytes = new TextEncoder().encode(this.editor.value);
+    let binary = '';
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    const encoded = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_');
+    // `/ko/index.html` and `/ko/` are the same page; share the short one.
+    const path = location.pathname.replace(/index\.html$/, '');
+    return `${location.origin}${path}#code=${encoded}`;
   }
 
   /* Named after the slot when there is one, so a folder of downloads still
