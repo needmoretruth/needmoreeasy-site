@@ -43,6 +43,9 @@ echo "== 브라우저 스크립트 타입 검사·컴파일 =="
 # any of the checks below run against the compiled files.
 node scripts/build-scripts.mjs
 
+echo "== 첫 화면에 실린 프로그램 전수 시험 =="
+node scripts/check-site-code.mjs
+
 echo "== 예제 회귀 시험 =="
 node scripts/check-examples.mjs
 
@@ -65,6 +68,8 @@ node scripts/check-site-structure.mjs http://127.0.0.1:8788
 node scripts/check-site-boot-failures.mjs http://127.0.0.1:8788
 node scripts/check-site-slow-engine.mjs http://127.0.0.1:8788
 node scripts/check-site-docs.mjs http://127.0.0.1:8788
+# The three files are a promise that nothing but the visitor writes to them.
+node scripts/check-site-files.mjs http://127.0.0.1:8788
 kill "$SERVE_PID" 2>/dev/null || true
 trap - EXIT
 

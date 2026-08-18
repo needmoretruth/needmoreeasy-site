@@ -56,6 +56,13 @@ const TEXT = {
     rename: 'rename',
     remove: 'delete',
     untitled: 'untitled',
+    fileWord: 'File',
+    examplesWord: 'Examples',
+    exampleNote:
+      'This tab is for looking at examples, so anything here can be replaced by the next one you open. To keep it, put it in a file.',
+    fileNote: 'This file stays in this browser. Nothing else ever writes to it.',
+    overwrite: 'overwrite?',
+    promptFailed: 'The message could not be fetched. Open it as a page instead.',
   },
   ko: {
     compiled: 'Python',
@@ -91,6 +98,13 @@ const TEXT = {
     rename: '이름 바꾸기',
     remove: '지우기',
     untitled: '이름 없음',
+    fileWord: '파일',
+    examplesWord: '예제',
+    exampleNote:
+      '이 칸은 예제를 보는 곳이라, 다음 예제를 열면 지금 것이 사라집니다. 계속 두려면 파일에 넣으세요.',
+    fileNote: '이 파일은 이 브라우저에 남습니다. 다른 것이 여기에 쓰는 일은 없습니다.',
+    overwrite: '덮어쓸까요?',
+    promptFailed: '글을 가져오지 못했습니다. 문서로 열어 보세요.',
   },
 }[LANG];
 
@@ -353,6 +367,73 @@ function wireCopyButtons(): void {
 
 /* A prompt is thousands of words long, so it is copied from the file rather
  * than from anything on screen: one press, whole document, no scrolling. */
+/* --- the three messages for someone else's AI ---------------------------- */
+
+/* The band at the top of the home page. Each entry says what its message is
+ * for; the message itself — twenty to forty thousand characters of it — is
+ * fetched only when somebody opens that entry, so it costs the page nothing
+ * until it is wanted. Without JavaScript the "open as a page" link beside it
+ * still works, which is why that link is in the HTML rather than made here.
+ */
+const promptTexts = new Map<string, string>();
+
+async function fetchPrompt(name: string, lang: string): Promise<string | null> {
+  const key = `${name}.${lang}`;
+  const held = promptTexts.get(key);
+  if (held !== undefined) return held;
+  try {
+    const response = await fetch(`/assets/prompts/${key}.txt`);
+    if (!response.ok) return null;
+    const text = await response.text();
+    promptTexts.set(key, text);
+    return text;
+  } catch {
+    return null;
+  }
+}
+
+function wireAiPrompts(): void {
+  for (const box of queryAll(document, 'details[data-prompt]', HTMLDetailsElement)) {
+    const name = box.dataset.prompt;
+    const lang = box.dataset.lang;
+    if (name === undefined || lang === undefined) continue;
+    const readout = queryMaybe(box, '[data-prompt-text]', HTMLElement);
+    const copy = queryMaybe(box, '[data-prompt-copy]', HTMLElement);
+    const save = queryMaybe(box, '[data-prompt-download]', HTMLElement);
+
+    const load = async (): Promise<string | null> => {
+      const text = await fetchPrompt(name, lang);
+      if (readout) {
+        readout.textContent = text ?? TEXT.promptFailed;
+        readout.dataset.state = text === null ? 'error' : 'ok';
+      }
+      return text;
+    };
+
+    box.addEventListener('toggle', () => {
+      if (box.open) void load();
+    });
+    if (copy) {
+      copy.addEventListener('click', () => {
+        void (async () => {
+          const text = await load();
+          const original = copy.textContent;
+          copy.textContent = text !== null && (await copyText(text)) ? TEXT.copied : TEXT.promptFailed;
+          setTimeout(() => { copy.textContent = original; }, 1600);
+        })();
+      });
+    }
+    if (save) {
+      save.addEventListener('click', () => {
+        void (async () => {
+          const text = await load();
+          if (text !== null) downloadText(`nme-${name}-prompt.${lang}.txt`, text);
+        })();
+      });
+    }
+  }
+}
+
 function wireFileCopyButtons(): void {
   const label = LANG === 'ko' ? '복사했습니다' : 'copied';
   const failed = LANG === 'ko' ? '복사하지 못했습니다' : 'copy failed';
@@ -551,6 +632,27 @@ function readWorkerMessage(data: unknown): WorkerMessage | null {
 const ANSWER_CAPACITY = 4096;
 const SLOT_KEY = 'nme-slots-v1';
 const DRAFT_KEY = 'nme-draft-v1';
+const FILES_KEY = 'nme-files-v1';
+
+/* Four tabs over one editor: three files that are the visitor's, and one place
+ * where examples open.
+ *
+ * The reason they are separate is a complaint that is easy to have and hard to
+ * forgive: you are writing something, you forget how a loop went, you open an
+ * example to look — and your program is gone. So an example never lands in a
+ * file. It opens in its own tab, and it takes a deliberate press to move it
+ * into File 1, 2 or 3. Nothing else writes to those three. */
+const FILE_IDS = ['example', '1', '2', '3'] as const;
+type FileId = (typeof FILE_IDS)[number];
+type FileShelf = Record<FileId, string>;
+
+function isFileId(value: string): value is FileId {
+  return FILE_IDS.some((id) => id === value);
+}
+
+function emptyShelf(): FileShelf {
+  return { example: '', 1: '', 2: '', 3: '' };
+}
 
 interface SharedAnswerMemory {
   readonly buffer: SharedArrayBuffer;
@@ -590,6 +692,7 @@ function asArray(value: unknown): readonly unknown[] | null {
  * property. A side table says the same thing without inventing a field on a
  * DOM element that the DOM does not have. */
 const slotDeleteTimers = new WeakMap<HTMLElement, number>();
+const fileOverwriteTimers = new WeakMap<HTMLElement, number>();
 
 class Playground {
   readonly editor: HTMLTextAreaElement;
@@ -612,6 +715,10 @@ class Playground {
   readonly tabs: HTMLElement[];
   readonly slotList: HTMLElement | null;
   readonly slotFlash: HTMLElement | null;
+  readonly fileTabs: HTMLElement[];
+  readonly fileNote: HTMLElement | null;
+  readonly fileNoteText: HTMLElement | null;
+  readonly editorTitle: HTMLElement | null;
   readonly progress: HTMLElement;
   readonly progressFill: HTMLElement;
   readonly alert: HTMLElement;
@@ -627,6 +734,8 @@ class Playground {
   running: boolean;
   readonly sharedMemory: SharedAnswerMemory | null;
   slots: SlotShelf;
+  files: FileShelf;
+  activeFile: FileId;
 
   retryAction: (() => void) | null = null;
   naming: ((name: string) => void) | null = null;
@@ -657,6 +766,10 @@ class Playground {
     this.tabs = queryAll(root, '.play-tabs [data-view]', HTMLElement);
     this.slotList = queryMaybe(root, '#slot-list', HTMLElement);
     this.slotFlash = queryMaybe(root, '#slot-flash', HTMLElement);
+    this.fileTabs = queryAll(root, '.file-tabs [data-file]', HTMLElement);
+    this.fileNote = queryMaybe(root, '#file-note', HTMLElement);
+    this.fileNoteText = queryMaybe(root, '#file-note-text', HTMLElement);
+    this.editorTitle = queryMaybe(root, '#editor-title', HTMLElement);
     this.progress = queryOne(root, '#boot-progress', HTMLElement);
     this.progressFill = queryOne(this.progress, 'i', HTMLElement);
     this.alert = queryOne(root, '#boot-alert', HTMLElement);
@@ -673,6 +786,8 @@ class Playground {
     this.sharedMemory = this.makeSharedMemory();
 
     this.slots = this.readSlots();
+    this.files = emptyShelf();
+    this.activeFile = 'example';
 
     this.buildChips();
     this.wire();
@@ -682,7 +797,8 @@ class Playground {
     // What the visitor last had on screen outranks the tour, and a link that
     // carries a program outranks both.
     const first = EXAMPLES[LANG][0];
-    if (!this.loadFromHash() && !this.restoreDraft() && first) this.load(first);
+    if (!this.loadFromHash() && !this.restoreFiles() && first) this.load(first);
+    this.drawFiles();
   }
 
   /* A guide links here with the program it is teaching in the URL, so a
@@ -703,7 +819,11 @@ class Playground {
     try {
       const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
       const bytes = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
-      this.editor.value = new TextDecoder().decode(bytes);
+      // A link someone sent you is somebody else's program: it opens where
+      // examples open, so it cannot overwrite one of your three files.
+      this.activeFile = 'example';
+      this.files.example = new TextDecoder().decode(bytes);
+      this.editor.value = this.files.example;
       this.terminal.textContent = '';
       return true;
     } catch {
@@ -787,7 +907,8 @@ class Playground {
       clearTimeout(this.debounce);
       this.debounce = setTimeout(() => {
         this.compileNow();
-        this.saveDraft();
+        this.writeFiles();
+        this.drawFiles();
       }, 180);
     });
 
@@ -803,6 +924,7 @@ class Playground {
     }
 
     this.wireTools();
+    this.wireFiles();
     this.wireSlots();
     this.wireEditorHeight();
     this.wireChipStrip();
@@ -944,26 +1066,146 @@ class Playground {
     }
   }
 
-  saveDraft(): void {
+  /* --- the three files, and the tab examples open in ---------------------- */
+
+  writeFiles(): void {
+    this.files[this.activeFile] = this.editor.value;
     try {
-      localStorage.setItem(DRAFT_KEY, this.editor.value);
+      localStorage.setItem(
+        FILES_KEY,
+        JSON.stringify({ files: this.files, active: this.activeFile }),
+      );
     } catch {
-      /* nothing to do: the text is still on screen */
+      /* full or private storage: the files live for this page only */
     }
   }
 
-  restoreDraft(): boolean {
-    let draft: string | null = null;
+  restoreFiles(): boolean {
+    let raw: string | null = null;
     try {
-      draft = localStorage.getItem(DRAFT_KEY);
+      raw = localStorage.getItem(FILES_KEY);
     } catch {
       return false;
     }
-    if (!draft) return false;
-    this.editor.value = draft;
+    if (raw !== null) {
+      try {
+        const stored: unknown = JSON.parse(raw);
+        if (typeof stored === 'object' && stored !== null && 'files' in stored) {
+          const shelf: unknown = stored.files;
+          if (typeof shelf === 'object' && shelf !== null) {
+            for (const id of FILE_IDS) {
+              const value: unknown = id in shelf ? Reflect.get(shelf, id) : '';
+              this.files[id] = typeof value === 'string' ? value : '';
+            }
+          }
+          const active: unknown = 'active' in stored ? stored.active : '';
+          if (typeof active === 'string' && isFileId(active)) this.activeFile = active;
+        }
+      } catch {
+        /* unreadable storage behaves like empty files */
+      }
+    } else {
+      // Before there were files there was one draft. It was whatever the
+      // editor last held, which is what the example tab now holds.
+      try {
+        const draft = localStorage.getItem(DRAFT_KEY);
+        if (draft) this.files.example = draft;
+      } catch {
+        /* no draft to carry over */
+      }
+    }
+    const carried = this.files[this.activeFile];
+    if (!carried) return false;
+    this.editor.value = carried;
     this.compileNow();
     if (this.grow) this.grow();
     return true;
+  }
+
+  /* Which tab is open, which files have something in them, what the editor
+   * is called, and what the row under the tabs says. */
+  drawFiles(): void {
+    for (const tab of this.fileTabs) {
+      const id = tab.dataset.file;
+      if (id === undefined || !isFileId(id)) continue;
+      tab.setAttribute('aria-selected', String(id === this.activeFile));
+      const held = id === this.activeFile ? this.editor.value : this.files[id];
+      tab.dataset.used = String(id !== 'example' && held.trim() !== '');
+    }
+    if (this.editorTitle) {
+      this.editorTitle.textContent =
+        this.activeFile === 'example'
+          ? TEXT.examplesWord
+          : `${TEXT.fileWord} ${this.activeFile}`;
+    }
+    if (this.fileNoteText) {
+      this.fileNoteText.textContent =
+        this.activeFile === 'example' ? TEXT.exampleNote : TEXT.fileNote;
+    }
+    if (this.fileNote) this.fileNote.hidden = false;
+    for (const button of queryAll(document, '[data-copy-to]', HTMLElement)) {
+      button.hidden = button.dataset.copyTo === this.activeFile;
+    }
+  }
+
+  switchFile(id: FileId): void {
+    if (id === this.activeFile) return;
+    this.writeFiles();
+    this.activeFile = id;
+    this.editor.value = this.files[id];
+    this.terminal.textContent = '';
+    this.slots.current = null;
+    this.drawFiles();
+    this.drawSlots();
+    this.compileNow();
+    this.writeFiles();
+    if (this.grow) this.grow();
+  }
+
+  /* Moving what is on screen into one of the three files. A file that already
+   * holds something asks once, in the button itself, before it is replaced —
+   * the same two-press shape the delete button uses. */
+  putInFile(id: FileId, button: HTMLElement): void {
+    const source = this.editor.value;
+    const waiting = fileOverwriteTimers.get(button);
+    if (this.files[id].trim() !== '' && waiting === undefined) {
+      const original = button.textContent;
+      button.textContent = `${TEXT.fileWord} ${id} ${TEXT.overwrite}`;
+      fileOverwriteTimers.set(
+        button,
+        setTimeout(() => {
+          fileOverwriteTimers.delete(button);
+          button.textContent = original;
+        }, 4000),
+      );
+      return;
+    }
+    if (waiting !== undefined) {
+      clearTimeout(waiting);
+      fileOverwriteTimers.delete(button);
+    }
+    this.files[id] = source;
+    this.activeFile = id;
+    this.editor.value = source;
+    this.drawFiles();
+    this.writeFiles();
+    this.flashSaved();
+    if (this.grow) this.grow();
+  }
+
+  wireFiles(): void {
+    for (const tab of this.fileTabs) {
+      tab.addEventListener('click', () => {
+        const id = tab.dataset.file;
+        if (id !== undefined && isFileId(id)) this.switchFile(id);
+      });
+    }
+    for (const button of queryAll(document, '[data-copy-to]', HTMLElement)) {
+      button.addEventListener('click', () => {
+        const id = button.dataset.copyTo;
+        if (id !== undefined && isFileId(id)) this.putInFile(id, button);
+      });
+    }
   }
 
   drawSlots(): void {
@@ -1099,7 +1341,8 @@ class Playground {
     this.writeSlots();
     this.drawSlots();
     this.compileNow();
-    this.saveDraft();
+    this.writeFiles();
+    this.drawFiles();
     if (this.grow) this.grow();
   }
 
@@ -1141,7 +1384,13 @@ class Playground {
     this.flashTimer = setTimeout(() => { flash.dataset.on = 'false'; }, 1600);
   }
 
+  /* An example opens in its own tab. It can never land in one of the three
+   * files, because that is where the visitor's own work is. */
   load(example: Example): void {
+    if (this.activeFile !== 'example') {
+      this.writeFiles();
+      this.activeFile = 'example';
+    }
     this.slots.current = null;
     this.editor.value = example.source;
     this.chips.querySelectorAll('.chip').forEach((chip) => {
@@ -1149,8 +1398,9 @@ class Playground {
     });
     this.terminal.textContent = '';
     this.drawSlots();
+    this.drawFiles();
     this.compileNow();
-    this.saveDraft();
+    this.writeFiles();
     if (this.grow) this.grow();
   }
 
@@ -1311,6 +1561,11 @@ class Playground {
       answers: this.sharedMemory ? undefined : this.collectAnswers(),
     };
     this.ensureWorker().postMessage(request);
+    // On a phone the editor fills the screen and the output is below the fold,
+    // so pressing Run would look like nothing happened. Bring the output up.
+    if (matchMedia('(max-width: 819px)').matches) {
+      this.terminal.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
   }
 
   collectAnswers(): string[] {
@@ -1449,6 +1704,7 @@ wirePointerSheen();
 wireBeam();
 wireCopyButtons();
 wireFileCopyButtons();
+wireAiPrompts();
 wireDocRail();
 wireGuideFilter();
 
@@ -1456,5 +1712,10 @@ const playgroundRoot = queryMaybe(document, '#playground', HTMLElement);
 if (playgroundRoot) {
   const playground = new Playground(playgroundRoot);
   void playground.start();
-  window.addEventListener('hashchange', () => { playground.loadFromHash(); });
+  window.addEventListener('hashchange', () => {
+    if (playground.loadFromHash()) {
+      playground.drawFiles();
+      playground.compileNow();
+    }
+  });
 }
