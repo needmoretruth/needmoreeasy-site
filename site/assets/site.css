@@ -331,8 +331,10 @@ body::after {
 }
 
 /* A specular highlight that follows the pointer. `--mx`/`--my` are set by
- * script; without script it simply never moves and the sheen sits still. */
-.glass-lit::after,
+ * script; without script there is no highlight at all, which is the right
+ * outcome — a still highlight in a fixed place would just look like a smudge.
+ * The hero panel is deliberately not in this list: its `::after` is already
+ * the slow sweep, and an element has only one. */
 .card::after,
 .prompt-card::after {
   content: "";
@@ -348,7 +350,7 @@ body::after {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  :is(.glass-lit, .card, .prompt-card):hover::after { opacity: 0.5; }
+  :is(.card, .prompt-card):hover::after { opacity: 0.5; }
 }
 
 /* Where glass is impossible — an old browser, or a reader who asked for less
@@ -1414,9 +1416,6 @@ pre code {
 /* The recommended card is marked by weight and edge, not by colour. */
 .prompt-card.is-pick { background: var(--glass-2); box-shadow: var(--shadow-3); }
 
-.syntax-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; }
-.syntax-group { margin-top: 2.4rem; }
-.syntax-group h3 { scroll-margin-top: 5rem; }
 table.syntax { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
 table.syntax th, table.syntax td {
   text-align: left;

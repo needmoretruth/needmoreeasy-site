@@ -243,7 +243,7 @@ function wirePointerSheen() {
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  for (const panel of document.querySelectorAll('.hero-figure, .card, .prompt-card')) {
+  for (const panel of document.querySelectorAll('.card, .prompt-card')) {
     panel.addEventListener('pointermove', (event) => {
       const box = panel.getBoundingClientRect();
       panel.style.setProperty('--mx', `${event.clientX - box.left}px`);
