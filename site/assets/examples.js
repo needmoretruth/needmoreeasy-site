@@ -305,6 +305,22 @@ end
 show Thanks for playing`,
     },
     {
+      id: 'six',
+      label: 'All six at once',
+      answers: [],
+      expect: 'advanced English',
+      source: `# Sentence, beginner and Python, each in English and in Korean.
+# Six ways of writing, one file, no declarations anywhere.
+show hello                    # sentence, English
+안녕하세요 말해줘              # sentence, Korean
+say "beginner English"        # beginner, English
+말해 "초급 한국어"             # beginner, Korean
+greeting = "advanced English" # Python, English names
+print(greeting)
+인사 = "고급 한국어"            # Python, Korean names
+print(인사)`,
+    },
+    {
       id: 'levels',
       label: 'Three levels at once',
       answers: [],
@@ -703,6 +719,22 @@ print(word)`,
 둘 중 하나가 이겼습니다 말해줘
 끝
 재미있었습니다 말해줘`,
+    },
+    {
+      id: 'six',
+      label: '여섯 가지 한 파일에',
+      answers: [],
+      expect: '고급 한국어',
+      source: `# 문장형·초급·고급을 각각 한국어와 영어로.
+# 여섯 가지 쓰는 법이 한 파일에 있고, 선언은 어디에도 없습니다.
+안녕하세요 말해줘              # 문장형 한국어
+show hello                    # 문장형 영어
+말해 "초급 한국어"             # 초급 한국어
+say "beginner English"        # 초급 영어
+인사 = "고급 한국어"            # 고급(Python), 한국어 이름
+print(인사)
+greeting = "advanced English" # 고급(Python), 영어 이름
+print(greeting)`,
     },
     {
       id: 'levels',
