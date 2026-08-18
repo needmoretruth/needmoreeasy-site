@@ -20,7 +20,9 @@ const STORE_KEY = 'nme-lang';
 const TEXT = {
   en: {
     compiled: 'Python',
+    compiledNote: 'what the compiler produced',
     errorLabel: 'what the compiler says',
+    errorNote: 'fix this line and it will compile',
     bootCompiler: 'fetching the compiler…',
     bootEngine: 'fetching the Python engine — 11 MB, once…',
     engineReady: 'ready to run',
@@ -52,7 +54,9 @@ const TEXT = {
   },
   ko: {
     compiled: 'Python',
+    compiledNote: '컴파일러가 만든 결과',
     errorLabel: '컴파일러가 알려주는 내용',
+    errorNote: '이 줄을 고치면 됩니다',
     bootCompiler: '컴파일러를 내려받는 중입니다…',
     bootEngine: '파이썬 실행기를 내려받는 중입니다 — 11MB, 처음 한 번만…',
     engineReady: '실행 준비가 됐습니다',
@@ -448,6 +452,7 @@ class Playground {
     this.editor = root.querySelector('#editor');
     this.python = root.querySelector('#python');
     this.pythonState = root.querySelector('#python-state');
+    this.pythonNote = root.querySelector('#python-note');
     this.terminal = root.querySelector('#terminal');
     this.runButton = root.querySelector('#run');
     this.stopButton = root.querySelector('#stop');
@@ -937,6 +942,7 @@ class Playground {
       this.python.dataset.state = 'ok';
       this.python.innerHTML = highlightPython(outcome.python);
       this.pythonState.textContent = TEXT.compiled;
+      if (this.pythonNote) this.pythonNote.textContent = TEXT.compiledNote;
       this.runButton.disabled = this.running;
       if (this.alertText.textContent === TEXT.fixFirst) this.hideAlert();
     } else {
@@ -944,6 +950,9 @@ class Playground {
       this.python.dataset.state = 'error';
       this.python.textContent = outcome.diagnostic;
       this.pythonState.textContent = TEXT.errorLabel;
+      // The subtitle said "what the compiler produced" next to a message that
+      // says the opposite. One of them has to change with the state.
+      if (this.pythonNote) this.pythonNote.textContent = TEXT.errorNote;
       this.runButton.disabled = true;
     }
   }
