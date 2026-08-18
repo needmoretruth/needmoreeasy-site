@@ -1,13 +1,15 @@
 /* What the visitor sees when a download does not arrive. */
 import { chromium } from 'playwright';
 
+const BASE = (process.argv[2] || 'http://localhost:8787').replace(/\/$/, '');
+
 const browser = await chromium.launch();
 
 // 1) the compiler never arrives
 {
   const page = await (await browser.newContext()).newPage();
   await page.route('**/wasm/nme_bg.wasm', (route) => route.abort());
-  await page.goto('http://localhost:8787/', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#boot-alert:not([hidden])', { timeout: 30000 });
   console.log('컴파일러 없음 알림:', (await page.locator('#boot-alert p').textContent()).slice(0, 70));
   console.log('  실행 단추 잠김:', await page.locator('#run').isDisabled());
@@ -19,7 +21,7 @@ const browser = await chromium.launch();
 {
   const page = await (await browser.newContext()).newPage();
   await page.route('**/wasm-run/nmerun_bg.wasm', (route) => route.abort());
-  await page.goto('http://localhost:8787/', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !document.querySelector('#run').disabled, null, { timeout: 30000 });
   await page.click('#run');
   await page.waitForSelector('#boot-alert:not([hidden])', { timeout: 30000 });
@@ -34,7 +36,7 @@ const browser = await chromium.launch();
     await new Promise((resolve) => setTimeout(resolve, 6000));
     await route.continue();
   });
-  await page.goto('http://localhost:8787/', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !document.querySelector('#run').disabled, null, { timeout: 30000 });
   await page.click('#run');
   console.log('기다리는 중 문구:', await page.locator('#engine-note').textContent());

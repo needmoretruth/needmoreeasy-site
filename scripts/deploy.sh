@@ -54,6 +54,10 @@ sleep 1
 node scripts/check-site-layout.mjs http://127.0.0.1:8788
 node scripts/check-site-playground.mjs http://127.0.0.1:8788
 node scripts/check-site-structure.mjs http://127.0.0.1:8788
+# What a visitor sees when a download never arrives, and when the engine is
+# slow — the two paths that are invisible until they go wrong.
+node scripts/check-site-boot-failures.mjs http://127.0.0.1:8788
+node scripts/check-site-slow-engine.mjs http://127.0.0.1:8788
 kill "$SERVE_PID" 2>/dev/null || true
 trap - EXIT
 

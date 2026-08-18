@@ -2,6 +2,8 @@
  * program already typed, and pressing Run must produce output. */
 import { chromium } from 'playwright';
 
+const BASE = (process.argv[2] || 'http://localhost:8787').replace(/\/$/, '');
+
 const browser = await chromium.launch();
 const context = await browser.newContext();
 const page = await context.newPage();
@@ -9,7 +11,7 @@ const errors = [];
 page.on('pageerror', (error) => errors.push(String(error)));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 
-await page.goto('http://localhost:8787/ko/learn/guides/01-hello.html', { waitUntil: 'networkidle' });
+await page.goto(BASE + '/ko/learn/guides/01-hello', { waitUntil: 'networkidle' });
 const link = page.locator('.snippet-tools a').first();
 const href = await link.getAttribute('href');
 console.log('첫 실행 링크:', href.slice(0, 60));
