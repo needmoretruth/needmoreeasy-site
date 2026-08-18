@@ -616,6 +616,7 @@ class Playground {
     this.wireTools();
     this.wireSlots();
     this.wireEditorHeight();
+    this.wireChipStrip();
     this.runButton.addEventListener('click', () => this.run());
     // Ctrl/Cmd + Enter runs, the way every editor a programmer will meet next
     // already does. The button carries the same shortcut in its tooltip.
@@ -639,6 +640,27 @@ class Playground {
         this.answer();
       }
     });
+  }
+
+  /* Thirty examples do not fit a phone, so they become one strip you swipe.
+   * A strip with no edge fade looks like a list that simply ends, so the ends
+   * are marked — and only the ends that actually have more beyond them. */
+  wireChipStrip() {
+    const strip = this.chips;
+    if (!strip) return;
+    const mark = () => {
+      const more = strip.scrollWidth - strip.clientWidth;
+      strip.dataset.more = more > 4 ? 'true' : 'false';
+      // The strip carries the page's side padding inside itself, and scroll
+      // snapping parks the first chip after it — so "at the start" is that
+      // padding, not zero.
+      const inset = parseFloat(getComputedStyle(strip).paddingLeft) || 0;
+      strip.dataset.atStart = String(strip.scrollLeft <= inset + 2);
+      strip.dataset.atEnd = String(strip.scrollLeft >= more - 2);
+    };
+    strip.addEventListener('scroll', mark, { passive: true });
+    addEventListener('resize', mark);
+    mark();
   }
 
   /* On a phone the editor is the whole screen's worth of space there is, so
