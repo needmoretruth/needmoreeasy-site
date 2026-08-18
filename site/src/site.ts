@@ -65,6 +65,8 @@ const TEXT = {
     promptFailed: 'The message could not be fetched. Open it as a page instead.',
     storageRefused:
       'This browser is refusing to store anything, so these files last only until you leave the page. Copy or download anything you want to keep.',
+    promptClipped:
+      '… the first part only. Copy takes the whole message; "open as a page" shows all of it.',
   },
   ko: {
     compiled: 'Python',
@@ -109,6 +111,8 @@ const TEXT = {
     promptFailed: '글을 가져오지 못했습니다. 문서로 열어 보세요.',
     storageRefused:
       '이 브라우저가 저장을 막고 있어서, 이 파일들은 창을 닫으면 사라집니다. 남기고 싶은 것은 복사하거나 내려받아 두세요.',
+    promptClipped:
+      '… 여기까지만 보여 줍니다. 「전체 복사」는 글 전체를 복사하고, 「문서로 열기」는 전부 보여 줍니다.',
   },
 }[LANG];
 
@@ -403,10 +407,19 @@ function wireAiPrompts(): void {
     const copy = queryMaybe(box, '[data-prompt-copy]', HTMLElement);
     const save = queryMaybe(box, '[data-prompt-download]', HTMLElement);
 
+    /* Twenty-five thousand characters in a box eight lines tall is not reading,
+     * it is a place a finger gets stuck on a phone. The opening is shown; the
+     * copy button and the page link still carry all of it. */
+    const shownPart = (text: string): string => {
+      const lines = text.split('\n');
+      if (lines.length <= 45) return text;
+      return `${lines.slice(0, 45).join('\n')}\n\n${TEXT.promptClipped}`;
+    };
+
     const load = async (): Promise<string | null> => {
       const text = await fetchPrompt(name, lang);
       if (readout) {
-        readout.textContent = text ?? TEXT.promptFailed;
+        readout.textContent = text === null ? TEXT.promptFailed : shownPart(text);
         readout.dataset.state = text === null ? 'error' : 'ok';
       }
       return text;

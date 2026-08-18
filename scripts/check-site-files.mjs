@@ -45,7 +45,13 @@ const promptLength = await page.$eval(
   'details[data-prompt="sentence"] [data-prompt-text]',
   (element) => element.textContent.length,
 );
-ok('AI에게 줄 글이 펼칠 때 실제로 불러와짐', promptLength > 2000, `${promptLength}자`);
+ok('AI에게 줄 글이 펼칠 때 실제로 불러와짐', promptLength > 500, `${promptLength}자`);
+// The pane shows the opening only; the whole message still has to be there.
+const wholeLength = await page.evaluate(async () => {
+  const response = await fetch('/assets/prompts/sentence.ko.txt');
+  return response.ok ? (await response.text()).length : 0;
+});
+ok('글 전체가 그대로 있음', wholeLength > 10000, `${wholeLength}자`);
 
 /* --- the three files ---------------------------------------------------- */
 await page.click('.file-tabs [data-file="1"]');
@@ -86,6 +92,20 @@ ok('내용이 있는 파일은 한 번 물어봄', (await page.textContent('[dat
 await page.click('[data-copy-to="2"]');
 await page.waitForTimeout(300);
 ok('두 번째로 누르면 덮어씀', (await page.textContent('#editor-title')).includes('파일 2'));
+
+/* --- the order a visitor actually presses things in ----------------------- */
+/* Open File 1, then press an example chip without switching tabs first. The
+ * chip must move the view to the Examples tab and leave File 1 untouched. */
+await page.click('.file-tabs [data-file="1"]');
+await page.waitForTimeout(300);
+const chipsAgain = await page.$$('#examples .chip');
+if (chipsAgain.length > 5) await chipsAgain[5].click();
+await page.waitForTimeout(500);
+ok('파일을 열어 둔 채 예제를 눌러도 예제 칸으로 감',
+   (await page.textContent('#editor-title')).includes('예제'));
+await page.click('.file-tabs [data-file="1"]');
+await page.waitForTimeout(300);
+ok('그래도 파일 1은 그대로', (await page.inputValue('#editor')) === MINE);
 
 /* --- a link somebody sent ------------------------------------------------ */
 /* The step below must be a real navigation, not a hash change.
@@ -159,6 +179,24 @@ await page.waitForTimeout(2200);
 ok('복사 단추가 제 이름을 되찾음',
    (await page.$eval('[data-copy-link]', (element) => element.textContent ?? '')) === linkLabel,
    linkLabel.trim());
+
+/* --- the English page, which has its own copy of all of this -------------- */
+const english = await context.newPage();
+await english.goto(BASE + '/index.html', { waitUntil: 'load' });
+await english.waitForTimeout(1200);
+await english.click('.file-tabs [data-file="1"]');
+await english.fill('#editor', 'show my English program');
+await english.waitForTimeout(400);
+ok('영어 화면에도 파일 탭이 있음',
+   (await english.textContent('#editor-title')).includes('File 1'));
+await english.goto('about:blank');
+await english.goto(BASE + '/index.html#code=c2hvdyBIZWxsbwo', { waitUntil: 'load' });
+await english.waitForTimeout(1500);
+await english.click('.file-tabs [data-file="1"]');
+await english.waitForTimeout(300);
+ok('영어 화면도 링크로 들어오면 파일이 안전',
+   (await english.inputValue('#editor')) === 'show my English program');
+await english.close();
 
 ok('콘솔 오류 없음', errors.length === 0, errors.slice(0, 2).join(' / '));
 

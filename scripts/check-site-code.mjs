@@ -137,7 +137,7 @@ print(json.dumps(out))
 for (const page of PAGES) {
   const html = readFileSync(join(SITE, page), 'utf8');
 
-  for (const match of html.matchAll(/<pre class="code"([^>]*)>([\s\S]*?)<\/pre>/g)) {
+  for (const match of html.matchAll(/<pre class="[^"]*\bcode\b[^"]*"([^>]*)>([\s\S]*?)<\/pre>/g)) {
     const attributes = match[1];
     const source = unescapeHtml(match[2]);
     const first = source.split('\n')[0].slice(0, 40);

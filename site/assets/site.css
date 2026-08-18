@@ -35,9 +35,10 @@
   --bg: #dde2ea;
   --bg-2: #c9d1de;
   --stage-a: rgba(255, 255, 255, 1);
-  --stage-b: rgba(78, 92, 118, 0.34);
+  --stage-b: rgba(96, 99, 104, 0.34);
   --stage-c: rgba(255, 255, 255, 0.9);
   --grid: rgba(20, 26, 38, 0.065);
+  --grid-lit: rgba(20, 26, 38, 0.2);
   --grain: 0.035;
 
   /* Ink */
@@ -95,9 +96,10 @@
     --bg: #0a0b0e;
     --bg-2: #101319;
     --stage-a: rgba(255, 255, 255, 0.30);
-    --stage-b: rgba(158, 178, 212, 0.24);
+    --stage-b: rgba(188, 191, 196, 0.24);
     --stage-c: rgba(255, 255, 255, 0.16);
     --grid: rgba(255, 255, 255, 0.062);
+    --grid-lit: rgba(255, 255, 255, 0.19);
     --grain: 0.05;
 
     --ink: rgba(255, 255, 255, 0.93);
@@ -138,9 +140,10 @@
   --bg: #0a0b0e;
   --bg-2: #101319;
   --stage-a: rgba(255, 255, 255, 0.30);
-  --stage-b: rgba(158, 178, 212, 0.24);
+  --stage-b: rgba(188, 191, 196, 0.24);
   --stage-c: rgba(255, 255, 255, 0.16);
   --grid: rgba(255, 255, 255, 0.062);
+  --grid-lit: rgba(255, 255, 255, 0.19);
   --grain: 0.05;
 
   --ink: rgba(255, 255, 255, 0.93);
@@ -1478,6 +1481,15 @@ table.syntax tr:last-child td { border-bottom: 0; }
 }
 
 
+::selection {
+  background: rgba(20, 26, 38, 0.18);
+  color: var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) ::selection { background: rgba(255, 255, 255, 0.24); }
+}
+:root[data-theme="dark"] ::selection { background: rgba(255, 255, 255, 0.24); }
+
 /* --- the AI band, at the very top ---------------------------------------- */
 
 /* Someone who has never programmed will not always know what a word on this
@@ -1698,7 +1710,20 @@ table.syntax tr:last-child td { border-bottom: 0; }
  * where it is only read; the boxes you type into go up to 16px. */
 @media (pointer: coarse) {
   .editor, .term-input, .answers-box { font-size: 16px; }
+  /* A finger is about 9mm across. These are the controls a visitor presses
+   * most, and several of them were 30px tall to fit a 390px header. Only the
+   * height grows, so nothing is pushed off the line. */
+  .copy-btn, .chip, .slot button, .lang-toggle a, .theme-toggle button,
+  .file-tabs button, .ai-open, .slot-drop, .slot-edit { min-height: 40px; }
+  .ai-open { display: inline-flex; align-items: center; }
 }
+
+/* The answer row is two things side by side, and at 320px they did not fit:
+ * the page grew 74px wider than the screen, and `overflow-x: hidden` on the
+ * body meant the part that stuck out could not be scrolled to. */
+.term-input-row { flex-wrap: wrap; }
+.term-input { min-width: 0; flex: 1 1 8rem; }
+.term-input-row .btn { flex: 0 0 auto; }
 
 @media (max-width: 819px) {
   .panes[data-view="nme"] .pane-python,
@@ -1717,6 +1742,11 @@ table.syntax tr:last-child td { border-bottom: 0; }
   .doc-rail { position: static; max-height: none; }
   .site-foot .wrap { flex-direction: column; align-items: flex-start; }
   .foot-spacer { display: none; }
+  /* The floating bar sits over the bottom of the editor, so the last lines of
+   * a program — and the caret, with the keyboard up — were behind it. The
+   * editor keeps a bar's worth of empty space at its foot so they can rise
+   * above it. */
+  .pane-nme .editor { padding-bottom: 5.6rem; }
   /* Run has to stay reachable while you are scrolling through your own
    * program, so on a narrow screen the bar rides the bottom of the section. */
   .run-bar {
@@ -1953,8 +1983,8 @@ main > section + section::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(color-mix(in srgb, var(--grid) 300%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--grid) 300%, transparent) 1px, transparent 1px),
+    linear-gradient(var(--grid-lit) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-lit) 1px, transparent 1px),
     radial-gradient(340px circle at var(--px, -1000px) var(--py, -1000px),
       color-mix(in srgb, var(--edge-top) 45%, transparent), transparent 70%);
   background-size: 64px 64px, 64px 64px, 100% 100%;

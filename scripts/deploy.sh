@@ -60,6 +60,13 @@ node scripts/serve.mjs 8788 >/dev/null 2>&1 &
 SERVE_PID=$!
 trap 'kill "$SERVE_PID" 2>/dev/null || true' EXIT
 sleep 1
+# `set -e` does not watch a background job, so a preview server that never came
+# up would leave the checks below failing for the wrong reason — or, worse,
+# passing vacuously. Ask it for a page before trusting it.
+curl -fsS -o /dev/null --max-time 10 http://127.0.0.1:8788/ || {
+  echo "미리보기 서버가 뜨지 않았습니다" >&2
+  exit 1
+}
 node scripts/check-site-layout.mjs http://127.0.0.1:8788
 node scripts/check-site-playground.mjs http://127.0.0.1:8788
 node scripts/check-site-structure.mjs http://127.0.0.1:8788
