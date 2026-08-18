@@ -1398,7 +1398,7 @@ pre code {
 
 .prompt-grid { display: grid; gap: 1rem; margin: 1.8rem 0; }
 .prompt-card { padding: 1.3rem; display: grid; gap: 0.35rem; align-content: start; }
-.prompt-card h3 { margin: 0; }
+.prompt-card :is(h2, h3) { margin: 0; font-size: clamp(1.05rem, 1.3vw, 1.28rem); }
 .prompt-card p { color: var(--ink-soft); font-size: 0.92rem; margin: 0.3rem 0 0; }
 .prompt-card .prompt-size { font-size: 0.78rem; color: var(--ink-faint); }
 .prompt-card .prompt-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.9rem; }

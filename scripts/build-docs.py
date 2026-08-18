@@ -805,7 +805,7 @@ def prompt_hub_extra(lang: str, pages: list[Page], docs: Path) -> str:
         classes = "prompt-card is-pick" if recommended else "prompt-card"
         cards.append(
             f'<div class="{classes}">'
-            f"<h3>{escape(page.title)}</h3>"
+            f"<h2>{escape(page.title)}</h2>"
             f"<p>{escape(blurb_en if lang == 'en' else blurb_ko)}</p>"
             f'<p class="prompt-size">{size // 1000}k</p>'
             f'<p class="prompt-actions">'
