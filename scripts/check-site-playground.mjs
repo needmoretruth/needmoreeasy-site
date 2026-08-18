@@ -36,6 +36,20 @@ const [download] = await Promise.all([
 ]);
 console.log('내려받은 파일 이름:', download.suggestedFilename());
 
+// A program that clears the screen must clear this one too, and must never
+// print the letters of the control code it used to do it.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = 'print("before")\nprint("\\033[2J\\033[3J\\033[H", end="")\nprint("after")';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(400);
+await page.click('#run');
+await page.waitForFunction(() => /finish|끝났/.test(document.querySelector('#engine-note').textContent), null, { timeout: 20000 });
+const cleared = (await page.textContent('#terminal')).trim();
+console.log('화면 지우기 뒤 출력:', JSON.stringify(cleared));
+if (cleared !== 'after') errors.push('화면 지우기가 듣지 않음: ' + cleared);
+
 console.log(errors.length ? 'FAIL 콘솔 오류: ' + errors.join(' | ') : '콘솔 오류 없음');
 await browser.close();
 process.exit(errors.length ? 1 : 0);

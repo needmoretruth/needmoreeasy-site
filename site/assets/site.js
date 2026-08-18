@@ -950,7 +950,15 @@ class Playground {
     this.engineReady = false;
   }
 
+  /* A terminal control sequence is the only way one line of Python can clear a
+   * screen, so `clear the screen` emits one. Here the "screen" is a <pre>:
+   * honour the clear, and drop the rest rather than printing their letters. */
   print(text, className) {
+    if (text.includes('\u001b')) {
+      if (/\u001b\[[23]J/.test(text)) this.terminal.textContent = '';
+      text = text.replace(/\u001b\[[0-9;?]*[A-Za-z]/g, '');
+      if (!text) return;
+    }
     const node = className ? document.createElement('span') : null;
     if (node) {
       node.className = className;
