@@ -43,6 +43,33 @@ show Hello, world!
 repeat 3 times and show NME is easy`,
     },
     {
+      id: 'story',
+      label: 'A short story',
+      answers: ['left'],
+      expect: 'That is the end.',
+      source: `# A story that asks which way you go.
+show The path splits in two.
+ask way Left or right?
+
+if way equals left
+show A river. You follow it home.
+else
+show A cave. Something inside is asleep.
+end
+show That is the end.`,
+    },
+    {
+      id: 'slow',
+      label: 'A story, letter by letter',
+      answers: [],
+      expect: 'That is the end',
+      source: `# Letters arrive one at a time, the way a story does.
+say slowly The door opened slowly.
+wait 1 second
+say very slowly Nobody was there.
+show That is the end`,
+    },
+    {
       id: 'ask',
       label: 'Ask a name',
       answers: ['Mina'],
@@ -51,24 +78,6 @@ repeat 3 times and show NME is easy`,
 What is your name?
 show Hello name!
 3 times Welcome to NME`,
-    },
-    {
-      id: 'guess',
-      label: 'Guessing game',
-      answers: ['5'],
-      expect: 'Thanks for playing',
-      source: `# No quotes, commas, equals signs or colons anywhere.
-set answer to random number from 1 to 10
-ask number guess Pick a number from 1 to 10
-
-if guess equals answer
-show Correct!
-else if guess is less than answer
-show Go higher
-else
-show Go lower
-end
-show Thanks for playing`,
     },
     {
       id: 'maths',
@@ -107,30 +116,18 @@ end
 show fruits`,
     },
     {
-      id: 'wait',
-      label: 'Wait a moment',
+      id: 'conditions',
+      label: 'Two conditions',
       answers: [],
-      expect: 'Done',
-      source: `# Waiting is a sentence too.
-show Ready
-repeat 3 times
-wait 1 second
-show tick
-end
-show Done`,
-    },
-    {
-      id: 'skip',
-      label: 'Skip a round',
-      answers: [],
-      expect: '7',
-      source: `# skip jumps to the next round; break leaves the loop.
-set score to 0
-repeat 8 times
-add 1 to score
-if score equals 3 then skip
-show score
-end`,
+      expect: 'Good evening',
+      source: `# and, or, exists, and the comparison words.
+set name to Mina
+set hour to 21
+set tired to False
+
+if name exists and hour is greater than 18 then show Good evening name!
+if tired or hour is greater than or equal to 23 then show Time for bed
+if hour is not equal to 12 then show It is not noon`,
     },
     {
       id: 'while',
@@ -146,34 +143,123 @@ end
 show finished`,
     },
     {
-      id: 'conditions',
-      label: 'Two conditions',
+      id: 'skip',
+      label: 'Skip a round',
       answers: [],
-      expect: 'Good evening',
-      source: `# and, or, exists, and the comparison words.
-set name to Mina
-set hour to 21
-set tired to False
-
-if name exists and hour is greater than 18 then show Good evening name!
-if tired or hour is greater than or equal to 23 then show Time for bed
-if hour is not equal to 12 then show It is not noon`,
+      expect: '7',
+      source: `# skip jumps to the next round; break leaves the loop.
+set score to 0
+repeat 8 times
+add 1 to score
+if score equals 3 then skip
+show score
+end`,
     },
     {
-      id: 'story',
-      label: 'A short story',
-      answers: ['left'],
-      expect: 'That is the end.',
-      source: `# A story that asks which way you go.
-show The path splits in two.
-ask way Left or right?
-
-if way equals left
-show A river. You follow it home.
-else
-show A cave. Something inside is asleep.
+      id: 'countdown',
+      label: 'Leave a loop early',
+      answers: [],
+      expect: 'Stopped early',
+      source: `# Count down, and leave the loop before it finishes.
+set left to 5
+while left is greater than 0
+show left
+subtract 1 from left
+if left equals 2 then break
 end
-show That is the end.`,
+show Stopped early`,
+    },
+    {
+      id: 'wait',
+      label: 'Wait a moment',
+      answers: [],
+      expect: 'Done',
+      source: `# Waiting is a sentence too.
+show Ready
+repeat 3 times
+wait 1 second
+show tick
+end
+show Done`,
+    },
+    {
+      id: 'guess',
+      label: 'Guessing game',
+      answers: ['5'],
+      expect: 'Thanks for playing',
+      source: `# No quotes, commas, equals signs or colons anywhere.
+set answer to random number from 1 to 10
+ask number guess Pick a number from 1 to 10
+
+if guess equals answer
+show Correct!
+else if guess is less than answer
+show Go higher
+else
+show Go lower
+end
+show Thanks for playing`,
+    },
+    {
+      id: 'screen',
+      label: 'Arrange the screen',
+      answers: [],
+      expect: 'Coffee, tea, water',
+      source: `# Four sentences that tidy the screen.
+clear the screen
+draw a line
+say in the middle Todays menu
+draw a line
+say in a box Coffee, tea, water`,
+    },
+    {
+      id: 'clock',
+      label: 'Stopwatch and cooldown',
+      answers: [],
+      expect: 'The door opened',
+      source: `# A stopwatch and a named cooldown, both as sentences.
+start the timer
+put door on cooldown for 2 seconds
+
+when door is on cooldown
+show The door is still locked
+end
+
+wait for door
+show The door opened
+show elapsed`,
+    },
+    {
+      id: 'rps',
+      label: 'Rock, paper, scissors',
+      answers: ['rock'],
+      expect: 'Thanks for playing',
+      source: `# A whole game: a random choice, a question and three answers.
+set mine to rock or paper or scissors chosen at random
+ask yours rock, paper or scissors?
+
+show I chose mine
+
+if yours equals mine
+show A draw
+else
+show One of us won
+end
+show Thanks for playing`,
+    },
+    {
+      id: 'reaction',
+      label: 'How fast are you?',
+      answers: [''],
+      expect: 'Your time',
+      source: `# The stopwatch, used for the thing stopwatches are for.
+show Get ready
+wait 2 seconds
+show NOW, press enter
+start the timer
+ask pressed press enter
+show Your time in seconds
+show elapsed`,
     },
     {
       id: 'menu',
@@ -230,92 +316,6 @@ while word is not equal to open
 ask word Say the magic word
 end
 show The door swings open.`,
-    },
-    {
-      id: 'countdown',
-      label: 'Leave a loop early',
-      answers: [],
-      expect: 'Stopped early',
-      source: `# Count down, and leave the loop before it finishes.
-set left to 5
-while left is greater than 0
-show left
-subtract 1 from left
-if left equals 2 then break
-end
-show Stopped early`,
-    },
-    {
-      id: 'slow',
-      label: 'A story, letter by letter',
-      answers: [],
-      expect: 'That is the end',
-      source: `# Letters arrive one at a time, the way a story does.
-say slowly The door opened slowly.
-wait 1 second
-say very slowly Nobody was there.
-show That is the end`,
-    },
-    {
-      id: 'screen',
-      label: 'Arrange the screen',
-      answers: [],
-      expect: 'Coffee, tea, water',
-      source: `# Four sentences that tidy the screen.
-clear the screen
-draw a line
-say in the middle Todays menu
-draw a line
-say in a box Coffee, tea, water`,
-    },
-    {
-      id: 'clock',
-      label: 'Stopwatch and cooldown',
-      answers: [],
-      expect: 'The door opened',
-      source: `# A stopwatch and a named cooldown, both as sentences.
-start the timer
-put door on cooldown for 2 seconds
-
-when door is on cooldown
-show The door is still locked
-end
-
-wait for door
-show The door opened
-show elapsed`,
-    },
-    {
-      id: 'reaction',
-      label: 'How fast are you?',
-      answers: [''],
-      expect: 'Your time',
-      source: `# The stopwatch, used for the thing stopwatches are for.
-show Get ready
-wait 2 seconds
-show NOW, press enter
-start the timer
-ask pressed press enter
-show Your time in seconds
-show elapsed`,
-    },
-    {
-      id: 'rps',
-      label: 'Rock, paper, scissors',
-      answers: ['rock'],
-      expect: 'Thanks for playing',
-      source: `# A whole game: a random choice, a question and three answers.
-set mine to rock or paper or scissors chosen at random
-ask yours rock, paper or scissors?
-
-show I chose mine
-
-if yours equals mine
-show A draw
-else
-show One of us won
-end
-show Thanks for playing`,
     },
     {
       id: 'six',
@@ -459,6 +459,33 @@ print(word)`,
 3번 반복해서 NME는 쉽습니다 말해줘`,
     },
     {
+      id: 'story',
+      label: '짧은 이야기',
+      answers: ['왼쪽'],
+      expect: '여기까지입니다',
+      source: `# 어느 쪽으로 갈지 물어보는 이야기.
+두 갈래 길 앞에 서 있습니다 말해줘
+길을 물어봐 왼쪽인가요 오른쪽인가요?
+
+만약에 길이 왼쪽과 같으면
+강이 나옵니다. 물길을 보며 집으로 돌아갑니다 말해줘
+아니면
+동굴이 나옵니다. 안에서 무언가 자고 있습니다 말해줘
+끝
+여기까지입니다 말해줘`,
+    },
+    {
+      id: 'slow',
+      label: '글자 하나씩 나오는 이야기',
+      answers: [],
+      expect: '여기까지입니다',
+      source: `# 소설처럼 글자가 하나씩 나옵니다.
+천천히 말해줘 문이 천천히 열렸습니다.
+1초 기다려
+아주 천천히 말해줘 아무도 없었습니다.
+여기까지입니다 말해줘`,
+    },
+    {
       id: 'ask',
       label: '이름 묻기',
       answers: ['민수'],
@@ -467,24 +494,6 @@ print(word)`,
 이름이 뭐예요?
 안녕하세요 이름! 말해줘
 3번 반갑습니다`,
-    },
-    {
-      id: 'guess',
-      label: '숫자 맞히기',
-      answers: ['5'],
-      expect: '놀아 주셔서 고맙습니다',
-      source: `# 따옴표도 쉼표도 등호도 콜론도 없습니다.
-정답은 1부터 10까지 랜덤정수
-추측을 숫자로 물어봐 1부터 10까지 골라 보세요
-
-만약에 추측이 정답과 같으면
-맞았어요 말해줘
-아니면 만약에 추측이 정답보다 작으면
-더 큰 수예요 말해줘
-아니면
-더 작은 수예요 말해줘
-끝
-놀아 주셔서 고맙습니다 말해줘`,
     },
     {
       id: 'maths',
@@ -523,30 +532,18 @@ print(word)`,
 과일들 말해줘`,
     },
     {
-      id: 'wait',
-      label: '기다리기',
+      id: 'conditions',
+      label: '두 조건',
       answers: [],
-      expect: '끝났습니다',
-      source: `# 기다리는 것도 문장입니다.
-준비됐습니다 말해줘
-3번 반복해
-1초 기다려
-하나 지났어요 말해줘
-끝
-끝났습니다 말해줘`,
-    },
-    {
-      id: 'skip',
-      label: '건너뛰기',
-      answers: [],
-      expect: '7',
-      source: `# 건너뛰어는 다음 바퀴로, 멈춰는 반복 밖으로 나갑니다.
-점수는 0
-8번 반복해
-점수에 1 더해
-만약에 점수가 3과 같으면 건너뛰어
-점수 말해줘
-끝`,
+      expect: '안녕히 주무세요',
+      source: `# 그리고, 또는, 있으면, 그리고 비교하는 말들.
+이름은 민수
+시각은 23
+피곤은 참
+
+만약 이름이 있으면 그리고 시각이 18보다 크면 좋은 저녁이에요 이름! 말해줘
+만약 피곤 또는 시각이 23보다 크거나 같으면 안녕히 주무세요 말해줘
+만약에 시각이 12와 같지 않으면 정오가 아니에요 말해줘`,
     },
     {
       id: 'while',
@@ -562,34 +559,123 @@ print(word)`,
 끝났어요 말해줘`,
     },
     {
-      id: 'conditions',
-      label: '두 조건',
+      id: 'skip',
+      label: '건너뛰기',
       answers: [],
-      expect: '안녕히 주무세요',
-      source: `# 그리고, 또는, 있으면, 그리고 비교하는 말들.
-이름은 민수
-시각은 23
-피곤은 참
-
-만약 이름이 있으면 그리고 시각이 18보다 크면 좋은 저녁이에요 이름! 말해줘
-만약 피곤 또는 시각이 23보다 크거나 같으면 안녕히 주무세요 말해줘
-만약에 시각이 12와 같지 않으면 정오가 아니에요 말해줘`,
+      expect: '7',
+      source: `# 건너뛰어는 다음 바퀴로, 멈춰는 반복 밖으로 나갑니다.
+점수는 0
+8번 반복해
+점수에 1 더해
+만약에 점수가 3과 같으면 건너뛰어
+점수 말해줘
+끝`,
     },
     {
-      id: 'story',
-      label: '짧은 이야기',
-      answers: ['왼쪽'],
-      expect: '여기까지입니다',
-      source: `# 어느 쪽으로 갈지 물어보는 이야기.
-두 갈래 길 앞에 서 있습니다 말해줘
-길을 물어봐 왼쪽인가요 오른쪽인가요?
-
-만약에 길이 왼쪽과 같으면
-강이 나옵니다. 물길을 보며 집으로 돌아갑니다 말해줘
-아니면
-동굴이 나옵니다. 안에서 무언가 자고 있습니다 말해줘
+      id: 'countdown',
+      label: '반복 중간에 빠져나오기',
+      answers: [],
+      expect: '여기서 멈췄습니다',
+      source: `# 거꾸로 세다가 끝나기 전에 빠져나옵니다.
+남은수는 5
+남은수가 0보다 클 동안
+남은수 말해줘
+남은수에서 1 빼
+만약에 남은수가 2와 같으면 멈춰
 끝
-여기까지입니다 말해줘`,
+여기서 멈췄습니다 말해줘`,
+    },
+    {
+      id: 'wait',
+      label: '기다리기',
+      answers: [],
+      expect: '끝났습니다',
+      source: `# 기다리는 것도 문장입니다.
+준비됐습니다 말해줘
+3번 반복해
+1초 기다려
+하나 지났어요 말해줘
+끝
+끝났습니다 말해줘`,
+    },
+    {
+      id: 'guess',
+      label: '숫자 맞히기',
+      answers: ['5'],
+      expect: '놀아 주셔서 고맙습니다',
+      source: `# 따옴표도 쉼표도 등호도 콜론도 없습니다.
+정답은 1부터 10까지 랜덤정수
+추측을 숫자로 물어봐 1부터 10까지 골라 보세요
+
+만약에 추측이 정답과 같으면
+맞았어요 말해줘
+아니면 만약에 추측이 정답보다 작으면
+더 큰 수예요 말해줘
+아니면
+더 작은 수예요 말해줘
+끝
+놀아 주셔서 고맙습니다 말해줘`,
+    },
+    {
+      id: 'screen',
+      label: '화면 꾸미기',
+      answers: [],
+      expect: '커피, 차, 물',
+      source: `# 화면을 정리하는 문장 넷.
+화면 지워
+줄 그어
+가운데 말해줘 오늘의 차림표
+줄 그어
+상자로 말해줘 커피, 차, 물`,
+    },
+    {
+      id: 'clock',
+      label: '시간 재기와 쿨타임',
+      answers: [],
+      expect: '문이 열렸습니다',
+      source: `# 시간 재기와 쿨타임, 둘 다 문장입니다.
+시간 재기 시작해
+문 쿨타임 2초 걸어
+
+만약 문 쿨타임이 남았으면
+문이 아직 잠겨 있습니다 말해줘
+끝
+
+문 쿨타임 끝날때까지 기다려
+문이 열렸습니다 말해줘
+잰시간 말해줘`,
+    },
+    {
+      id: 'rps',
+      label: '가위바위보',
+      answers: ['바위'],
+      expect: '재미있었습니다',
+      source: `# 게임 하나가 통째로: 무작위 하나, 질문 하나, 대답 셋.
+내것은 바위 또는 보 또는 가위 중에서 랜덤선택
+네것을 물어봐 바위, 보, 가위 중 하나를 골라 주세요
+
+나는 내것 냈습니다 말해줘
+
+만약에 네것이 내것과 같으면
+비겼습니다 말해줘
+아니면
+둘 중 하나가 이겼습니다 말해줘
+끝
+재미있었습니다 말해줘`,
+    },
+    {
+      id: 'reaction',
+      label: '반응 속도 재기',
+      answers: [''],
+      expect: '걸린 시간',
+      source: `# 시간 재기를 원래 쓰라고 만든 곳에 씁니다.
+준비하세요 말해줘
+2초 기다려
+지금! 엔터를 누르세요 말해줘
+시간 재기 시작해
+입력을 물어봐 엔터
+걸린 시간(초) 말해줘
+잰시간 말해줘`,
     },
     {
       id: 'menu',
@@ -646,92 +732,6 @@ print(word)`,
 주문을 물어봐 마법의 주문을 말해 보세요
 끝
 문이 열렸습니다 말해줘`,
-    },
-    {
-      id: 'countdown',
-      label: '반복 중간에 빠져나오기',
-      answers: [],
-      expect: '여기서 멈췄습니다',
-      source: `# 거꾸로 세다가 끝나기 전에 빠져나옵니다.
-남은수는 5
-남은수가 0보다 클 동안
-남은수 말해줘
-남은수에서 1 빼
-만약에 남은수가 2와 같으면 멈춰
-끝
-여기서 멈췄습니다 말해줘`,
-    },
-    {
-      id: 'slow',
-      label: '글자 하나씩 나오는 이야기',
-      answers: [],
-      expect: '여기까지입니다',
-      source: `# 소설처럼 글자가 하나씩 나옵니다.
-천천히 말해줘 문이 천천히 열렸습니다.
-1초 기다려
-아주 천천히 말해줘 아무도 없었습니다.
-여기까지입니다 말해줘`,
-    },
-    {
-      id: 'screen',
-      label: '화면 꾸미기',
-      answers: [],
-      expect: '커피, 차, 물',
-      source: `# 화면을 정리하는 문장 넷.
-화면 지워
-줄 그어
-가운데 말해줘 오늘의 차림표
-줄 그어
-상자로 말해줘 커피, 차, 물`,
-    },
-    {
-      id: 'clock',
-      label: '시간 재기와 쿨타임',
-      answers: [],
-      expect: '문이 열렸습니다',
-      source: `# 시간 재기와 쿨타임, 둘 다 문장입니다.
-시간 재기 시작해
-문 쿨타임 2초 걸어
-
-만약 문 쿨타임이 남았으면
-문이 아직 잠겨 있습니다 말해줘
-끝
-
-문 쿨타임 끝날때까지 기다려
-문이 열렸습니다 말해줘
-잰시간 말해줘`,
-    },
-    {
-      id: 'reaction',
-      label: '반응 속도 재기',
-      answers: [''],
-      expect: '걸린 시간',
-      source: `# 시간 재기를 원래 쓰라고 만든 곳에 씁니다.
-준비하세요 말해줘
-2초 기다려
-지금! 엔터를 누르세요 말해줘
-시간 재기 시작해
-입력을 물어봐 엔터
-걸린 시간(초) 말해줘
-잰시간 말해줘`,
-    },
-    {
-      id: 'rps',
-      label: '가위바위보',
-      answers: ['바위'],
-      expect: '재미있었습니다',
-      source: `# 게임 하나가 통째로: 무작위 하나, 질문 하나, 대답 셋.
-내것은 바위 또는 보 또는 가위 중에서 랜덤선택
-네것을 물어봐 바위, 보, 가위 중 하나를 골라 주세요
-
-나는 내것 냈습니다 말해줘
-
-만약에 네것이 내것과 같으면
-비겼습니다 말해줘
-아니면
-둘 중 하나가 이겼습니다 말해줘
-끝
-재미있었습니다 말해줘`,
     },
     {
       id: 'six',
