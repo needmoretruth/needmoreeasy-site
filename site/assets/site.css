@@ -774,7 +774,8 @@ pre code {
 .pane-head {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
   padding: 0.72rem 1.05rem;
   border-bottom: 1px solid var(--hairline);
   font-size: 0.78rem;
@@ -785,8 +786,13 @@ pre code {
   font-weight: 600;
   color: var(--ink);
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
-.pane-head .pane-tools { margin-left: auto; display: flex; gap: 0.35rem; }
+/* The label and its `.nme` suffix must not break mid-word; when the tools no
+ * longer fit beside them they take a line of their own instead. */
+.pane-head > span:not(.pane-tools) { white-space: nowrap; }
+.pane-tools .copy-btn { white-space: nowrap; }
+.pane-head .pane-tools { margin-left: auto; display: flex; gap: 0.3rem; flex: none; }
 
 .editor, .readout {
   flex: 1;
@@ -1464,6 +1470,10 @@ table.syntax tr:last-child td { border-bottom: 0; }
   .panes[data-view="python"] .pane-nme { display: none; }
   /* The editor sets its own height from the program on a narrow screen. */
   .pane-nme .editor { flex: none; }
+  /* Small enough that the label, the file suffix and the three tools sit on
+   * one line even at 320px. */
+  .pane-head { padding: 0.6rem 0.85rem; }
+  .pane-tools .copy-btn { font-size: 0.7rem; padding: 0.18rem 0.5rem; min-height: 30px; }
   .nav-hide-sm { display: none; }
   .head-nav { gap: 0; }
   .head-nav a { padding: 0.5rem 0.45rem; font-size: 0.88rem; }
