@@ -334,13 +334,19 @@ set animal to pick from cat or dog
     },
     {
       id: 'typo',
-      label: 'It fixes a typo',
+      label: 'It reads your mistakes',
       answers: [],
-      expect: 'Again',
-      source: `# repaet is one keystroke away from repeat, and only one
-# action fits here — so NME repairs it instead of guessing.
+      expect: 'and once more',
+      source: `# Every line below is misspelt, mis-ordered or over-polite.
+# Only one action fits each one, so NME reads it and says so
+# instead of guessing — or of quietly printing your mistake.
 repaet 2 times and show Again
-2 timse: say "and again"`,
+waite 1 second
+please say and again
+set score to 0
+to score add 1
+show score
+2 timse: say "and once more"`,
     },
     {
       id: 'error',
@@ -728,13 +734,18 @@ for 사람 in 사람들:                        # 다시 고급
     },
     {
       id: 'typo',
-      label: '오타를 고쳐 줍니다',
+      label: '실수를 알아서 읽습니다',
       answers: [],
-      expect: '다시',
-      source: `# 반목해는 반복해에서 한 글자만 다르고, 여기 들어갈 동작은
-# 하나뿐이라 NME가 짐작하지 않고 고쳐서 읽습니다.
+      expect: '또',
+      source: `# 아래는 전부 오타이거나, 순서가 다르거나, 말이 길어진 줄입니다.
+# 각 줄에 들어갈 동작이 하나뿐이라 NME가 짐작하지 않고 읽습니다.
 2번 반목해서 다시 말해줘
-2번 반복해서 또 말헤`,
+1초 기다러
+안녕 좀 말해줘
+세 번 반복해서 또 말해줘
+점수는 0
+1을 점수에 더해
+점수 말해줘`,
     },
     {
       id: 'error',
