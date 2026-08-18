@@ -6,11 +6,12 @@
  *   node scripts/check-site-structure.mjs [base-url]
  */
 import { chromium } from 'playwright';
+import { guidePath } from './site-paths.mjs';
 const BASE = process.argv[2] || 'http://127.0.0.1:8931';
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 let bad = 0;
-for (const path of ['/index.html', '/ko/index.html', '/ko/learn/guides/88-timer', '/learn/prompts', '/ko/learn/guides']) {
+for (const path of ['/index.html', '/ko/index.html', guidePath('timer', 'ko'), '/learn/prompts', '/ko/learn/guides']) {
   await page.goto(BASE + path, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(500);
   const out = await page.evaluate(() => {

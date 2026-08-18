@@ -9,6 +9,7 @@
  * carries a working "run it" link, and that a Korean browser lands on /ko/.
  */
 import { chromium } from 'playwright';
+import { guidePath } from './site-paths.mjs';
 
 const BASE = (process.argv[2] || 'https://needmoreeasy.com').replace(/\/$/, '');
 const browser = await chromium.launch();
@@ -48,7 +49,7 @@ const ok = (message) => console.log('ok   ' + message);
 /* 3. a guide's "run it" link carries its program into the playground */
 {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-  await page.goto(BASE + '/ko/learn/guides/88-timer', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + guidePath('timer', 'ko'), { waitUntil: 'domcontentloaded' });
   const href = await page.getAttribute('.snippet-tools a', 'href');
   if (!href || !href.includes('#code=')) {
     note('가이드에 실행 링크가 없음');

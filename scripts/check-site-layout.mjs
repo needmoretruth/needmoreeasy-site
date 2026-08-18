@@ -3,6 +3,7 @@
  * horizontal overflow, console errors, tap-target size, contrast-critical
  * elements present. Prints one line per failure and exits non-zero. */
 import { chromium } from 'playwright';
+import { guidePath } from './site-paths.mjs';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8931';
 // 320 is the narrowest phone still in use, 360 and 430 bracket the common
@@ -13,8 +14,8 @@ const PAGES = [
   '/ko/index.html',
   '/learn/guides',
   '/ko/learn/guides',
-  '/learn/guides/05-repeat',
-  '/ko/learn/guides/05-repeat',
+  guidePath('repeat', 'en'),
+  guidePath('repeat', 'ko'),
   '/learn/prompts',
   '/ko/learn/prompts',
   '/learn/syntax',

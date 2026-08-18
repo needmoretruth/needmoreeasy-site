@@ -5,6 +5,7 @@
  *   node scripts/check-site-docs.mjs [base-url]
  */
 import { chromium } from 'playwright';
+import { guidePath } from './site-paths.mjs';
 
 const BASE = (process.argv[2] || 'http://localhost:8787').replace(/\/$/, '');
 const browser = await chromium.launch();
@@ -33,7 +34,7 @@ for (const width of [320, 1440]) {
 // the rail must be open on a wide screen and closed on a phone
 for (const width of [360, 1200]) {
   await page.setViewportSize({ width, height: 900 });
-  await page.goto(BASE + '/ko/learn/guides/05-repeat', { waitUntil: 'networkidle' });
+  await page.goto(BASE + guidePath('repeat', 'ko'), { waitUntil: 'networkidle' });
   console.log(`${width}px 목록 서랍 열림:`, await page.locator('.doc-rail').evaluate((el) => el.open));
 }
 if (errors.length) console.log('오류:', errors);
