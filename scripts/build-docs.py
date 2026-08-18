@@ -108,7 +108,7 @@ STRINGS = {
         "learn": "/ko/learn/",
         "site_title": "NeedMoreEasy",
         "docs": "배우기",
-        "try": "실행해 보기",
+        "try": "써 보기",
         "install": "설치",
         "guides": "가이드",
         "syntax": "문법 목록",
@@ -131,7 +131,7 @@ STRINGS = {
         "hub_title": "NeedMoreEasy 배우기",
         "hub_lede": "저장소가 가르치는 내용을 전부 여기서 읽을 수 있습니다. "
                     "설치 없이 휴대폰에서도 됩니다. 예제는 어느 것이든 "
-                    "플레이그라운드에서 바로 실행해 볼 수 있습니다.",
+                    "연습장에서 바로 실행해 볼 수 있습니다.",
         "filter": "가이드 찾기",
         "filter_count": "가이드 %d편",
         "difficulty": "난이도",
