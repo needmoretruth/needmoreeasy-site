@@ -14,3 +14,34 @@ __pycache__/
 
 # Screenshots taken while checking the design.
 *.png
+
+# Local contributor and AI-assistant instructions — never site data.
+# The owner has asked twice that none of this can reach a commit.
+**/CLAUDE.md
+**/claude.md
+**/AGENT.md
+**/AGENTS.md
+**/agent.md
+**/agents.md
+**/GEMINI.md
+**/CODEX.md
+**/PLAN.md
+**/plan.md
+**/AI.md
+**/.claude/
+**/.codex/
+**/.agents/
+**/.cursor/
+**/.cursorrules
+**/.windsurf/
+**/.aider*
+**/copilot-instructions.md
+
+# Secrets. Deploy credentials live in the shell environment, never in a file here.
+.env
+.env.*
+*.key
+*.pem
+
+# Plain-text prompts, written by scripts/build-docs.py from the language repo.
+/site/assets/prompts/

@@ -935,13 +935,47 @@ def first_sentence(text: str) -> str:
     return ""
 
 
+# The three prompts, as plain text, for the copy buttons at the top of the home
+# page. The rendered pages keep their headings and their "how to use this"
+# note; what a visitor pastes into a chat window must be the prompt alone, so
+# the wrapper above the first `---` rule is dropped here.
+PROMPT_TEXTS: list[tuple[str, str]] = [
+    ("prompts/nme-sentence", "sentence"),
+    ("prompts/nme-all-levels", "all-levels"),
+    ("prompts/nme-complete", "complete"),
+]
+
+
+def write_prompt_texts(docs: Path) -> int:
+    out_dir = SITE / "assets" / "prompts"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    written = 0
+    for key, name in PROMPT_TEXTS:
+        for lang in ("en", "ko"):
+            source = source_for(docs, key, lang)
+            if source is None:
+                raise SystemExit(f"build-docs: no prompt at {key} ({lang})")
+            text = source.read_text(encoding="utf-8")
+            parts = text.split("\n---\n", 1)
+            if len(parts) != 2:
+                raise SystemExit(
+                    f"build-docs: {source} has no `---` rule, so the prompt "
+                    "itself cannot be told apart from the note above it"
+                )
+            (out_dir / f"{name}.{lang}.txt").write_text(
+                parts[1].lstrip("\n"), encoding="utf-8"
+            )
+            written += 1
+    return written
+
+
 def build(docs: Path, binary: Path | None) -> None:
     pages = collect(docs)
     by_key = {(page.key, page.lang): page for page in pages}
     guides = [page for page in pages if page.group == "guides"]
     compiler = Compiler(binary)
 
-    written = 0
+    written = write_prompt_texts(docs)
     for page in pages:
         order = guides if page.group == "guides" else []
         page.out.parent.mkdir(parents=True, exist_ok=True)

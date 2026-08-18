@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NeedMoreEasy — a language that starts with a sentence and grows into Python</title>
-<meta name="description" content="NeedMoreEasy (NME) compiles ordinary sentences, in English or Korean, into ordinary Python. Try it in your browser: the real compiler runs on this page.">
+<title>NeedMoreEasy — write a sentence, the computer does it</title>
+<meta name="description" content="NeedMoreEasy (NME) is a programming language you write as ordinary sentences, in English or Korean. Nothing to install: write a sentence on this page and press Run.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="canonical" href="https://needmoreeasy.com/">
 <link rel="alternate" hreflang="en" href="https://needmoreeasy.com/">
 <link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/">
 <link rel="alternate" hreflang="x-default" href="https://needmoreeasy.com/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="NeedMoreEasy — start with a sentence, grow into Python">
-<meta property="og:description" content="A language that compiles sentences, in English or Korean, into ordinary Python. The compiler runs in your browser on this page.">
+<meta property="og:title" content="NeedMoreEasy — write a sentence, the computer does it">
+<meta property="og:description" content="A programming language you write as ordinary sentences, in English or Korean. Nothing to install: write a sentence on this page and press Run.">
 <meta property="og:url" content="https://needmoreeasy.com/">
 <meta property="og:image" content="https://needmoreeasy.com/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="NeedMoreEasy — start with a sentence, grow into Python">
+<meta property="og:image:alt" content="NeedMoreEasy — write a sentence, the computer does it">
 <meta name="twitter:card" content="summary_large_image">
 <script src="/assets/theme.js"></script>
 <link rel="stylesheet" href="/assets/site.css">
@@ -28,16 +28,16 @@
   <i class="orb"></i><i class="orb"></i><i class="orb"></i><i class="orb"></i>
 </div>
 
-<a class="skip-link" href="#playground">Skip to the playground</a>
+<a class="skip-link" href="#playground">Skip to the writing box</a>
 
 <header class="site-head">
   <div class="wrap">
     <a class="brand" href="/">need<span>more</span>easy</a>
     <nav class="head-nav" aria-label="Site">
-      <a href="#playground">Try it</a>
-      <a href="#install">Install</a>
-      <a href="/learn/">Learn</a>
-      <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
+      <a href="#playground">Write something</a>
+      <a href="#first-steps">First steps</a>
+      <a href="/learn/guides">Guides</a>
+      <a href="#ai-help">Ask an AI</a>
     </nav>
       <span class="theme-toggle" role="group" aria-label="Theme">
         <button type="button" data-theme-choice="light" aria-pressed="false" title="Light" aria-label="Light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg></button>
@@ -53,37 +53,106 @@
 
 <main>
 
+<section id="ai-help" class="ai-band">
+  <div class="wrap">
+    <div class="ai-band-head">
+      <h2>If anything here does not make sense, ask your own AI.</h2>
+      <p>
+        Copy one of the three messages below and paste it into ChatGPT, Claude,
+        Gemini or whichever assistant you already use. From then on it knows
+        this language, and you can just say <em>“write me an NME program that
+        counts to ten”</em>. The messages are generated from the compiler
+        itself, so what they describe is what actually works.
+      </p>
+    </div>
+    <ol class="ai-list">
+      <li>
+        <details data-prompt="sentence" data-lang="en">
+          <summary>
+            <span class="ai-name">Teach my AI sentence grammar</span>
+            <span class="ai-why">The short one. Sentences only — no Python, no brackets. Start here if you have never written a program.</span>
+            <span class="ai-open">details</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>Copy the whole message</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>Download it</button>
+              <a class="btn btn-ghost" href="/learn/prompts/sentence">Open as a page</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">Loading…</pre>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details data-prompt="all-levels" data-lang="en">
+          <summary>
+            <span class="ai-name">Teach my AI all three ways of writing</span>
+            <span class="ai-why">Sentences, the shorter beginner form and Python, plus the bundled modules and every error number. For when you work with someone who writes Python.</span>
+            <span class="ai-open">details</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>Copy the whole message</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>Download it</button>
+              <a class="btn btn-ghost" href="/learn/prompts/all-levels">Open as a page</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">Loading…</pre>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details data-prompt="complete" data-lang="en">
+          <summary>
+            <span class="ai-name">Teach my AI everything, with finished examples</span>
+            <span class="ai-why">The two above plus twelve complete programs. The longest, and the most accurate — use it if your chat window will hold it.</span>
+            <span class="ai-open">details</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>Copy the whole message</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>Download it</button>
+              <a class="btn btn-ghost" href="/learn/prompts/complete">Open as a page</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">Loading…</pre>
+          </div>
+        </details>
+      </li>
+    </ol>
+  </div>
+</section>
+
 <section class="hero">
   <div class="wrap">
     <div class="hero-text">
-      <h1>If Python still feels hard, start with a sentence.</h1>
+      <h1>Write a sentence. The computer does it.</h1>
       <p class="lede">
-        NeedMoreEasy (NME) is a small language that compiles into ordinary
-        Python. Write plain sentences — in English, in Korean, or with both on
-        one line. Sentences alone can carry a whole program; if the day comes
-        when you want real Python, you replace one line at a time, in the same
-        file. There is no second project to start.
+        You do not need to have written a program before, and you do not need
+        to install anything. Type <code>say Hello</code> in the box below and
+        press Run. <em>Hello</em> appears. That is a program, and you just
+        wrote it.
       </p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="#playground">Try it in your browser</a>
-        <a class="btn btn-ghost" href="https://github.com/needmoretruth/needmoreeasy">Read the source</a>
+        <a class="btn btn-primary" href="#playground">Try it right here</a>
+        <a class="btn btn-ghost" href="#first-steps">Show me the first three things</a>
       </div>
       <div class="badges">
         <span class="badge badge-beta">public beta</span>
-        <span class="badge">Apache-2.0</span>
-        <span class="badge">compiles to Python</span>
+        <span class="badge">free, Apache-2.0</span>
+        <span class="badge">works on a phone</span>
         <span class="badge">English &amp; Korean</span>
       </div>
     </div>
     <div class="hero-figure">
       <span class="figure-label">you write</span>
-      <pre class="code">이름을 물어봐 What is your name?
-show Hello 이름!
-3번 반복해서 Welcome to NME 말해줘</pre>
-      <div class="figure-arrow">compiles to</div>
-      <pre class="code">이름 = input("What is your name?" + " ")
-print("Hello " + str(이름) + "!")
-for _ in range(3): print("Welcome to NME")</pre>
+      <pre class="code" data-nme>ask name What is your name?
+say Hello name!
+3 times say Welcome</pre>
+      <div class="figure-arrow">the computer says</div>
+      <pre class="code" data-out>What is your name? Mina
+Hello Mina!
+Welcome
+Welcome
+Welcome</pre>
     </div>
   </div>
 </section>
@@ -92,31 +161,47 @@ for _ in range(3): print("Welcome to NME")</pre>
   <div class="wrap">
     <div class="play-head">
       <div>
-        <p class="eyebrow">Playground</p>
-        <h2>Write on the left. That is the Python on the right.</h2>
+        <p class="eyebrow">Your writing box</p>
+        <h2>Write on the left, press Run, read the answer below.</h2>
         <p class="lede">
-          This page carries the real compiler, built for the browser, and a
-          Python engine next to it. Your program is compiled as
-          you type and runs in this tab. Your program never leaves it.
+          Nothing you write leaves this tab. There are three files that stay
+          here for you — open an example, look at it, and your own work is
+          still where you left it.
         </p>
       </div>
     </div>
 
+    <div class="file-tabs" role="tablist" aria-label="Which file you are looking at">
+      <button type="button" role="tab" data-file="example" aria-selected="true">Examples</button>
+      <button type="button" role="tab" data-file="1" aria-selected="false">File 1</button>
+      <button type="button" role="tab" data-file="2" aria-selected="false">File 2</button>
+      <button type="button" role="tab" data-file="3" aria-selected="false">File 3</button>
+    </div>
+
     <div class="examples" id="examples" role="group" aria-label="Example programs"></div>
 
+    <div class="file-note" id="file-note" hidden>
+      <p id="file-note-text"></p>
+      <span class="file-note-actions">
+        <button class="btn btn-ghost" type="button" data-copy-to="1">Put it in File 1</button>
+        <button class="btn btn-ghost" type="button" data-copy-to="2">Put it in File 2</button>
+        <button class="btn btn-ghost" type="button" data-copy-to="3">Put it in File 3</button>
+      </span>
+    </div>
+
     <div class="play-tabs" role="tablist" aria-label="Which panel to show">
-      <button type="button" role="tab" data-view="nme" aria-selected="true">Your program</button>
+      <button type="button" role="tab" data-view="nme" aria-selected="true">What you wrote</button>
       <button type="button" role="tab" data-view="python" aria-selected="false">Python</button>
     </div>
 
     <div class="panes" data-view="nme">
       <div class="pane pane-nme">
-        <div class="pane-head"><strong>Your program</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>copy</button><button class="copy-btn" type="button" data-copy-link>share link</button><button class="copy-btn" type="button" data-download-editor>download</button></span></div>
+        <div class="pane-head"><strong id="editor-title">Examples</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>copy</button><button class="copy-btn" type="button" data-copy-link>share link</button><button class="copy-btn" type="button" data-download-editor>download</button></span></div>
         <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
-                  autocorrect="off" aria-label="NME program"></textarea>
+                  autocorrect="off" aria-label="Your program"></textarea>
       </div>
       <div class="pane pane-python">
-        <div class="pane-head"><strong id="python-state">Python</strong><span id="python-note">what the compiler produced</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-python>copy</button><button class="copy-btn" type="button" data-download-python>download</button></span></div>
+        <div class="pane-head"><strong id="python-state">Python</strong><span id="python-note">the same program, written the hard way</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-python>copy</button><button class="copy-btn" type="button" data-download-python>download</button></span></div>
         <pre class="readout" id="python" data-state="ok" aria-live="polite"></pre>
       </div>
     </div>
@@ -135,17 +220,7 @@ for _ in range(3): print("Welcome to NME")</pre>
       <button class="btn btn-ghost" id="boot-retry" type="button">try again</button>
     </div>
 
-    <div class="terminal" id="terminal" data-placeholder="Output appears here." aria-live="polite" aria-label="Program output"></div>
-
-    <div class="slots">
-      <div class="slot-bar">
-        <span class="slot-title">Save slots</span>
-        <span class="saved-flash" id="slot-flash" aria-live="polite"></span>
-        <button class="btn btn-ghost" id="slot-save" type="button">Save this code</button>
-        <button class="btn btn-ghost" id="slot-new" type="button">New slot</button>
-      </div>
-      <ul class="slot-list" id="slot-list" data-empty="Nothing saved yet. Anything you save stays in this browser."></ul>
-    </div>
+    <div class="terminal" id="terminal" data-placeholder="What your program says appears here." aria-live="polite" aria-label="Program output"></div>
 
     <div class="term-input-row" id="input-row" hidden>
       <input class="term-input" id="term-input" type="text" autocomplete="off"
@@ -159,46 +234,141 @@ for _ in range(3): print("Welcome to NME")</pre>
       <textarea class="editor answers-box" id="answers" rows="3"></textarea>
     </div>
 
+    <details class="slots">
+      <summary>
+        <span class="slot-title">Keep more than three — your saved programs</span>
+      </summary>
+      <div class="slot-bar">
+        <span class="saved-flash" id="slot-flash" aria-live="polite"></span>
+        <button class="btn btn-ghost" id="slot-save" type="button">Save what is open now</button>
+        <button class="btn btn-ghost" id="slot-new" type="button">Save as a new one</button>
+      </div>
+      <ul class="slot-list" id="slot-list" data-empty="Nothing saved here yet. Files 1, 2 and 3 above are saved for you automatically."></ul>
+    </details>
+
     <p class="notice">
-      The engine in your browser is <strong>RustPython</strong>, an independent
-      Python written in Rust — not CPython. Programs that open files, use the
-      network, or import packages from PyPI need NME installed on your own
-      computer, where it uses your real Python. Everything else on this page
-      behaves the same in both places.
+      The Python engine on this page is <strong>RustPython</strong>, an
+      independent Python written in Rust. Programs that open files on your
+      computer, use the network, or install extra packages need NME on your own
+      machine, where it uses your real Python. Everything else behaves the same
+      in both places.
     </p>
+  </div>
+</section>
+
+<section id="first-steps">
+  <div class="wrap">
+    <p class="eyebrow">First steps</p>
+    <h2>Three sentences, and you can already write programs.</h2>
+    <p class="lede">
+      Press “open this” on any of them. It appears in the box above; press Run
+      and watch. Nothing here can break anything.
+    </p>
+
+    <ol class="steps">
+      <li class="step">
+        <h3>1. Say something</h3>
+        <p>A sentence that starts with <code>say</code> puts words on the screen.</p>
+        <pre class="code" data-nme>say Hello
+say I am learning to write programs</pre>
+        <a class="btn btn-ghost" href="#code=c2F5IEhlbGxvCnNheSBJIGFtIGxlYXJuaW5nIHRvIHdyaXRlIHByb2dyYW1zCg">open this</a>
+      </li>
+      <li class="step">
+        <h3>2. Ask a question</h3>
+        <p>
+          <code>ask for</code> stops and waits for you to type. The answer is
+          kept under the name you chose, and you can use that name later.
+        </p>
+        <pre class="code" data-nme>ask name What is your name?
+say Nice to meet you name</pre>
+        <a class="btn btn-ghost" href="#code=YXNrIG5hbWUgV2hhdCBpcyB5b3VyIG5hbWU_CnNheSBOaWNlIHRvIG1lZXQgeW91IG5hbWUK">open this</a>
+      </li>
+      <li class="step">
+        <h3>3. Do it many times</h3>
+        <p>Put a number and the word <code>times</code> in front of anything.</p>
+        <pre class="code" data-nme>5 times say I will not forget this</pre>
+        <a class="btn btn-ghost" href="#code=NSB0aW1lcyBzYXkgSSB3aWxsIG5vdCBmb3JnZXQgdGhpcwo">open this</a>
+      </li>
+    </ol>
+
+    <p class="lede after-steps">
+      That is the whole idea. Everything else is more sentences —
+      <a href="/learn/guides">the guides</a> add one at a time, starting from
+      exactly here.
+    </p>
+  </div>
+</section>
+
+<section id="what-else">
+  <div class="wrap">
+    <p class="eyebrow">Sentences are not a toy</p>
+    <h2>Waiting, stories, a clock, a drawn screen — all of it is sayable.</h2>
+    <p class="lede">
+      Sentence grammar is not a warm-up you grow out of. It is the language.
+      The first sixteen guides do not contain a single line of Python.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>A story that types itself</h3>
+        <p>Words arriving one letter at a time, the way a novel reads.</p>
+        <pre class="code" data-nme>say slowly The door opened.
+1 second wait
+say slowly Nobody was there.</pre>
+      </div>
+      <div class="card">
+        <h3>A screen you draw on</h3>
+        <p>Clear it, rule a line across it, put a message in a box.</p>
+        <pre class="code" data-nme>clear the screen
+draw a line
+say in a box Shop</pre>
+      </div>
+      <div class="card">
+        <h3>A clock and a cooldown</h3>
+        <p>Time how long something took, or make a door usable once every three seconds.</p>
+        <pre class="code" data-nme>start the timer
+ask answer Ready?
+show elapsed</pre>
+      </div>
+      <div class="card">
+        <h3>Chance</h3>
+        <p>Dice, a coin, a one-in-three surprise — said as a percentage.</p>
+        <pre class="code" data-nme>set die to random number from 1 to 6
+30% chance say You found a coin</pre>
+      </div>
+    </div>
   </div>
 </section>
 
 <section id="levels">
   <div class="wrap">
-    <p class="eyebrow">Sentences first</p>
-    <h2>Sentences alone can carry a whole program.</h2>
+    <p class="eyebrow">Three ways to write the same thing</p>
+    <h2>You can ignore the other two for as long as you like.</h2>
     <p class="lede">
-      Sentence syntax is not a warm-up you grow out of — it is the language.
-      Lists, loops, conditions, questions, waiting, stories, a stopwatch: all of
-      it is sayable without a single quote, bracket, colon or equals sign. Two
-      more levels exist for the day you want them, and guides 01–12 and 86–88
-      use neither.
+      NME turns what you write into Python — a language a great many people
+      already use. The panel on the right of the box above shows that
+      happening, live. You never have to read it. It is there for the day you
+      are curious, and for the day someone asks you for “the Python”.
     </p>
 
     <div class="cards">
       <div class="card">
         <h3>Sentence</h3>
         <p class="role">start here — and stay as long as you like</p>
-        <p>Say what you want to happen. Guides 01–12 and 86–88 stay here.</p>
-        <pre class="code">3 times Welcome to NME</pre>
+        <p>Say what you want to happen. No quotes, no brackets, no equals sign.</p>
+        <pre class="code" data-nme>3 times say Welcome</pre>
       </div>
       <div class="card">
         <h3>Beginner</h3>
         <p class="role">shorter, whenever you feel like it</p>
         <p>The same ideas in fewer words, with fewer rules than Python.</p>
-        <pre class="code">3 times: say "Hello"</pre>
+        <pre class="code" data-nme>3 times: say "Welcome"</pre>
       </div>
       <div class="card">
         <h3>Python</h3>
         <p class="role">for people who already write Python</p>
         <p>Real Python, kept byte for byte. Mix it in one line at a time.</p>
-        <pre class="code">for i in range(3): print(i)</pre>
+        <pre class="code" data-nme>for i in range(3): print("Welcome")</pre>
       </div>
     </div>
   </div>
@@ -212,47 +382,20 @@ for _ in range(3): print("Welcome to NME")</pre>
         <h2>English and Korean can share a line.</h2>
         <p class="lede">
           Every NME word exists in both languages, and mixing them needs no
-          declaration. This matters for a first language: you can keep writing
-          in whichever words you actually think in.
+          setting and no declaration. For a first language that matters: you
+          keep writing in the words you actually think in.
         </p>
         <p class="fineprint">
-          Error messages carry a stable code such as <code>E0102</code>, and the
-          command line will explain any of them in either language.
+          When something is wrong, the message carries a fixed number such as
+          <code>E0102</code>, and it is written in both languages at once — so
+          you can show it to anyone, or to an AI, and they will know what it
+          means.
         </p>
       </div>
       <div>
-        <pre class="code">이름을 물어봐 What is your name?
+        <pre class="code" data-nme>이름을 물어봐 What is your name?
 show Hello 이름!
-3번 반복해서 Welcome to NME 말해줘</pre>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="install">
-  <div class="wrap">
-    <div class="split">
-      <div>
-        <p class="eyebrow">Install</p>
-        <h2>On your own computer, it runs on your real Python.</h2>
-        <p class="lede">
-          This is the public beta and it builds from source. You need stable
-          Rust, Python 3.8 or newer, and Git. Windows, macOS and Linux steps are
-          all in the installation guide.
-        </p>
-        <p class="fineprint">
-          <a href="/learn/install">Installation guide</a> ·
-          <a href="/learn/start">Five-minute guide</a>
-        </p>
-      </div>
-      <div class="copy-wrap">
-        <button class="copy-btn" type="button" data-copy="install-code">copy</button>
-        <pre class="code" id="install-code">git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
-cd needmoreeasy
-cargo install --path crates/nme-cli --locked
-nme --version
-
-nme run examples/hello-sentence</pre>
+3번 반복해서 Welcome 말해줘</pre>
       </div>
     </div>
   </div>
@@ -261,32 +404,58 @@ nme run examples/hello-sentence</pre>
 <section id="learn">
   <div class="wrap">
     <p class="eyebrow">Learn</p>
-    <h2>The guides and the syntax list live on this site.</h2>
+    <h2>Everything is on this site. You never have to open GitHub.</h2>
     <p class="lede">
-      You never have to open GitHub. All 88 guides and the complete syntax list
-      are readable here, and every example can be opened in the playground and
-      run in the same tab — on a phone too.
+      The guides go in order, each one short, each one adding a single idea.
+      Every example in them opens in the box above and runs in the same tab —
+      on a phone too.
     </p>
     <ul class="links">
-      <li><a href="/learn/start">Five-minute guide</a>
-        <span>Starts from no programming knowledge at all.</span></li>
-      <li><a href="/learn/guides">All 88 guides</a>
-        <span>One short guide per idea, in order of difficulty.</span></li>
-      <li><a href="/learn/syntax">Syntax list</a>
-        <span>Every spelling the compiler accepts, beside the Python it becomes.</span></li>
-      <li><a href="/learn/prompts">AI prompts</a>
-        <span>Paste one file into ChatGPT or Claude and it can write NME.</span></li>
-      <li><a href="/learn/reference">Language reference</a>
-        <span>All three levels, exact meanings, mixing rules, limitations.</span></li>
-      <li><a href="/learn/tutorial">Learning path</a>
-        <span>Seven projects, ending with a tiny compiler you write yourself.</span></li>
-      <li><a href="/learn/converting-python">Convert Python into NME</a>
-        <span>Take a Python file and get an easier version back.</span></li>
-      <li><a href="/learn/install">Installation guide</a>
-        <span>Windows, macOS and Linux, on your own computer.</span></li>
-      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/CHANGELOG.md">Changelog</a>
-        <span>What changed in every beta.</span></li>
+      <li><a href="/learn/guides">The guides, in order</a>
+        <span>Start at the first one. Part 1 is sentences only.</span></li>
+      <li><a href="/learn/start">Five minutes, from nothing</a>
+        <span>If you would rather read one page than browse a list.</span></li>
+      <li><a href="/learn/syntax">Every sentence the computer understands</a>
+        <span>The full list, beside the Python each one becomes.</span></li>
+      <li><a href="#ai-help">Ask your own AI</a>
+        <span>Paste one message into ChatGPT or Claude and it can write NME.</span></li>
+      <li><a href="/learn/reference">The exact rules</a>
+        <span>All three ways of writing, what each means, how they mix.</span></li>
+      <li><a href="/learn/tutorial">A longer path</a>
+        <span>Projects that end with a small language you wrote yourself.</span></li>
+      <li><a href="/learn/converting-python">Turn Python into sentences</a>
+        <span>Paste a Python file, get an easier version back.</span></li>
     </ul>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <div class="split">
+      <div>
+        <p class="eyebrow">Later, if you want it</p>
+        <h2>On your own computer it uses your real Python.</h2>
+        <p class="lede">
+          You do not need this to learn. It is for the day you want a program
+          that saves files, reaches the network, or runs without a browser.
+          This is the public beta and it builds from source: you need stable
+          Rust, Python 3.8 or newer, and Git.
+        </p>
+        <p class="fineprint">
+          <a href="/learn/install">Installation guide</a> ·
+          <a href="/learn/start">Five-minute guide</a>
+        </p>
+      </div>
+      <div class="copy-wrap">
+        <button class="copy-btn" type="button" data-copy="install-code">copy</button>
+        <pre class="code" data-shell id="install-code">git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+cd needmoreeasy
+cargo install --path crates/nme-cli --locked
+nme --version
+
+nme run examples/hello-sentence</pre>
+      </div>
+    </div>
   </div>
 </section>
 

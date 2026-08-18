@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NeedMoreEasy — 문장으로 시작해서 파이썬까지 가는 언어</title>
-<meta name="description" content="NeedMoreEasy(NME)는 한국어나 영어로 쓴 평범한 문장을 그대로 파이썬으로 바꿉니다. 이 페이지에서 진짜 컴파일러가 브라우저 안에서 바로 돌아갑니다.">
+<title>NeedMoreEasy — 한 문장을 쓰면 컴퓨터가 그대로 합니다</title>
+<meta name="description" content="NeedMoreEasy(NME)는 평범한 문장으로 쓰는 프로그래밍 언어입니다. 한국어로 써도 되고 영어로 써도 됩니다. 설치할 것이 없습니다 — 이 화면에 한 문장을 적고 실행을 누르면 됩니다.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="canonical" href="https://needmoreeasy.com/ko/">
 <link rel="alternate" hreflang="en" href="https://needmoreeasy.com/">
 <link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/">
 <link rel="alternate" hreflang="x-default" href="https://needmoreeasy.com/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="NeedMoreEasy — 문장으로 시작해서 파이썬까지">
-<meta property="og:description" content="한국어 문장을 그대로 파이썬으로 바꾸는 언어입니다. 이 페이지에서 바로 써 볼 수 있습니다.">
+<meta property="og:title" content="NeedMoreEasy — 한 문장을 쓰면 컴퓨터가 그대로 합니다">
+<meta property="og:description" content="평범한 문장으로 쓰는 프로그래밍 언어입니다. 설치할 것이 없고, 이 화면에서 바로 써 보고 실행할 수 있습니다.">
 <meta property="og:url" content="https://needmoreeasy.com/ko/">
 <meta property="og:image" content="https://needmoreeasy.com/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="NeedMoreEasy — start with a sentence, grow into Python">
+<meta property="og:image:alt" content="NeedMoreEasy — 한 문장을 쓰면 컴퓨터가 그대로 합니다">
 <meta name="twitter:card" content="summary_large_image">
 <script src="/assets/theme.js"></script>
 <link rel="stylesheet" href="/assets/site.css">
@@ -28,18 +28,18 @@
   <i class="orb"></i><i class="orb"></i><i class="orb"></i><i class="orb"></i>
 </div>
 
-<a class="skip-link" href="#playground">연습장으로 건너뛰기</a>
+<a class="skip-link" href="#playground">쓰는 칸으로 건너뛰기</a>
 
 <header class="site-head">
   <div class="wrap">
     <a class="brand" href="/ko/">need<span>more</span>easy</a>
     <nav class="head-nav" aria-label="사이트">
-      <a href="#playground">써 보기</a>
-      <a href="#install">설치</a>
-      <a href="/ko/learn/">배우기</a>
-      <a href="https://github.com/needmoretruth/needmoreeasy">깃허브</a>
+      <a href="#playground">직접 써 보기</a>
+      <a href="#first-steps">첫걸음</a>
+      <a href="/ko/learn/guides">가이드</a>
+      <a href="#ai-help">AI에게 묻기</a>
     </nav>
-      <span class="theme-toggle" role="group" aria-label="화면 테마">
+      <span class="theme-toggle" role="group" aria-label="화면 밝기">
         <button type="button" data-theme-choice="light" aria-pressed="false" title="밝게" aria-label="밝게"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg></button>
         <button type="button" data-theme-choice="system" aria-pressed="true" title="기기 설정 따르기" aria-label="기기 설정 따르기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 3.6a8.4 8.4 0 0 1 0 16.8z" fill="currentColor" stroke="none"/></svg></button>
         <button type="button" data-theme-choice="dark" aria-pressed="false" title="어둡게" aria-label="어둡게"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.4A8.6 8.6 0 0 1 9.6 4a8.6 8.6 0 1 0 10.4 10.4z"/></svg></button>
@@ -53,37 +53,105 @@
 
 <main>
 
+<section id="ai-help" class="ai-band">
+  <div class="wrap">
+    <div class="ai-band-head">
+      <h2>여기 있는 말이 이해되지 않으면, 쓰던 AI에게 물어보세요.</h2>
+      <p>
+        아래 셋 중 하나를 통째로 복사해서 ChatGPT·Claude·Gemini 같은 대화창 맨
+        앞에 붙여넣으세요. 그다음부터는 <em>“NME로 열까지 세는 프로그램 만들어
+        줘”</em>처럼 말하면 됩니다. 이 글은 컴파일러에서 자동으로 만들어지므로,
+        여기 적힌 문법은 실제로 되는 문법입니다.
+      </p>
+    </div>
+    <ol class="ai-list">
+      <li>
+        <details data-prompt="sentence" data-lang="ko">
+          <summary>
+            <span class="ai-name">문장문법만 가르치기</span>
+            <span class="ai-why">가장 짧습니다. 문장문법만 담았고 파이썬은 없습니다. 프로그램을 한 번도 써 본 적이 없다면 이것 하나면 됩니다.</span>
+            <span class="ai-open">상세</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>전체 복사</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>내려받기</button>
+              <a class="btn btn-ghost" href="/ko/learn/prompts/sentence">문서로 열기</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">불러오는 중…</pre>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details data-prompt="all-levels" data-lang="ko">
+          <summary>
+            <span class="ai-name">세 가지 문법을 전부 가르치기</span>
+            <span class="ai-why">문장문법·초급 문법·파이썬에 모듈과 오류 번호까지 담았습니다. 파이썬을 쓰는 사람과 같이 일할 때 씁니다.</span>
+            <span class="ai-open">상세</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>전체 복사</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>내려받기</button>
+              <a class="btn btn-ghost" href="/ko/learn/prompts/all-levels">문서로 열기</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">불러오는 중…</pre>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details data-prompt="complete" data-lang="ko">
+          <summary>
+            <span class="ai-name">전부 가르치기 — 완성된 예제까지</span>
+            <span class="ai-why">위의 둘에 완성된 프로그램 열두 개를 더한 것입니다. 가장 길고 가장 정확합니다. 대화창에 다 들어간다면 이것을 쓰세요.</span>
+            <span class="ai-open">상세</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>전체 복사</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>내려받기</button>
+              <a class="btn btn-ghost" href="/ko/learn/prompts/complete">문서로 열기</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">불러오는 중…</pre>
+          </div>
+        </details>
+      </li>
+    </ol>
+  </div>
+</section>
+
 <section class="hero">
   <div class="wrap">
     <div class="hero-text">
-      <h1>파이썬이 어렵다면, 문장부터 시작하세요.</h1>
+      <h1>한 문장을 쓰면, 컴퓨터가 그대로 합니다.</h1>
       <p class="lede">
-        NeedMoreEasy(NME)는 평범한 문장을 그대로 파이썬으로 바꾸는 작은 언어입니다.
-        한국어로 써도 되고, 영어로 써도 되고, 한 줄에 둘을 섞어도 됩니다.
-        문장만으로 프로그램 하나를 끝까지 만들 수 있고, 파이썬을 쓰고 싶어지는 날이
-        오면 같은 파일 안에서 한 줄씩 바꿔 나가면 됩니다. 다른 언어로 프로젝트를
-        다시 시작할 일이 없습니다.
+        프로그램을 한 번도 써 본 적이 없어도 됩니다. 설치할 것도 없습니다.
+        아래 칸에 <code>안녕하세요 말해줘</code>라고 적고 실행을 누르면 화면에
+        <em>안녕하세요</em>가 나옵니다. 그것이 프로그램이고, 방금 그것을
+        쓰셨습니다.
       </p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="#playground">브라우저에서 바로 써 보기</a>
-        <a class="btn btn-ghost" href="https://github.com/needmoretruth/needmoreeasy">소스 코드 보기</a>
+        <a class="btn btn-primary" href="#playground">여기서 바로 써 보기</a>
+        <a class="btn btn-ghost" href="#first-steps">처음 배울 세 가지 보기</a>
       </div>
       <div class="badges">
         <span class="badge badge-beta">공개 베타</span>
-        <span class="badge">Apache-2.0</span>
-        <span class="badge">파이썬으로 변환</span>
+        <span class="badge">무료 · Apache-2.0</span>
+        <span class="badge">휴대폰에서도 됩니다</span>
         <span class="badge">한국어 · 영어</span>
       </div>
     </div>
     <div class="hero-figure">
       <span class="figure-label">이렇게 쓰면</span>
-      <pre class="code">이름을 물어봐 What is your name?
-show Hello 이름!
-3번 반복해서 Welcome to NME 말해줘</pre>
-      <div class="figure-arrow">이 파이썬이 됩니다</div>
-      <pre class="code">이름 = input("What is your name?" + " ")
-print("Hello " + str(이름) + "!")
-for _ in range(3): print("Welcome to NME")</pre>
+      <pre class="code" data-nme>이름을 물어봐 이름이 뭐예요?
+안녕하세요 이름! 말해줘
+3번 반복해서 환영합니다 말해줘</pre>
+      <div class="figure-arrow">컴퓨터가 이렇게 합니다</div>
+      <pre class="code" data-out>이름이 뭐예요? 민수
+안녕하세요 민수!
+환영합니다
+환영합니다
+환영합니다</pre>
     </div>
   </div>
 </section>
@@ -92,31 +160,46 @@ for _ in range(3): print("Welcome to NME")</pre>
   <div class="wrap">
     <div class="play-head">
       <div>
-        <p class="eyebrow">연습장</p>
-        <h2>왼쪽에 쓰면, 오른쪽이 그 파이썬입니다.</h2>
+        <p class="eyebrow">쓰는 칸</p>
+        <h2>왼쪽에 쓰고, 실행을 누르고, 아래에서 결과를 봅니다.</h2>
         <p class="lede">
-          이 페이지는 진짜 컴파일러를 브라우저용으로 빌드해서 담고 있고,
-          그 옆에 파이썬 실행기도 함께 담고 있습니다. 쓰는 동안 바로 변환되고,
-          실행도 이 탭 안에서 끝납니다. 내가 쓴 프로그램은 이 탭 밖으로 나가지 않습니다.
+          쓰신 글은 이 창 밖으로 나가지 않습니다. 파일 셋이 이 브라우저에 계속
+          남아 있으니, 예제를 열어 보고 돌아와도 쓰던 것은 그대로 있습니다.
         </p>
       </div>
     </div>
 
+    <div class="file-tabs" role="tablist" aria-label="지금 보고 있는 파일">
+      <button type="button" role="tab" data-file="example" aria-selected="true">예제</button>
+      <button type="button" role="tab" data-file="1" aria-selected="false">파일 1</button>
+      <button type="button" role="tab" data-file="2" aria-selected="false">파일 2</button>
+      <button type="button" role="tab" data-file="3" aria-selected="false">파일 3</button>
+    </div>
+
     <div class="examples" id="examples" role="group" aria-label="예제 프로그램"></div>
 
-    <div class="play-tabs" role="tablist" aria-label="어느 쪽을 볼지">
-      <button type="button" role="tab" data-view="nme" aria-selected="true">내 프로그램</button>
+    <div class="file-note" id="file-note" hidden>
+      <p id="file-note-text"></p>
+      <span class="file-note-actions">
+        <button class="btn btn-ghost" type="button" data-copy-to="1">파일 1에 넣기</button>
+        <button class="btn btn-ghost" type="button" data-copy-to="2">파일 2에 넣기</button>
+        <button class="btn btn-ghost" type="button" data-copy-to="3">파일 3에 넣기</button>
+      </span>
+    </div>
+
+    <div class="play-tabs" role="tablist" aria-label="어느 칸을 볼지">
+      <button type="button" role="tab" data-view="nme" aria-selected="true">쓴 글</button>
       <button type="button" role="tab" data-view="python" aria-selected="false">파이썬</button>
     </div>
 
     <div class="panes" data-view="nme">
       <div class="pane pane-nme">
-        <div class="pane-head"><strong>내 프로그램</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>복사</button><button class="copy-btn" type="button" data-copy-link>링크 복사</button><button class="copy-btn" type="button" data-download-editor>내려받기</button></span></div>
+        <div class="pane-head"><strong id="editor-title">예제</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>복사</button><button class="copy-btn" type="button" data-copy-link>링크 복사</button><button class="copy-btn" type="button" data-download-editor>내려받기</button></span></div>
         <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
-                  autocorrect="off" aria-label="NME 프로그램"></textarea>
+                  autocorrect="off" aria-label="내가 쓴 프로그램"></textarea>
       </div>
       <div class="pane pane-python">
-        <div class="pane-head"><strong id="python-state">Python</strong><span id="python-note">컴파일러가 만든 결과</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-python>복사</button><button class="copy-btn" type="button" data-download-python>내려받기</button></span></div>
+        <div class="pane-head"><strong id="python-state">파이썬</strong><span id="python-note">같은 프로그램을 어렵게 쓴 것</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-python>복사</button><button class="copy-btn" type="button" data-download-python>내려받기</button></span></div>
         <pre class="readout" id="python" data-state="ok" aria-live="polite"></pre>
       </div>
     </div>
@@ -127,7 +210,7 @@ for _ in range(3): print("Welcome to NME")</pre>
       <span class="status-dot" id="engine-dot" aria-hidden="true"></span>
       <span class="run-note" id="engine-note" aria-live="polite"></span>
       <div class="progress" id="boot-progress" role="progressbar" aria-valuemin="0"
-           aria-valuemax="100" aria-label="내려받기 진행률" data-mode="loading" hidden><i></i></div>
+           aria-valuemax="100" aria-label="내려받는 중" data-mode="loading" hidden><i></i></div>
     </div>
 
     <div class="alert" id="boot-alert" role="alert" hidden>
@@ -135,69 +218,155 @@ for _ in range(3): print("Welcome to NME")</pre>
       <button class="btn btn-ghost" id="boot-retry" type="button">다시 시도</button>
     </div>
 
-    <div class="terminal" id="terminal" data-placeholder="결과가 여기에 나옵니다." aria-live="polite" aria-label="프로그램 출력"></div>
-
-    <div class="slots">
-      <div class="slot-bar">
-        <span class="slot-title">저장 슬롯</span>
-        <span class="saved-flash" id="slot-flash" aria-live="polite"></span>
-        <button class="btn btn-ghost" id="slot-save" type="button">이 코드 저장</button>
-        <button class="btn btn-ghost" id="slot-new" type="button">새 슬롯</button>
-      </div>
-      <ul class="slot-list" id="slot-list" data-empty="아직 저장한 코드가 없습니다. 저장한 코드는 이 브라우저에만 남습니다."></ul>
-    </div>
+    <div class="terminal" id="terminal" data-placeholder="프로그램이 하는 말이 여기에 나옵니다." aria-live="polite" aria-label="프로그램 출력"></div>
 
     <div class="term-input-row" id="input-row" hidden>
       <input class="term-input" id="term-input" type="text" autocomplete="off"
-             aria-label="프로그램에 줄 답">
-      <button class="btn btn-primary" id="send" type="button">입력</button>
+             aria-label="프로그램에 줄 대답">
+      <button class="btn btn-primary" id="send" type="button">대답</button>
     </div>
 
     <div class="notice" id="answers-wrap" hidden>
       <p data-no-shared-memory></p>
-      <label for="answers"><strong>답(한 줄에 하나씩)</strong></label>
+      <label for="answers"><strong>미리 적어 두는 대답 — 한 줄에 하나</strong></label>
       <textarea class="editor answers-box" id="answers" rows="3"></textarea>
     </div>
 
+    <details class="slots">
+      <summary>
+        <span class="slot-title">셋보다 많이 두고 싶을 때 — 보관함</span>
+      </summary>
+      <div class="slot-bar">
+        <span class="saved-flash" id="slot-flash" aria-live="polite"></span>
+        <button class="btn btn-ghost" id="slot-save" type="button">지금 열린 것 저장</button>
+        <button class="btn btn-ghost" id="slot-new" type="button">새 이름으로 저장</button>
+      </div>
+      <ul class="slot-list" id="slot-list" data-empty="아직 보관한 것이 없습니다. 위의 파일 1·2·3은 저절로 저장됩니다."></ul>
+    </details>
+
     <p class="notice">
-      브라우저 안에서 도는 실행기는 <strong>RustPython</strong>입니다.
-      러스트로 만든 별개의 파이썬 구현이고, CPython이 아닙니다.
-      파일을 열거나, 네트워크를 쓰거나, PyPI에서 받은 꾸러미를 불러오는 프로그램은
-      내 컴퓨터에 NME를 설치해서 실제 파이썬으로 돌려야 합니다.
-      그 밖의 것은 이 페이지와 내 컴퓨터에서 같게 동작합니다.
+      이 화면에서 프로그램을 돌리는 것은 <strong>RustPython</strong>입니다. 러스트로
+      새로 쓴 파이썬이고, 흔히 쓰는 CPython과는 다릅니다. 컴퓨터의 파일을 열거나
+      인터넷을 쓰거나 다른 꾸러미를 받아 쓰는 프로그램은 본인 컴퓨터에 NME를
+      설치해야 합니다. 그 밖의 것은 두 곳에서 똑같이 동작합니다.
     </p>
+  </div>
+</section>
+
+<section id="first-steps">
+  <div class="wrap">
+    <p class="eyebrow">첫걸음</p>
+    <h2>문장 세 개면 벌써 프로그램을 쓸 수 있습니다.</h2>
+    <p class="lede">
+      아래에서 “열어 보기”를 누르면 위의 칸에 그대로 들어갑니다. 실행을 눌러
+      보세요. 여기서 무엇을 해도 고장 나지 않습니다.
+    </p>
+
+    <ol class="steps">
+      <li class="step">
+        <h3>1. 말하게 하기</h3>
+        <p>문장 끝에 <code>말해줘</code>를 붙이면 그 말이 화면에 나옵니다.</p>
+        <pre class="code" data-nme>안녕하세요 말해줘
+저는 프로그램을 배우고 있습니다 말해줘</pre>
+        <a class="btn btn-ghost" href="#code=7JWI64WV7ZWY7IS47JqUIOunkO2VtOykmArsoIDripQg7ZSE66Gc6re4656o7J2EIOuwsOyasOqzoCDsnojsirXri4jri6Qg66eQ7ZW07KSYCg">열어 보기</a>
+      </li>
+      <li class="step">
+        <h3>2. 물어보기</h3>
+        <p>
+          <code>물어봐</code>는 멈춰 서서 사람이 칠 때까지 기다립니다. 친
+          내용은 앞에 적은 이름 밑에 남고, 뒤에서 그 이름을 그대로 쓸 수
+          있습니다.
+        </p>
+        <pre class="code" data-nme>이름을 물어봐 이름이 뭐예요?
+반가워요 이름 말해줘</pre>
+        <a class="btn btn-ghost" href="#code=7J2066aE7J2EIOusvOyWtOu0kCDsnbTrpoTsnbQg662Q7JiI7JqUPwrrsJjqsIDsm4zsmpQg7J2066aEIOunkO2VtOykmAo">열어 보기</a>
+      </li>
+      <li class="step">
+        <h3>3. 여러 번 하기</h3>
+        <p>앞에 숫자와 <code>번 반복해서</code>를 붙이면 그만큼 되풀이합니다.</p>
+        <pre class="code" data-nme>5번 반복해서 잊지 않겠습니다 말해줘</pre>
+        <a class="btn btn-ghost" href="#code=NeuyiCDrsJjrs7XtlbTshJwg7J6K7KeAIOyViuqyoOyKteuLiOuLpCDrp5DtlbTspJgK">열어 보기</a>
+      </li>
+    </ol>
+
+    <p class="lede after-steps">
+      이것이 전부입니다. 나머지는 문장이 늘어날 뿐이고,
+      <a href="/ko/learn/guides">가이드</a>가 정확히 여기서부터 하나씩
+      더해 갑니다.
+    </p>
+  </div>
+</section>
+
+<section id="what-else">
+  <div class="wrap">
+    <p class="eyebrow">문장문법은 맛보기가 아닙니다</p>
+    <h2>기다리기, 이야기, 시계, 그려지는 화면까지 전부 문장으로 됩니다.</h2>
+    <p class="lede">
+      문장문법은 나중에 버리고 가는 준비 단계가 아니라 이 언어 자체입니다.
+      가이드 1부의 열여섯 편에는 파이썬이 한 줄도 나오지 않습니다.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>글자가 하나씩 나오는 이야기</h3>
+        <p>소설을 읽듯이 글자가 하나씩 나타나게 합니다.</p>
+        <pre class="code" data-nme>천천히 말해줘 문이 열렸습니다.
+1초 기다려
+천천히 말해줘 아무도 없었습니다.</pre>
+      </div>
+      <div class="card">
+        <h3>그려지는 화면</h3>
+        <p>화면을 지우고, 줄을 긋고, 상자 안에 글을 넣습니다.</p>
+        <pre class="code" data-nme>화면 지워
+줄 그어
+상자로 말해줘 가게</pre>
+      </div>
+      <div class="card">
+        <h3>시계와 쿨타임</h3>
+        <p>걸린 시간을 재고, 문을 3초에 한 번만 열리게 합니다.</p>
+        <pre class="code" data-nme>시간 재기 시작해
+대답을 물어봐 준비됐나요?
+잰시간 말해줘</pre>
+      </div>
+      <div class="card">
+        <h3>확률</h3>
+        <p>주사위, 동전, 열에 셋 — 백분율로 그냥 말합니다.</p>
+        <pre class="code" data-nme>주사위는 1부터 6까지 무작위 숫자
+30% 확률로 말해줘 동전을 주웠습니다</pre>
+      </div>
+    </div>
   </div>
 </section>
 
 <section id="levels">
   <div class="wrap">
-    <p class="eyebrow">문장형이 먼저</p>
-    <h2>문장만으로 프로그램 하나가 끝까지 만들어집니다.</h2>
+    <p class="eyebrow">같은 것을 쓰는 세 가지 방법</p>
+    <h2>나머지 둘은 원할 때까지 안 봐도 됩니다.</h2>
     <p class="lede">
-      문장형은 나중에 버리는 연습용이 아니라 NME 그 자체입니다. 목록, 반복,
-      조건, 질문, 기다리기, 이야기, 시간 재기까지 전부 문장으로 말할 수 있고,
-      따옴표도 괄호도 콜론도 등호도 쓰지 않습니다. 문법이 두 단계 더 있지만,
-      가이드 01~12와 86~88은 둘 다 쓰지 않습니다.
+      NME는 쓰신 문장을 파이썬으로 바꿉니다. 파이썬은 이미 아주 많은 사람이
+      쓰는 언어입니다. 위 칸의 오른쪽에서 그 일이 실시간으로 일어나는 것을 볼
+      수 있습니다. 읽지 않아도 됩니다. 궁금해지는 날과, 누군가 “파이썬 코드로
+      달라”고 하는 날을 위해 있는 것입니다.
     </p>
 
     <div class="cards">
       <div class="card">
-        <h3>문장형</h3>
-        <p class="role">여기서 시작해서, 계속 여기 있어도 됩니다</p>
-        <p>하고 싶은 말을 그대로 씁니다. 가이드 01~12와 86~88이 전부 이 문법입니다.</p>
-        <pre class="code">3번 반복해서 환영합니다 말해줘</pre>
+        <h3>문장</h3>
+        <p class="role">여기서 시작해서, 원하는 만큼 머물러도 됩니다</p>
+        <p>하고 싶은 일을 그대로 말합니다. 따옴표도 괄호도 등호도 없습니다.</p>
+        <pre class="code" data-nme>3번 반복해서 환영합니다 말해줘</pre>
       </div>
       <div class="card">
         <h3>초급</h3>
-        <p class="role">더 짧게 쓰고 싶어지면</p>
-        <p>같은 뜻을 더 적은 낱말로 씁니다. 파이썬보다 규칙이 적습니다.</p>
-        <pre class="code">3번: 말해 "안녕하세요"</pre>
+        <p class="role">짧게 쓰고 싶어지면, 그때</p>
+        <p>같은 것을 더 적은 말로 씁니다. 파이썬보다 규칙이 적습니다.</p>
+        <pre class="code" data-nme>3번: 말해 "환영합니다"</pre>
       </div>
       <div class="card">
         <h3>파이썬</h3>
-        <p class="role">이미 파이썬을 쓰는 사람을 위해</p>
-        <p>진짜 파이썬이 그대로 남습니다. 한 줄씩 섞어 써도 됩니다.</p>
-        <pre class="code">for i in range(3): print(i)</pre>
+        <p class="role">이미 파이썬을 쓰는 사람을 위한 것</p>
+        <p>진짜 파이썬이 한 글자도 안 바뀌고 그대로 있습니다. 한 줄씩 섞어도 됩니다.</p>
+        <pre class="code" data-nme>for i in range(3): print("환영합니다")</pre>
       </div>
     </div>
   </div>
@@ -207,51 +376,23 @@ for _ in range(3): print("Welcome to NME")</pre>
   <div class="wrap">
     <div class="split">
       <div>
-        <p class="eyebrow">두 언어</p>
+        <p class="eyebrow">두 나라 말</p>
         <h2>한국어와 영어가 한 줄에 같이 있어도 됩니다.</h2>
         <p class="lede">
-          NME의 모든 낱말은 한국어와 영어 양쪽에 다 있고, 섞어 쓸 때 따로 선언할 것이 없습니다.
-          처음 배우는 언어에서는 이것이 꽤 중요합니다.
-          내가 실제로 생각하는 말로 계속 쓸 수 있기 때문입니다.
+          NME의 모든 낱말은 두 언어에 다 있고, 섞어 쓰는 데 아무 설정도
+          필요하지 않습니다. 처음 배우는 언어에서는 이것이 중요합니다 — 실제로
+          머릿속에 떠오르는 말로 계속 쓸 수 있습니다.
         </p>
         <p class="fineprint">
-          오류 메시지에는 <code>E0102</code> 같은 고정 번호가 붙습니다.
-          그 번호를 명령 한 줄로 물어보면 한국어나 영어로 길게 풀어서 설명해 줍니다.
+          무언가 잘못되면 <code>E0102</code> 같은 고정된 번호가 붙은 메시지가
+          나오고, 그 메시지는 두 언어로 함께 적혀 있습니다. 그대로 누구에게나,
+          또는 AI에게 보여 주면 무슨 뜻인지 압니다.
         </p>
       </div>
       <div>
-        <pre class="code">이름을 물어봐 What is your name?
+        <pre class="code" data-nme>이름을 물어봐 What is your name?
 show Hello 이름!
-3번 반복해서 Welcome to NME 말해줘</pre>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="install">
-  <div class="wrap">
-    <div class="split">
-      <div>
-        <p class="eyebrow">설치</p>
-        <h2>내 컴퓨터에서는 내 파이썬으로 돕니다.</h2>
-        <p class="lede">
-          지금은 공개 베타이고, 소스에서 빌드해서 설치합니다.
-          안정판 러스트와 파이썬 3.8 이상, 깃이 필요합니다.
-          윈도우 · 맥 · 리눅스 방법은 설치 문서에 모두 있습니다.
-        </p>
-        <p class="fineprint">
-          <a href="/ko/learn/install">설치 문서</a> ·
-          <a href="/ko/learn/start">5분 안내</a>
-        </p>
-      </div>
-      <div class="copy-wrap">
-        <button class="copy-btn" type="button" data-copy="install-code">복사</button>
-        <pre class="code" id="install-code">git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
-cd needmoreeasy
-cargo install --path crates/nme-cli --locked
-nme --version
-
-nme run examples/hello-sentence.ko</pre>
+3번 반복해서 Welcome 말해줘</pre>
       </div>
     </div>
   </div>
@@ -260,32 +401,58 @@ nme run examples/hello-sentence.ko</pre>
 <section id="learn">
   <div class="wrap">
     <p class="eyebrow">배우기</p>
-    <h2>가이드도 문법도 이 사이트 안에 있습니다.</h2>
+    <h2>전부 이 사이트 안에 있습니다. GitHub를 열 일이 없습니다.</h2>
     <p class="lede">
-      GitHub에 들어가지 않아도 됩니다. 가이드 88편과 문법 목록 전체를 여기서
-      읽고, 예제는 어느 것이든 그 자리에서 실행해 볼 수 있습니다. 휴대폰에서도
+      가이드는 순서대로 가고, 한 편이 짧고, 한 편에 한 가지만 더합니다. 가이드
+      안의 모든 예제는 위의 칸에서 열려 같은 창에서 바로 돌아갑니다. 휴대폰에서도
       됩니다.
     </p>
     <ul class="links">
-      <li><a href="/ko/learn/start">5분 안내</a>
-        <span>프로그래밍을 전혀 몰라도 되는 지점에서 시작합니다.</span></li>
-      <li><a href="/ko/learn/guides">가이드 88편</a>
-        <span>한 편에 한 가지씩, 난이도 순서대로 읽습니다.</span></li>
-      <li><a href="/ko/learn/syntax">문법 목록</a>
-        <span>컴파일러가 받아들이는 모든 표기를, 되는 Python과 나란히.</span></li>
-      <li><a href="/ko/learn/prompts">AI 프롬프트</a>
-        <span>이 글 하나를 ChatGPT나 Claude에 붙여넣으면 NME를 써 줍니다.</span></li>
-      <li><a href="/ko/learn/reference">언어 설명서</a>
-        <span>세 문법의 정확한 뜻, 섞어 쓰는 규칙, 한계까지.</span></li>
-      <li><a href="/ko/learn/tutorial">학습 경로</a>
-        <span>일곱 개 과제로, 마지막에는 작은 컴파일러를 직접 만듭니다.</span></li>
-      <li><a href="/ko/learn/converting-python">파이썬을 NME로 바꾸기</a>
-        <span>가지고 있는 파이썬 파일을 더 쉬운 형태로 되돌려 받습니다.</span></li>
-      <li><a href="/ko/learn/install">설치 안내</a>
-        <span>Windows · macOS · Linux에서 내 컴퓨터에 설치하기.</span></li>
-      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/CHANGELOG.ko.md">변경 기록</a>
-        <span>베타마다 무엇이 달라졌는지.</span></li>
+      <li><a href="/ko/learn/guides">가이드 — 순서대로</a>
+        <span>첫 편부터 보세요. 1부는 문장문법만 씁니다.</span></li>
+      <li><a href="/ko/learn/start">5분 만에, 아무것도 모르는 상태에서</a>
+        <span>목록을 훑는 것보다 한 쪽을 읽는 편이 편하다면.</span></li>
+      <li><a href="/ko/learn/syntax">컴퓨터가 알아듣는 문장 전부</a>
+        <span>어떤 파이썬으로 바뀌는지 나란히 적혀 있습니다.</span></li>
+      <li><a href="#ai-help">쓰던 AI에게 묻기</a>
+        <span>한 글을 붙여넣으면 그 AI가 NME를 써 줍니다.</span></li>
+      <li><a href="/ko/learn/reference">정확한 규칙</a>
+        <span>세 가지 쓰는 법, 각각의 뜻, 섞는 규칙.</span></li>
+      <li><a href="/ko/learn/tutorial">더 긴 길</a>
+        <span>직접 만든 작은 언어로 끝나는 과제들.</span></li>
+      <li><a href="/ko/learn/converting-python">파이썬을 문장으로 바꾸기</a>
+        <span>파이썬 파일을 넣으면 쉬운 쪽으로 바꿔 줍니다.</span></li>
     </ul>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <div class="split">
+      <div>
+        <p class="eyebrow">나중에, 필요해지면</p>
+        <h2>본인 컴퓨터에서는 원래 쓰던 파이썬으로 돕니다.</h2>
+        <p class="lede">
+          배우는 데에는 필요하지 않습니다. 파일을 저장하거나 인터넷을 쓰거나
+          브라우저 없이 돌아가는 프로그램이 필요해지는 날을 위한 것입니다. 지금은
+          공개 베타라 소스에서 직접 빌드합니다. 안정판 러스트, 파이썬 3.8 이상,
+          Git이 필요합니다.
+        </p>
+        <p class="fineprint">
+          <a href="/ko/learn/install">설치 안내</a> ·
+          <a href="/ko/learn/start">5분 시작</a>
+        </p>
+      </div>
+      <div class="copy-wrap">
+        <button class="copy-btn" type="button" data-copy="install-code">복사</button>
+        <pre class="code" data-shell id="install-code">git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+cd needmoreeasy
+cargo install --path crates/nme-cli --locked
+nme --version
+
+nme run examples/hello-sentence</pre>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -295,9 +462,9 @@ nme run examples/hello-sentence.ko</pre>
   <div class="wrap">
     <span>NeedMoreEasy · Apache-2.0 · 컴파일러 <code>0.0.1-beta.160</code></span>
     <span class="foot-spacer"></span>
-    <a href="https://github.com/needmoretruth/needmoreeasy">깃허브</a>
-    <a href="https://github.com/needmoretruth/needmoreeasy/issues">이슈</a>
-    <a href="/" data-lang-choice="en">English</a>
+    <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
+    <a href="https://github.com/needmoretruth/needmoreeasy/issues">문제 알리기</a>
+    <a href="/" data-lang-choice="en">EN</a>
   </div>
 </footer>
 
