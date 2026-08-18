@@ -90,9 +90,9 @@ STRINGS = {
         "copy": "copy",
         "source": "This page on GitHub",
         "hub_title": "Learn NeedMoreEasy",
-        "hub_lede": "Everything the repository teaches, readable here — on a "
-                    "phone, with nothing installed. Any example can be opened "
-                    "in the playground and run in the same tab.",
+        "hub_lede": "Everything NME teaches, readable here — on a phone, with "
+                    "nothing installed. Any example can be opened in the "
+                    "playground and run in the same tab.",
         "filter": "Filter the guides",
         "filter_count": "%d guides",
         "difficulty": "Difficulty",
@@ -129,7 +129,7 @@ STRINGS = {
         "copy": "복사",
         "source": "GitHub에서 이 문서 보기",
         "hub_title": "NeedMoreEasy 배우기",
-        "hub_lede": "저장소가 가르치는 내용을 전부 여기서 읽을 수 있습니다. "
+        "hub_lede": "NME가 가르치는 내용을 전부 여기서 읽을 수 있습니다. "
                     "설치 없이 휴대폰에서도 됩니다. 예제는 어느 것이든 "
                     "연습장에서 바로 실행해 볼 수 있습니다.",
         "filter": "가이드 찾기",
