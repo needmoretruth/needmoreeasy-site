@@ -43,20 +43,19 @@ show Hello, world!
 repeat 3 times and show NME is easy`,
     },
     {
-      id: 'story',
-      label: 'A short story',
-      answers: ['left'],
-      expect: 'That is the end.',
-      source: `# A story that asks which way you go.
-show The path splits in two.
-ask way Left or right?
-
-if way equals left
-show A river. You follow it home.
-else
-show A cave. Something inside is asleep.
+      id: 'storyblock',
+      label: 'A story in one block',
+      answers: [],
+      expect: 'no title',
+      source: `# Inside a story block every line is text. No 'show' needed.
+story:
+    It was a very old library.
+    The books stood at every thickness.
+    On the bottom shelf one lay flat.
 end
-show That is the end.`,
+slow story:
+    That book had no title.
+end`,
     },
     {
       id: 'slow',
@@ -201,6 +200,25 @@ end
 show Thanks for playing`,
     },
     {
+      id: 'chance',
+      label: 'Chance',
+      answers: [],
+      expect: 'always shows',
+      source: `# A percentage decides how often something happens.
+set die to random number from 1 to 6
+show Rolling now
+show die
+100% chance show This line always shows
+0% chance show This line never shows
+30% chance show About three times in ten
+rain is a 40% chance
+if rain
+    show Take an umbrella
+else
+    show It is clear today
+end`,
+    },
+    {
       id: 'screen',
       label: 'Arrange the screen',
       answers: [],
@@ -260,6 +278,22 @@ start the timer
 ask pressed press enter
 show Your time in seconds
 show elapsed`,
+    },
+    {
+      id: 'story',
+      label: 'A short story',
+      answers: ['left'],
+      expect: 'That is the end.',
+      source: `# A story that asks which way you go.
+show The path splits in two.
+ask way Left or right?
+
+if way equals left
+show A river. You follow it home.
+else
+show A cave. Something inside is asleep.
+end
+show That is the end.`,
     },
     {
       id: 'menu',
@@ -459,20 +493,19 @@ print(word)`,
 3번 반복해서 NME는 쉽습니다 말해줘`,
     },
     {
-      id: 'story',
-      label: '짧은 이야기',
-      answers: ['왼쪽'],
-      expect: '여기까지입니다',
-      source: `# 어느 쪽으로 갈지 물어보는 이야기.
-두 갈래 길 앞에 서 있습니다 말해줘
-길을 물어봐 왼쪽인가요 오른쪽인가요?
-
-만약에 길이 왼쪽과 같으면
-강이 나옵니다. 물길을 보며 집으로 돌아갑니다 말해줘
-아니면
-동굴이 나옵니다. 안에서 무언가 자고 있습니다 말해줘
+      id: 'storyblock',
+      label: '이야기 묶음',
+      answers: [],
+      expect: '제목이 없었습니다',
+      source: `# 이야기 묶음 안은 전부 글입니다. 줄마다 말해줘를 쓰지 않아도 됩니다.
+이야기:
+    아주 오래된 도서관이었습니다.
+    책들은 저마다 다른 두께로 서 있었습니다.
+    맨 아래 칸에 한 권만 눕혀져 있었습니다.
 끝
-여기까지입니다 말해줘`,
+천천히 이야기:
+    그 책에는 제목이 없었습니다.
+끝`,
     },
     {
       id: 'slow',
@@ -617,6 +650,25 @@ print(word)`,
 놀아 주셔서 고맙습니다 말해줘`,
     },
     {
+      id: 'chance',
+      label: '확률',
+      answers: [],
+      expect: '언제나 나옵니다',
+      source: `# 백 번에 몇 번 일어날지를 직접 정합니다.
+주사위는 1부터 6까지 무작위 숫자
+굴립니다 말해줘
+주사위 말해줘
+100% 확률로 말해줘 이 줄은 언제나 나옵니다
+0% 확률로 말해줘 이 줄은 절대 나오지 않습니다
+30% 확률로 말해줘 열에 셋쯤 나옵니다
+비는 40% 확률
+만약에 비가 있으면
+    우산을 챙기세요 말해줘
+아니면
+    오늘은 맑습니다 말해줘
+끝`,
+    },
+    {
       id: 'screen',
       label: '화면 꾸미기',
       answers: [],
@@ -676,6 +728,22 @@ print(word)`,
 입력을 물어봐 엔터
 걸린 시간(초) 말해줘
 잰시간 말해줘`,
+    },
+    {
+      id: 'story',
+      label: '짧은 이야기',
+      answers: ['왼쪽'],
+      expect: '여기까지입니다',
+      source: `# 어느 쪽으로 갈지 물어보는 이야기.
+두 갈래 길 앞에 서 있습니다 말해줘
+길을 물어봐 왼쪽인가요 오른쪽인가요?
+
+만약에 길이 왼쪽과 같으면
+강이 나옵니다. 물길을 보며 집으로 돌아갑니다 말해줘
+아니면
+동굴이 나옵니다. 안에서 무언가 자고 있습니다 말해줘
+끝
+여기까지입니다 말해줘`,
     },
     {
       id: 'menu',
