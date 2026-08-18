@@ -168,8 +168,15 @@ class Page:
 
     @property
     def url(self) -> str:
+        """The address to link to.
+
+        Deliberately without `.html`: Cloudflare Pages serves `learn/start.html`
+        at `/learn/start` and permanently redirects the `.html` form to it, so
+        linking with the extension costs a redirect on every navigation. The
+        file on disk keeps the extension — see `out`.
+        """
         prefix = "/learn/" if self.lang == "en" else "/ko/learn/"
-        return f"{prefix}{self.slug}.html"
+        return f"{prefix}{self.slug}"
 
     @property
     def out(self) -> Path:
@@ -482,7 +489,7 @@ def rail(page: Page, pages: list[Page], guides: list[Page]) -> str:
 <div class="rail-group"><h3>{escape(words["rail_prompts"])}</h3><ul>{group_links("prompts")}</ul></div>
 <div class="rail-group"><h3>{escape(words["rail_deeper"])}</h3><ul>{group_links("deeper")}</ul></div>
 <div class="rail-group"><h3>{escape(words["rail_guides"])}</h3><ul>
-<li><a href="{hub}guides.html">{escape(words["guides_heading"])}</a></li>
+<li><a href="{hub}guides">{escape(words["guides_heading"])}</a></li>
 </ul></div>
 {"".join(guide_groups)}
 </details>"""
@@ -566,7 +573,7 @@ def page_shell(
     <nav class="head-nav" aria-label="{escape(words["docs"])}">
       <a href="{words["home"]}#playground">{escape(words["try"])}</a>
       <a href="{words["learn"]}">{escape(words["docs"])}</a>
-      <a class="nav-hide-sm" href="{words["learn"]}guides.html">{escape(words["guides"])}</a>
+      <a class="nav-hide-sm" href="{words["learn"]}guides">{escape(words["guides"])}</a>
       <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
     </nav>
       <span class="theme-toggle" role="group" aria-label="{escape(words["theme"])}">
@@ -636,11 +643,11 @@ def crumbs(page: Page) -> str:
     trail = [f'<a href="{words["learn"]}">{escape(words["back"])}</a>']
     if page.group == "guides":
         trail.append(
-            f'<span>/</span><a href="{words["learn"]}guides.html">{escape(words["guides"])}</a>'
+            f'<span>/</span><a href="{words["learn"]}guides">{escape(words["guides"])}</a>'
         )
     elif page.group == "prompts":
         trail.append(
-            f'<span>/</span><a href="{words["learn"]}prompts.html">{escape(words["prompts"])}</a>'
+            f'<span>/</span><a href="{words["learn"]}prompts">{escape(words["prompts"])}</a>'
         )
     return f'<nav class="doc-crumbs">{"".join(trail)}</nav>'
 
@@ -649,8 +656,14 @@ PREREQ_LABEL = {"en": "Prerequisites", "ko": "선수 지식"}
 RESULT_LABEL = {"en": "You will end up with", "ko": "결과물"}
 
 
-def meta_strip(page: Page) -> str:
-    """Difficulty and topic as badges; the rest as two quiet lines."""
+def meta_strip(page: Page, rewrite) -> str:
+    """Difficulty and topic as badges; the rest as two quiet lines.
+
+    `rewrite` is the same link rewriter the body uses. Without it the
+    prerequisite link keeps pointing at a `.md` file that the site does not
+    publish — 116 dead links across the guides, all of them the one line a
+    reader is most likely to follow.
+    """
     if not page.meta:
         return ""
     words = STRINGS[page.lang]
@@ -665,7 +678,7 @@ def meta_strip(page: Page) -> str:
         if key in page.meta:
             rows.append(
                 f"<dt>{escape(labels[page.lang])}</dt>"
-                f"<dd>{md.render_inline(page.meta[key])}</dd>"
+                f"<dd>{md.render_inline(page.meta[key], rewrite)}</dd>"
             )
     if not badges and not rows:
         return ""
@@ -726,7 +739,7 @@ def learn_hub(lang: str, pages: list[Page]) -> str:
             f"<span>{escape(blurb)}</span></li>"
         )
     guides_line = (
-        f'<li><a href="{words["learn"]}guides.html">{escape(words["guides_heading"])}</a>'
+        f'<li><a href="{words["learn"]}guides">{escape(words["guides_heading"])}</a>'
         f'<span>{"One short guide per idea, in order." if lang == "en" else "한 편에 한 가지씩, 순서대로 읽는 가이드입니다."}</span></li>'
     )
     deeper = "".join(
@@ -869,11 +882,12 @@ def render_page(
     by_key: dict[tuple[str, str], Page],
 ) -> str:
     words = STRINGS[page.lang]
-    body = md.render(page.text, make_link_rewriter(page, by_key, docs))
+    rewrite = make_link_rewriter(page, by_key, docs)
+    body = md.render(page.text, rewrite)
     body = wrap_tables(body)
     body = add_anchors(body)
     body = decorate_snippets(body, page, compiler)
-    strip = meta_strip(page) + copy_bar(page)
+    strip = meta_strip(page, rewrite) + copy_bar(page)
     if strip and "</h1>" in body:
         body = body.replace("</h1>", "</h1>\n" + strip, 1)
 
@@ -984,11 +998,11 @@ def write_sitemap(pages: list[Page]) -> None:
         if page.lang != "en" or page.key in seen:
             continue
         seen.add(page.key)
-        twin = f"/ko/learn/{page.slug}.html"
+        twin = f"/ko/learn/{page.slug}"
         pairs.append((page.url, twin))
     for slug in ("index", "guides", "prompts"):
-        english = "/learn/" if slug == "index" else f"/learn/{slug}.html"
-        korean = "/ko/learn/" if slug == "index" else f"/ko/learn/{slug}.html"
+        english = "/learn/" if slug == "index" else f"/learn/{slug}"
+        korean = "/ko/learn/" if slug == "index" else f"/ko/learn/{slug}"
         pairs.append((english, korean))
 
     lines = [
@@ -1027,7 +1041,7 @@ def write_hub(
 </div>
     </article>"""
     twin = ("/ko/learn/" if lang == "en" else "/learn/") + (
-        "" if slug == "index" else f"{slug}.html"
+        "" if slug == "index" else slug
     )
     html_text = page_shell(
         lang,

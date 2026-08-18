@@ -34,12 +34,32 @@ createServer(async (request, response) => {
   let path = normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, '');
   let file = join(ROOT, path);
 
-  try {
-    if ((await stat(file)).isDirectory()) file = join(file, 'index.html');
-  } catch {
-    response.writeHead(404, { 'content-type': 'text/plain' });
-    response.end('not found');
-    return;
+  // Cloudflare Pages serves `/learn/guides` from `learn/guides.html` and
+  // redirects the `.html` form to the clean one, so every link on this site
+  // is written without the extension. Resolve the same way here, including
+  // the tie: `learn/guides.html` and the `learn/guides/` directory both exist,
+  // and Pages serves the file. Getting this order wrong makes preview 404 on
+  // pages that work in production.
+  const exists = async (candidate) => {
+    try {
+      return await stat(candidate);
+    } catch {
+      return null;
+    }
+  };
+
+  const asFile = await exists(file + '.html');
+  if (asFile && asFile.isFile()) {
+    file += '.html';
+  } else {
+    const direct = await exists(file);
+    if (direct && direct.isDirectory()) {
+      file = join(file, 'index.html');
+    } else if (!direct) {
+      response.writeHead(404, { 'content-type': 'text/plain' });
+      response.end('not found');
+      return;
+    }
   }
 
   try {

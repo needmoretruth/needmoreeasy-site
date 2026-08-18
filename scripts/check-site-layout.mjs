@@ -9,13 +9,13 @@ const WIDTHS = [320, 390, 768, 1280, 1920];
 const PAGES = [
   '/index.html',
   '/ko/index.html',
-  '/learn/guides.html',
-  '/ko/learn/guides.html',
-  '/learn/guides/05-repeat.html',
-  '/ko/learn/guides/05-repeat.html',
-  '/learn/prompts.html',
-  '/ko/learn/prompts.html',
-  '/learn/syntax.html',
+  '/learn/guides',
+  '/ko/learn/guides',
+  '/learn/guides/05-repeat',
+  '/ko/learn/guides/05-repeat',
+  '/learn/prompts',
+  '/ko/learn/prompts',
+  '/learn/syntax',
 ];
 
 const browser = await chromium.launch();

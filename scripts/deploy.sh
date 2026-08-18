@@ -43,6 +43,9 @@ node scripts/check-examples.mjs
 # The layout check needs a server with the same cross-origin headers Pages
 # sends, so it starts one, checks every page at five widths in both themes,
 # and stops it again. A layout that overflows a phone must not reach the web.
+echo "== 내부 링크 전수 시험 =="
+node scripts/check-site-links.mjs
+
 echo "== 화면 폭·테마 회귀 시험 =="
 node scripts/serve.mjs 8788 >/dev/null 2>&1 &
 SERVE_PID=$!
