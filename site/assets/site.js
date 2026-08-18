@@ -181,6 +181,15 @@ function wireReveal() {
     node.style.setProperty('transition-delay', `${Math.min(index % 6, 5) * 35}ms`);
     seen.observe(node);
   });
+
+  // Failsafe. Anything still hidden after a few seconds is shown anyway: a
+  // reader who never scrolls, a tool that renders the whole page at once, or
+  // an observer that never fires must not be left looking at empty sections.
+  // Four seconds is long enough that a scrolling reader still sees the motion.
+  setTimeout(() => {
+    seen.disconnect();
+    targets.forEach((node) => node.classList.add('in'));
+  }, 4000);
 }
 
 /* The header is part of the page until the page moves under it. */

@@ -233,6 +233,46 @@ end
 show Stopped early`,
     },
     {
+      id: 'slow',
+      label: 'A story, letter by letter',
+      answers: [],
+      expect: 'That is the end',
+      source: `# Letters arrive one at a time, the way a story does.
+say slowly The door opened slowly.
+wait 1 second
+say very slowly Nobody was there.
+show That is the end`,
+    },
+    {
+      id: 'screen',
+      label: 'Arrange the screen',
+      answers: [],
+      expect: 'Coffee, tea, water',
+      source: `# Four sentences that tidy the screen.
+clear the screen
+draw a line
+say in the middle Todays menu
+draw a line
+say in a box Coffee, tea, water`,
+    },
+    {
+      id: 'clock',
+      label: 'Stopwatch and cooldown',
+      answers: [],
+      expect: 'The door opened',
+      source: `# A stopwatch and a named cooldown, both as sentences.
+start the timer
+put door on cooldown for 2 seconds
+
+when door is on cooldown
+show The door is still locked
+end
+
+wait for door
+show The door opened
+show elapsed`,
+    },
+    {
       id: 'levels',
       label: 'Three levels at once',
       answers: [],
@@ -553,6 +593,46 @@ print(word)`,
 만약에 남은수가 2와 같으면 멈춰
 끝
 여기서 멈췄습니다 말해줘`,
+    },
+    {
+      id: 'slow',
+      label: '글자 하나씩 나오는 이야기',
+      answers: [],
+      expect: '여기까지입니다',
+      source: `# 소설처럼 글자가 하나씩 나옵니다.
+천천히 말해줘 문이 천천히 열렸습니다.
+1초 기다려
+아주 천천히 말해줘 아무도 없었습니다.
+여기까지입니다 말해줘`,
+    },
+    {
+      id: 'screen',
+      label: '화면 꾸미기',
+      answers: [],
+      expect: '커피, 차, 물',
+      source: `# 화면을 정리하는 문장 넷.
+화면 지워
+줄 그어
+가운데 말해줘 오늘의 차림표
+줄 그어
+상자로 말해줘 커피, 차, 물`,
+    },
+    {
+      id: 'clock',
+      label: '시간 재기와 쿨타임',
+      answers: [],
+      expect: '문이 열렸습니다',
+      source: `# 시간 재기와 쿨타임, 둘 다 문장입니다.
+시간 재기 시작해
+문 쿨타임 2초 걸어
+
+만약 문 쿨타임이 남았으면
+문이 아직 잠겨 있습니다 말해줘
+끝
+
+문 쿨타임 끝날때까지 기다려
+문이 열렸습니다 말해줘
+잰시간 말해줘`,
     },
     {
       id: 'levels',

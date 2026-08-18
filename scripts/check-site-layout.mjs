@@ -68,6 +68,28 @@ for (const theme of ['light', 'dark']) {
   await context.close();
 }
 
+/* Nothing may stay invisible on a page nobody scrolled. The reveal animation
+ * hides its targets until they come into view, so it needs a failsafe; without
+ * one, a reader who lands and reads without touching the wheel — or any tool
+ * that renders the whole page at once — sees empty sections. Checked once per
+ * landing page rather than at every width, because it costs four seconds. */
+{
+  const context = await browser.newContext();
+  for (const path of ['/index.html', '/ko/index.html']) {
+    const page = await context.newPage();
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(BASE + path, { waitUntil: 'domcontentloaded' });
+    // 4s failsafe plus the 0.7s transition and its stagger.
+    await page.waitForTimeout(5600);
+    const hidden = await page.evaluate(() => [...document.querySelectorAll('.reveal')]
+      .filter((el) => Number(getComputedStyle(el).opacity) < 0.9)
+      .map((el) => String(el.className).slice(0, 30)).slice(0, 3));
+    if (hidden.length) note(`${path}: 스크롤 없이 안 보이는 요소 ${hidden.join(', ')}`);
+    await page.close();
+  }
+  await context.close();
+}
+
 /* The theme toggle has to do two things a screenshot cannot prove: change the
  * painted colour, and still be in force after a reload. */
 {

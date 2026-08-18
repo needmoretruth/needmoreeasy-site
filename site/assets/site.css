@@ -1543,6 +1543,7 @@ table.syntax tr:last-child td { border-bottom: 0; }
 
 /* Printing a guide should give a plain document, not a screenshot of glass. */
 @media print {
+  .js .reveal { opacity: 1; transform: none; filter: none; }
   .stage, .site-head, .doc-rail, .doc-toc, .snippet-tools, .site-foot { display: none; }
   body { background: #fff; color: #000; }
   body::before, body::after { display: none; }

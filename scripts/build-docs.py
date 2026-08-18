@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Renders the language repository's documentation into the site.
 
-Everything a beginner needs — the five-minute start, the syntax list, all 85
+Everything a beginner needs — the five-minute start, the syntax list, all 88
 guides and the AI prompts — is published here so that reading and writing NME
 never requires a GitHub account or a desktop. Each page is the same Markdown
 that ships in the repository, so there is one source of truth and no second
@@ -99,7 +99,7 @@ STRINGS = {
         "topic": "Topic",
         "toggle": "한국어",
         "toggle_url": "/ko/learn/",
-        "guides_heading": "All 85 guides",
+        "guides_heading": "All 88 guides",
         "back": "Learn",
     },
     "ko": {
@@ -138,7 +138,7 @@ STRINGS = {
         "topic": "주제",
         "toggle": "English",
         "toggle_url": "/learn/",
-        "guides_heading": "가이드 85편 전체",
+        "guides_heading": "가이드 88편 전체",
         "back": "배우기",
     },
 }
