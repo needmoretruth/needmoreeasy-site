@@ -645,7 +645,7 @@ class Playground {
    * it grows with the program instead of making the writer scroll inside a
    * box eight lines tall. On a wide screen the two panes stay level. */
   wireEditorHeight() {
-    const narrow = matchMedia('(max-width: 859px)');
+    const narrow = matchMedia('(max-width: 819px)');
     const grow = () => {
       if (!narrow.matches) {
         this.editor.style.height = '';
