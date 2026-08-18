@@ -44,6 +44,42 @@ function fail(where, message, detail) {
   if (detail) console.log(String(detail).split('\n').map((line) => `      ${line}`).join('\n'));
 }
 
+/* The two home pages are twins: the same sections, in the same order, with the
+ * same cards, the same four file tabs and the same three AI messages. Only the
+ * words differ. A section added to one and forgotten on the other is the most
+ * likely way this page drifts, and nothing else would catch it.
+ */
+function shapeOf(html) {
+  const marks = [];
+  const pattern =
+    /<section[^>]*id="([\w-]+)"|<h([12])[^>]*>|<div class="card"|<li class="step"|data-prompt="([\w-]+)"|data-file="(\w+)"|data-copy-to="(\d)"/g;
+  for (const match of html.matchAll(pattern)) {
+    if (match[1]) marks.push(`section#${match[1]}`);
+    else if (match[2]) marks.push(`h${match[2]}`);
+    else if (match[3]) marks.push(`prompt:${match[3]}`);
+    else if (match[4]) marks.push(`file:${match[4]}`);
+    else if (match[5]) marks.push(`copy-to:${match[5]}`);
+    else marks.push('card-or-step');
+  }
+  return marks;
+}
+
+function checkHomePagesMatch() {
+  const english = shapeOf(readFileSync(join(SITE, 'index.html'), 'utf8'));
+  const korean = shapeOf(readFileSync(join(SITE, 'ko/index.html'), 'utf8'));
+  const limit = Math.max(english.length, korean.length);
+  for (let index = 0; index < limit; index += 1) {
+    if (english[index] === korean[index]) continue;
+    fail(
+      'index.html vs ko/index.html',
+      'the two home pages have drifted apart',
+      `at position ${index}: English has ${english[index] ?? '(nothing)'}, ` +
+      `Korean has ${korean[index] ?? '(nothing)'}`,
+    );
+    return;
+  }
+}
+
 function unescapeHtml(text) {
   return text
     .replace(/&lt;/g, '<')
@@ -136,8 +172,9 @@ for (const page of PAGES) {
 }
 
 checkProducedPythonParses();
+checkHomePagesMatch();
 
 console.log(failures === 0
-  ? `홈 화면의 프로그램 ${checked}개가 전부 컴파일됩니다`
+  ? `홈 화면의 프로그램 ${checked}개가 전부 컴파일되고, 두 언어의 화면 구조가 같습니다`
   : `홈 화면 프로그램 ${failures}개가 잘못되었습니다`);
 process.exit(failures === 0 ? 0 : 1);
