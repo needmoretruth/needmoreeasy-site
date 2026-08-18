@@ -1723,6 +1723,11 @@ table.syntax tr:last-child td { border-bottom: 0; }
     backdrop-filter: blur(18px) saturate(150%);
     box-shadow: var(--shadow-3);
   }
+  /* Everything in the floating bar on one line at 360px: the two buttons keep
+   * their touch size, the note gives up the space instead. */
+  .run-bar { gap: 0.4rem; }
+  .run-bar .btn { padding: 0.5rem 0.95rem; }
+  .run-note { font-size: 0.78rem; flex: 1 1 6rem; min-width: 0; }
 }
 
 @media (max-width: 700px) {
