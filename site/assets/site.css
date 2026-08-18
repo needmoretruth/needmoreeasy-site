@@ -458,7 +458,8 @@ p code, li code, td code, th code {
   border-radius: 6px;
   background: var(--glass-sunk);
   border: 1px solid var(--hairline);
-  white-space: nowrap;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 pre.code, .readout, .terminal, .editor {
@@ -1053,7 +1054,7 @@ pre code {
 .split { display: grid; gap: clamp(1.5rem, 3vw, 3rem); align-items: center; }
 /* A grid item defaults to `min-width: auto`, which lets one long line of code
  * push the whole column — and the page — wider than the screen. */
-.split > *, .cards > *, .panes > *, .hero .wrap > * { min-width: 0; }
+.split > *, .cards > *, .panes > *, .hero .wrap > *, .doc-shell .wrap > * { min-width: 0; }
 
 .copy-wrap { position: relative; }
 .copy-wrap pre.code { padding-top: 2.6rem; }
