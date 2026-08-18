@@ -58,6 +58,7 @@ node scripts/check-site-structure.mjs http://127.0.0.1:8788
 # slow — the two paths that are invisible until they go wrong.
 node scripts/check-site-boot-failures.mjs http://127.0.0.1:8788
 node scripts/check-site-slow-engine.mjs http://127.0.0.1:8788
+node scripts/check-site-docs.mjs http://127.0.0.1:8788
 kill "$SERVE_PID" 2>/dev/null || true
 trap - EXIT
 
