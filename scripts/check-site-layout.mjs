@@ -70,6 +70,27 @@ for (const theme of ['light', 'dark']) {
   await context.close();
 }
 
+/* A phone held sideways is short and wide — 844x390 — which no portrait width
+ * exercises. The playground must still show both panes and must not overflow. */
+{
+  const context = await browser.newContext();
+  for (const [width, height] of [[844, 390], [740, 360]]) {
+    const page = await context.newPage();
+    await page.setViewportSize({ width, height });
+    await page.goto(BASE + '/ko/index.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(600);
+    const out = await page.evaluate(() => ({
+      overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+      columns: getComputedStyle(document.querySelector('.panes')).gridTemplateColumns.split(' ').length,
+    }));
+    if (out.overflow) note(`가로 ${width}x${height}: 가로 넘침`);
+    if (width >= 820 && out.columns !== 2) note(`가로 ${width}x${height}: 두 칸이 아님`);
+    if (width < 820 && out.columns !== 1) note(`가로 ${width}x${height}: 한 칸이 아님`);
+    await page.close();
+  }
+  await context.close();
+}
+
 /* Nothing may stay invisible on a page nobody scrolled. The reveal animation
  * hides its targets until they come into view, so it needs a failsafe; without
  * one, a reader who lands and reads without touching the wheel — or any tool
