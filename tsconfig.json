@@ -1,0 +1,36 @@
+{
+  /* The page's own scripts. The worker is checked separately, by
+   * `tsconfig.worker.json`, because it runs somewhere with no `document` and
+   * needs a different set of standard libraries — weakening this one to cover
+   * both would let a `document` reference into the worker unnoticed. */
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": [],
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "site/src/externals.d.ts",
+    "site/src/site.ts",
+    "site/src/examples.ts",
+    "site/src/theme.ts"
+  ]
+}

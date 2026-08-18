@@ -8,13 +8,17 @@
  * There is no server anywhere in here. The compiler is WebAssembly on this
  * thread; the Python engine is WebAssembly in a worker. A visitor's code never
  * leaves their machine, which is also why the page can promise that.
+ *
+ * This is the source. `scripts/build-scripts.mjs` type-checks it and compiles
+ * it to `site/assets/site.js`, which is the file the page loads.
  */
 
 import init, { compile } from './wasm/nme.js';
 import { EXAMPLES } from './examples.js';
 import { COMPILER_BYTES } from './engine-meta.js';
+import type { Example, ExampleLanguage } from './examples.js';
 
-const LANG = document.documentElement.lang === 'ko' ? 'ko' : 'en';
+const LANG: ExampleLanguage = document.documentElement.lang === 'ko' ? 'ko' : 'en';
 const STORE_KEY = 'nme-lang';
 
 const TEXT = {
@@ -90,13 +94,40 @@ const TEXT = {
   },
 }[LANG];
 
+/* --- reading the page ---------------------------------------------------- */
+
+/* Everything this file touches is fetched through one of these three, so that
+ * "the page must have this" and "the page may have this" are different lines
+ * rather than the same line and a hope. Each one checks what it found against
+ * the kind of element it is about to be used as, which is what lets the rest
+ * of the file stay free of type assertions.
+ */
+type ElementKind<T extends Element> = abstract new (...args: never[]) => T;
+
+function queryOne<T extends Element>(root: ParentNode, selector: string, kind: ElementKind<T>): T {
+  const found = root.querySelector(selector);
+  if (found instanceof kind) return found;
+  throw new Error(`the page is missing ${selector}`);
+}
+
+function queryMaybe<T extends Element>(root: ParentNode, selector: string, kind: ElementKind<T>): T | null {
+  const found = root.querySelector(selector);
+  return found instanceof kind ? found : null;
+}
+
+function queryAll<T extends Element>(root: ParentNode, selector: string, kind: ElementKind<T>): T[] {
+  return [...root.querySelectorAll(selector)].filter((node): node is T => node instanceof kind);
+}
+
 /* --- language routing ---------------------------------------------------- */
 
-function rememberLanguageChoice() {
-  document.querySelectorAll('[data-lang-choice]').forEach((link) => {
+function rememberLanguageChoice(): void {
+  queryAll(document, '[data-lang-choice]', HTMLElement).forEach((link) => {
     link.addEventListener('click', () => {
+      const choice = link.dataset.langChoice;
+      if (choice === undefined) return;
       try {
-        localStorage.setItem(STORE_KEY, link.dataset.langChoice);
+        localStorage.setItem(STORE_KEY, choice);
       } catch {
         /* private mode: the choice simply is not remembered */
       }
@@ -107,9 +138,9 @@ function rememberLanguageChoice() {
 /* The English page is the site's front door, so it is the only page that ever
  * forwards. It forwards once, only for a visitor whose browser asks for Korean
  * and who has never chosen a language here. Anyone who clicks "EN" stays. */
-function forwardKoreanSpeakersOnce() {
+function forwardKoreanSpeakersOnce(): void {
   if (LANG !== 'en') return;
-  let stored = null;
+  let stored: string | null = null;
   try {
     stored = localStorage.getItem(STORE_KEY);
   } catch {
@@ -129,15 +160,15 @@ const THEME_KEY = 'nme-theme';
 /* Three states, not two. "System" is a real choice: it is what a visitor who
  * set their phone to switch at sunset already asked for, so it stays the
  * default and the toggle can always get back to it. */
-function wireTheme() {
-  const buttons = [...document.querySelectorAll('[data-theme-choice]')];
+function wireTheme(): void {
+  const buttons = queryAll(document, '[data-theme-choice]', HTMLElement);
   if (!buttons.length) return;
 
-  const current = () => {
+  const current = (): string => {
     const attribute = document.documentElement.getAttribute('data-theme');
     return attribute === 'dark' || attribute === 'light' ? attribute : 'system';
   };
-  const paint = () => {
+  const paint = (): void => {
     const now = current();
     buttons.forEach((button) => {
       button.setAttribute('aria-pressed', String(button.dataset.themeChoice === now));
@@ -147,6 +178,7 @@ function wireTheme() {
   buttons.forEach((button) => {
     button.addEventListener('click', () => {
       const choice = button.dataset.themeChoice;
+      if (choice === undefined) return;
       if (choice === 'system') document.documentElement.removeAttribute('data-theme');
       else document.documentElement.setAttribute('data-theme', choice);
       try {
@@ -164,12 +196,13 @@ function wireTheme() {
 /* Panels rise into place as they are reached. Everything starts visible in the
  * markup; the hidden state is added here, so a reader without script — or one
  * who asked for less motion — sees a complete page either way. */
-function wireReveal() {
+function wireReveal(): void {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   if (!('IntersectionObserver' in window)) return;
 
-  const targets = document.querySelectorAll(
-    '.hero-text, .hero-figure, .play-head, .card, .split > div, .links li, .prompt-card, .notice');
+  const targets = queryAll(document,
+    '.hero-text, .hero-figure, .play-head, .card, .split > div, .links li, .prompt-card, .notice',
+    HTMLElement);
   if (!targets.length) return;
 
   const seen = new IntersectionObserver((entries) => {
@@ -199,10 +232,10 @@ function wireReveal() {
 }
 
 /* The header is part of the page until the page moves under it. */
-function wireHeaderEdge() {
-  const head = document.querySelector('.site-head');
+function wireHeaderEdge(): void {
+  const head = queryMaybe(document, '.site-head', HTMLElement);
   if (!head) return;
-  const sync = () => head.setAttribute('data-scrolled', String(window.scrollY > 8));
+  const sync = (): void => head.setAttribute('data-scrolled', String(window.scrollY > 8));
   sync();
   addEventListener('scroll', sync, { passive: true });
 }
@@ -211,8 +244,8 @@ function wireHeaderEdge() {
  * pointer is that light: a soft circle where the structure shows through.
  * It is one element and one custom property, and phones never get it because
  * there is no pointer to follow. */
-function wireBeam() {
-  const stage = document.querySelector('.stage');
+function wireBeam(): void {
+  const stage = queryMaybe(document, '.stage', HTMLElement);
   if (!stage) return;
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -239,11 +272,11 @@ function wireBeam() {
 
 /* Glass has a highlight where the light hits it, and here the light is the
  * pointer. Touch screens have no pointer to follow, so they never pay for it. */
-function wirePointerSheen() {
+function wirePointerSheen(): void {
   if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  for (const panel of document.querySelectorAll('.card, .prompt-card')) {
+  for (const panel of queryAll(document, '.card, .prompt-card', HTMLElement)) {
     panel.addEventListener('pointermove', (event) => {
       const box = panel.getBoundingClientRect();
       panel.style.setProperty('--mx', `${event.clientX - box.left}px`);
@@ -254,13 +287,13 @@ function wirePointerSheen() {
 
 /* The hero says "you write this, it becomes that". Revealing the second block
  * a beat after the first makes the page say it too, once, on arrival. */
-function wireHeroLines() {
+function wireHeroLines(): void {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const blocks = document.querySelectorAll('.hero-figure pre.code');
+  const blocks = queryAll(document, '.hero-figure pre.code', HTMLElement);
   if (blocks.length !== 2) return;
 
   blocks.forEach((block, blockIndex) => {
-    const lines = block.textContent.replace(/\n$/, '').split('\n');
+    const lines = (block.textContent ?? '').replace(/\n$/, '').split('\n');
     block.textContent = '';
     lines.forEach((text, index) => {
       const line = document.createElement('span');
@@ -276,7 +309,7 @@ function wireHeroLines() {
 
 /* A download the browser makes itself: no server sees the program, which is
  * the same promise the rest of the playground makes. */
-function downloadText(filename, text) {
+function downloadText(filename: string, text: string): void {
   const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -288,7 +321,7 @@ function downloadText(filename, text) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-async function copyText(text) {
+async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
     return true;
@@ -299,10 +332,12 @@ async function copyText(text) {
 
 /* --- copy buttons -------------------------------------------------------- */
 
-function wireCopyButtons() {
-  document.querySelectorAll('[data-copy]').forEach((button) => {
+function wireCopyButtons(): void {
+  queryAll(document, '[data-copy]', HTMLElement).forEach((button) => {
     button.addEventListener('click', async () => {
-      const target = document.getElementById(button.dataset.copy);
+      const targetId = button.dataset.copy;
+      if (targetId === undefined) return;
+      const target = document.getElementById(targetId);
       if (!target) return;
       try {
         await navigator.clipboard.writeText(target.innerText);
@@ -318,14 +353,16 @@ function wireCopyButtons() {
 
 /* A prompt is thousands of words long, so it is copied from the file rather
  * than from anything on screen: one press, whole document, no scrolling. */
-function wireFileCopyButtons() {
+function wireFileCopyButtons(): void {
   const label = LANG === 'ko' ? '복사했습니다' : 'copied';
   const failed = LANG === 'ko' ? '복사하지 못했습니다' : 'copy failed';
-  document.querySelectorAll('[data-copy-file]').forEach((button) => {
+  queryAll(document, '[data-copy-file]', HTMLElement).forEach((button) => {
     button.addEventListener('click', async () => {
+      const file = button.dataset.copyFile;
+      if (file === undefined) return;
       const original = button.textContent;
       try {
-        const response = await fetch(button.dataset.copyFile);
+        const response = await fetch(file);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         await navigator.clipboard.writeText(await response.text());
         button.textContent = label;
@@ -346,13 +383,15 @@ const PY_KEYWORDS = new Set([
   'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield',
 ]);
 
-function escapeHtml(text) {
-  return text.replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]));
+const HTML_ESCAPES: Readonly<Record<string, string>> = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>]/g, (ch) => HTML_ESCAPES[ch] ?? ch);
 }
 
 /* Deliberately small: strings, comments, numbers, keywords. Anything cleverer
  * would need a real Python lexer, and this pane is for reading, not editing. */
-function highlightPython(source) {
+function highlightPython(source: string): string {
   const pattern = /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#[^\n]*|\b\d+(?:\.\d+)?\b|[A-Za-z_\u00c0-\uffff][\w\u00c0-\uffff]*)/g;
   let result = '';
   let last = 0;
@@ -380,17 +419,17 @@ function highlightPython(source) {
 /* The index rail is a <details> so that it collapses on a phone. On a wide
  * screen it is a permanent column, and a reader with JavaScript off still gets
  * a working disclosure rather than an empty box. */
-function wireDocRail() {
-  const rail = document.querySelector('.doc-rail');
+function wireDocRail(): void {
+  const rail = queryMaybe(document, '.doc-rail', HTMLDetailsElement);
   if (!rail) return;
   const wide = matchMedia('(min-width: 900px)');
-  const sync = () => { rail.open = wide.matches; };
+  const sync = (): void => { rail.open = wide.matches; };
   sync();
   wide.addEventListener('change', sync);
 
   // Bring the current guide into view inside the rail only. `scrollIntoView`
   // would move the page itself, dropping the reader below the title.
-  const current = rail.querySelector('[aria-current="page"]');
+  const current = queryMaybe(rail, '[aria-current="page"]', HTMLElement);
   if (current && rail.scrollHeight > rail.clientHeight) {
     rail.scrollTop = current.offsetTop - rail.clientHeight / 2;
   }
@@ -399,13 +438,13 @@ function wireDocRail() {
 /* Eighty-five guides is too many to scroll through on a phone, so the list
  * filters as you type. Filtering happens over text the page already carries;
  * nothing is fetched. */
-function wireGuideFilter() {
-  const input = document.querySelector('#guide-filter');
-  const list = document.querySelector('#guide-list');
-  const count = document.querySelector('#guide-count');
+function wireGuideFilter(): void {
+  const input = queryMaybe(document, '#guide-filter', HTMLInputElement);
+  const list = queryMaybe(document, '#guide-list', HTMLElement);
+  const count = queryMaybe(document, '#guide-count', HTMLElement);
   if (!input || !list) return;
-  const items = [...list.children];
-  const template = count ? count.textContent.replace(/\d+/, '%d') : '';
+  const items = [...list.children].filter((node): node is HTMLElement => node instanceof HTMLElement);
+  const template = count ? (count.textContent ?? '').replace(/\d+/, '%d') : '';
 
   input.addEventListener('input', () => {
     const needle = input.value.trim().toLowerCase();
@@ -421,11 +460,13 @@ function wireGuideFilter() {
 
 /* --- downloads the visitor can watch ------------------------------------- */
 
+type ProgressReport = (loaded: number, total: number) => void;
+
 /* `init()` would happily fetch the WebAssembly itself, but then nobody can say
  * how far along it is. Reading the body in chunks costs nothing and turns a
  * blank wait into a progress bar. `expected` is the uncompressed size stamped
  * in at build time, because `content-length` describes the compressed bytes. */
-async function fetchWithProgress(url, expected, onProgress) {
+async function fetchWithProgress(url: string, expected: number, onProgress: ProgressReport): Promise<Response> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
   if (!response.body) return response;
@@ -443,39 +484,184 @@ async function fetchWithProgress(url, expected, onProgress) {
   return new Response(counted, { headers: { 'content-type': 'application/wasm' } });
 }
 
+/* --- what the two WebAssembly modules say -------------------------------- */
+
+/* Both modules answer in JSON rather than in objects, which keeps the glue out
+ * of this file — at the price of the text arriving here as `unknown`. These
+ * two readers are where that text becomes a shape the rest of the file can
+ * rely on; anything unexpected reads as "it did not work", which is what the
+ * old code did too, one field at a time. */
+interface CompileOutcome {
+  readonly ok: boolean;
+  readonly python: string;
+  readonly diagnostic: string;
+}
+
+function readCompileOutcome(json: string): CompileOutcome {
+  const raw: unknown = JSON.parse(json);
+  if (typeof raw !== 'object' || raw === null) return { ok: false, python: '', diagnostic: json };
+  const ok = 'ok' in raw && raw.ok === true;
+  const python = 'python' in raw && typeof raw.python === 'string' ? raw.python : '';
+  const diagnostic = 'diagnostic' in raw && typeof raw.diagnostic === 'string' ? raw.diagnostic : '';
+  return { ok, python, diagnostic };
+}
+
+/* What the worker sends back. Both ends of this are in this repository, so the
+ * union below is the whole protocol; `readWorkerMessage` turns the `unknown`
+ * that arrives on the wire into one of these, or into nothing at all, which
+ * the switch ignores exactly as the old `default: break` did. */
+type WorkerMessage =
+  | { readonly type: 'progress'; readonly loaded: number; readonly total: number }
+  | { readonly type: 'ready' }
+  | { readonly type: 'out'; readonly text: string }
+  | { readonly type: 'ask' }
+  | { readonly type: 'done'; readonly ok: boolean; readonly error: string | null }
+  | { readonly type: 'fatal'; readonly error: string };
+
+function readWorkerMessage(data: unknown): WorkerMessage | null {
+  if (typeof data !== 'object' || data === null || !('type' in data)) return null;
+  const kind = data.type;
+  if (kind === 'ready') return { type: 'ready' };
+  if (kind === 'ask') return { type: 'ask' };
+  if (kind === 'progress') {
+    const loaded = 'loaded' in data ? data.loaded : undefined;
+    const total = 'total' in data ? data.total : undefined;
+    if (typeof loaded !== 'number' || typeof total !== 'number') return null;
+    return { type: 'progress', loaded, total };
+  }
+  if (kind === 'out') {
+    const text = 'text' in data ? data.text : undefined;
+    return typeof text === 'string' ? { type: 'out', text } : null;
+  }
+  if (kind === 'done') {
+    const ok = 'ok' in data ? data.ok : undefined;
+    const error = 'error' in data ? data.error : undefined;
+    if (typeof ok !== 'boolean') return null;
+    return { type: 'done', ok, error: typeof error === 'string' ? error : null };
+  }
+  if (kind === 'fatal') {
+    const error = 'error' in data ? data.error : undefined;
+    return typeof error === 'string' ? { type: 'fatal', error } : null;
+  }
+  return null;
+}
+
 /* --- the playground ------------------------------------------------------ */
 
 const ANSWER_CAPACITY = 4096;
 const SLOT_KEY = 'nme-slots-v1';
 const DRAFT_KEY = 'nme-draft-v1';
 
+interface SharedAnswerMemory {
+  readonly buffer: SharedArrayBuffer;
+  readonly control: Int32Array;
+  readonly bytes: Uint8Array;
+}
+
+interface Slot {
+  id: string;
+  name: string;
+  source: string;
+  updated: number;
+}
+
+interface SlotShelf {
+  list: Slot[];
+  current: string | null;
+}
+
+interface RunRequest {
+  readonly type: 'run';
+  readonly python: string;
+  readonly sab: SharedArrayBuffer | undefined;
+  readonly answers: string[] | undefined;
+}
+
+type StatusLight = 'ready' | 'busy' | 'bad';
+
+/* `Array.isArray` reports `any[]`, which would leak an implicit `any` into
+ * everything downstream. Widening it to `unknown[]` here — no assertion, just
+ * a narrower return type — keeps the leak inside this one function. */
+function asArray(value: unknown): readonly unknown[] | null {
+  return Array.isArray(value) ? value : null;
+}
+
+/* The "delete for good?" countdown used to live on the button as an expando
+ * property. A side table says the same thing without inventing a field on a
+ * DOM element that the DOM does not have. */
+const slotDeleteTimers = new WeakMap<HTMLElement, number>();
+
 class Playground {
-  constructor(root) {
-    this.editor = root.querySelector('#editor');
-    this.python = root.querySelector('#python');
-    this.pythonState = root.querySelector('#python-state');
-    this.pythonNote = root.querySelector('#python-note');
-    this.terminal = root.querySelector('#terminal');
-    this.runButton = root.querySelector('#run');
-    this.stopButton = root.querySelector('#stop');
-    this.chips = root.querySelector('#examples');
-    this.inputRow = root.querySelector('#input-row');
-    this.input = root.querySelector('#term-input');
-    this.sendButton = root.querySelector('#send');
-    this.note = root.querySelector('#engine-note');
-    this.answersWrap = root.querySelector('#answers-wrap');
-    this.answers = root.querySelector('#answers');
-    this.dot = root.querySelector('#engine-dot');
-    this.panes = root.querySelector('.panes');
-    this.pythonPane = root.querySelector('.pane-python');
-    this.tabs = [...root.querySelectorAll('.play-tabs [data-view]')];
-    this.slotList = root.querySelector('#slot-list');
-    this.slotFlash = root.querySelector('#slot-flash');
-    this.progress = root.querySelector('#boot-progress');
-    this.progressFill = this.progress.querySelector('i');
-    this.alert = root.querySelector('#boot-alert');
-    this.alertText = this.alert.querySelector('p');
-    this.retryButton = root.querySelector('#boot-retry');
+  readonly editor: HTMLTextAreaElement;
+  readonly python: HTMLElement;
+  readonly pythonState: HTMLElement;
+  readonly pythonNote: HTMLElement | null;
+  readonly terminal: HTMLElement;
+  readonly runButton: HTMLButtonElement;
+  readonly stopButton: HTMLButtonElement;
+  readonly chips: HTMLElement;
+  readonly inputRow: HTMLElement;
+  readonly input: HTMLInputElement;
+  readonly sendButton: HTMLButtonElement;
+  readonly note: HTMLElement;
+  readonly answersWrap: HTMLElement | null;
+  readonly answers: HTMLTextAreaElement | null;
+  readonly dot: HTMLElement | null;
+  readonly panes: HTMLElement | null;
+  readonly pythonPane: HTMLElement | null;
+  readonly tabs: HTMLElement[];
+  readonly slotList: HTMLElement | null;
+  readonly slotFlash: HTMLElement | null;
+  readonly progress: HTMLElement;
+  readonly progressFill: HTMLElement;
+  readonly alert: HTMLElement;
+  readonly alertText: HTMLElement;
+  readonly retryButton: HTMLButtonElement;
+
+  worker: Worker | null;
+  compiled: string;
+  debounce: number;
+  compilerReady: boolean;
+  engineReady: boolean;
+  pendingRun: boolean;
+  running: boolean;
+  readonly sharedMemory: SharedAnswerMemory | null;
+  slots: SlotShelf;
+
+  retryAction: (() => void) | null = null;
+  naming: ((name: string) => void) | null = null;
+  nameRow: HTMLFormElement | null = null;
+  nameField: HTMLInputElement | null = null;
+  grow: (() => void) | null = null;
+  freshTimer: number | undefined = undefined;
+  flashTimer: number | undefined = undefined;
+
+  constructor(root: ParentNode) {
+    this.editor = queryOne(root, '#editor', HTMLTextAreaElement);
+    this.python = queryOne(root, '#python', HTMLElement);
+    this.pythonState = queryOne(root, '#python-state', HTMLElement);
+    this.pythonNote = queryMaybe(root, '#python-note', HTMLElement);
+    this.terminal = queryOne(root, '#terminal', HTMLElement);
+    this.runButton = queryOne(root, '#run', HTMLButtonElement);
+    this.stopButton = queryOne(root, '#stop', HTMLButtonElement);
+    this.chips = queryOne(root, '#examples', HTMLElement);
+    this.inputRow = queryOne(root, '#input-row', HTMLElement);
+    this.input = queryOne(root, '#term-input', HTMLInputElement);
+    this.sendButton = queryOne(root, '#send', HTMLButtonElement);
+    this.note = queryOne(root, '#engine-note', HTMLElement);
+    this.answersWrap = queryMaybe(root, '#answers-wrap', HTMLElement);
+    this.answers = queryMaybe(root, '#answers', HTMLTextAreaElement);
+    this.dot = queryMaybe(root, '#engine-dot', HTMLElement);
+    this.panes = queryMaybe(root, '.panes', HTMLElement);
+    this.pythonPane = queryMaybe(root, '.pane-python', HTMLElement);
+    this.tabs = queryAll(root, '.play-tabs [data-view]', HTMLElement);
+    this.slotList = queryMaybe(root, '#slot-list', HTMLElement);
+    this.slotFlash = queryMaybe(root, '#slot-flash', HTMLElement);
+    this.progress = queryOne(root, '#boot-progress', HTMLElement);
+    this.progressFill = queryOne(this.progress, 'i', HTMLElement);
+    this.alert = queryOne(root, '#boot-alert', HTMLElement);
+    this.alertText = queryOne(this.alert, 'p', HTMLElement);
+    this.retryButton = queryOne(root, '#boot-retry', HTMLButtonElement);
 
     this.worker = null;
     this.compiled = '';
@@ -495,12 +681,13 @@ class Playground {
     this.setStatus('busy');
     // What the visitor last had on screen outranks the tour, and a link that
     // carries a program outranks both.
-    if (!this.loadFromHash() && !this.restoreDraft()) this.load(EXAMPLES[LANG][0]);
+    const first = EXAMPLES[LANG][0];
+    if (!this.loadFromHash() && !this.restoreDraft() && first) this.load(first);
   }
 
   /* A guide links here with the program it is teaching in the URL, so a
    * reader on a phone can run the example without retyping it. */
-  loadFromHash() {
+  loadFromHash(): boolean {
     const hash = location.hash.slice(1);
     const asked = /(?:^|&)example=([\w-]+)/.exec(hash);
     if (asked) {
@@ -511,9 +698,10 @@ class Playground {
       }
     }
     const carried = /(?:^|&)code=([A-Za-z0-9_-]+)/.exec(hash);
-    if (!carried) return false;
+    const encoded = carried ? carried[1] : undefined;
+    if (encoded === undefined) return false;
     try {
-      const base64 = carried[1].replace(/-/g, '+').replace(/_/g, '/');
+      const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
       const bytes = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
       this.editor.value = new TextDecoder().decode(bytes);
       this.terminal.textContent = '';
@@ -525,11 +713,11 @@ class Playground {
 
   /* One dot, three states, and they are the only colours the page spends:
    * green it can run, yellow something is still arriving, red it failed. */
-  setStatus(state) {
+  setStatus(state: StatusLight): void {
     if (this.dot) this.dot.dataset.state = state;
   }
 
-  setProgress(loaded, total) {
+  setProgress(loaded: number, total: number): void {
     this.progress.hidden = false;
     if (!total) {
       this.progress.dataset.mode = 'waiting';
@@ -542,14 +730,14 @@ class Playground {
     this.progress.setAttribute('aria-valuenow', String(percent));
   }
 
-  hideProgress() {
+  hideProgress(): void {
     this.progress.hidden = true;
     this.progress.removeAttribute('aria-valuenow');
   }
 
   /* Every failure a visitor can hit here is a failed download, so the notice
    * always carries the one action that can fix it. */
-  showAlert(text, retry) {
+  showAlert(text: string, retry: (() => void) | null): void {
     this.setStatus('bad');
     this.alertText.textContent = text;
     this.alert.hidden = false;
@@ -557,7 +745,7 @@ class Playground {
     this.retryAction = retry || null;
   }
 
-  hideAlert() {
+  hideAlert(): void {
     this.alert.hidden = true;
     this.retryAction = null;
   }
@@ -565,11 +753,11 @@ class Playground {
   /* SharedArrayBuffer exists only on a cross-origin-isolated page. When it is
    * missing the playground degrades to answers-in-advance rather than
    * pretending the Run button is broken. */
-  makeSharedMemory() {
+  makeSharedMemory(): SharedAnswerMemory | null {
     if (typeof SharedArrayBuffer === 'undefined' || !self.crossOriginIsolated) {
       if (this.answersWrap) {
         this.answersWrap.hidden = false;
-        const message = this.answersWrap.querySelector('[data-no-shared-memory]');
+        const message = queryMaybe(this.answersWrap, '[data-no-shared-memory]', HTMLElement);
         if (message) message.textContent = TEXT.noSharedMemory;
       }
       return null;
@@ -582,7 +770,7 @@ class Playground {
     };
   }
 
-  buildChips() {
+  buildChips(): void {
     for (const example of EXAMPLES[LANG]) {
       const button = document.createElement('button');
       button.type = 'button';
@@ -594,7 +782,7 @@ class Playground {
     }
   }
 
-  wire() {
+  wire(): void {
     this.editor.addEventListener('input', () => {
       clearTimeout(this.debounce);
       this.debounce = setTimeout(() => {
@@ -606,7 +794,8 @@ class Playground {
     // On a phone the two code panes become two tabs over one panel.
     for (const tab of this.tabs) {
       tab.addEventListener('click', () => {
-        this.panes.dataset.view = tab.dataset.view;
+        const view = tab.dataset.view;
+        if (this.panes && view !== undefined) this.panes.dataset.view = view;
         this.tabs.forEach((other) => {
           other.setAttribute('aria-selected', String(other === tab));
         });
@@ -645,10 +834,9 @@ class Playground {
   /* Thirty examples do not fit a phone, so they become one strip you swipe.
    * A strip with no edge fade looks like a list that simply ends, so the ends
    * are marked — and only the ends that actually have more beyond them. */
-  wireChipStrip() {
+  wireChipStrip(): void {
     const strip = this.chips;
-    if (!strip) return;
-    const mark = () => {
+    const mark = (): void => {
       const more = strip.scrollWidth - strip.clientWidth;
       strip.dataset.more = more > 4 ? 'true' : 'false';
       // The strip carries the page's side padding inside itself, and scroll
@@ -666,9 +854,9 @@ class Playground {
   /* On a phone the editor is the whole screen's worth of space there is, so
    * it grows with the program instead of making the writer scroll inside a
    * box eight lines tall. On a wide screen the two panes stay level. */
-  wireEditorHeight() {
+  wireEditorHeight(): void {
     const narrow = matchMedia('(max-width: 819px)');
-    const grow = () => {
+    const grow = (): void => {
       if (!narrow.matches) {
         this.editor.style.height = '';
         return;
@@ -686,14 +874,14 @@ class Playground {
 
   /* --- taking the code away --------------------------------------------- */
 
-  wireTools() {
-    const flash = async (button, ok) => {
+  wireTools(): void {
+    const flash = (button: HTMLElement, ok: boolean): void => {
       const original = button.textContent;
       button.textContent = ok ? TEXT.copied : original;
       setTimeout(() => { button.textContent = original; }, 1400);
     };
-    const on = (selector, act) => {
-      const button = document.querySelector(selector);
+    const on = (selector: string, act: (button: HTMLElement) => void): void => {
+      const button = queryMaybe(document, selector, HTMLElement);
       if (button) button.addEventListener('click', () => act(button));
     };
 
@@ -701,7 +889,7 @@ class Playground {
     // A link that carries the program itself. The guides already use this
     // shape, so sharing what you wrote costs no server and no account.
     on('[data-copy-link]', async (button) => flash(button, await copyText(this.shareLink())));
-    on('[data-copy-python]', async (button) => flash(button, await copyText(this.compiled || this.python.textContent)));
+    on('[data-copy-python]', async (button) => flash(button, await copyText(this.compiled || this.python.textContent || '')));
     on('[data-download-editor]', () => downloadText(`${this.fileStem()}.nme`, this.editor.value));
     on('[data-download-python]', () => {
       if (this.compiled) downloadText(`${this.fileStem()}.py`, this.compiled);
@@ -709,7 +897,7 @@ class Playground {
   }
 
   /* base64url of the UTF-8 bytes, which is what `loadFromHash` reads back. */
-  shareLink() {
+  shareLink(): string {
     const bytes = new TextEncoder().encode(this.editor.value);
     let binary = '';
     for (const byte of bytes) binary += String.fromCharCode(byte);
@@ -721,7 +909,7 @@ class Playground {
 
   /* Named after the slot when there is one, so a folder of downloads still
    * says which program is which. */
-  fileStem() {
+  fileStem(): string {
     const slot = this.slots.list.find((one) => one.id === this.slots.current);
     const name = (slot ? slot.name : 'program').trim().replace(/[\\/:*?"<>|\s]+/g, '-');
     return name.slice(0, 48) || 'program';
@@ -729,11 +917,18 @@ class Playground {
 
   /* --- save slots -------------------------------------------------------- */
 
-  readSlots() {
+  readSlots(): SlotShelf {
     try {
-      const raw = JSON.parse(localStorage.getItem(SLOT_KEY) || 'null');
-      if (raw && Array.isArray(raw.list)) {
-        return { list: raw.list.filter((one) => one && typeof one.source === 'string'), current: raw.current ?? null };
+      const raw: unknown = JSON.parse(localStorage.getItem(SLOT_KEY) || 'null');
+      if (typeof raw === 'object' && raw !== null && 'list' in raw) {
+        const stored = asArray(raw.list);
+        if (stored) {
+          const current = 'current' in raw ? raw.current : undefined;
+          return {
+            list: stored.map(readSlot).filter((one): one is Slot => one !== null),
+            current: typeof current === 'string' ? current : null,
+          };
+        }
       }
     } catch {
       /* unreadable or blocked storage behaves like an empty shelf */
@@ -741,7 +936,7 @@ class Playground {
     return { list: [], current: null };
   }
 
-  writeSlots() {
+  writeSlots(): void {
     try {
       localStorage.setItem(SLOT_KEY, JSON.stringify(this.slots));
     } catch {
@@ -749,7 +944,7 @@ class Playground {
     }
   }
 
-  saveDraft() {
+  saveDraft(): void {
     try {
       localStorage.setItem(DRAFT_KEY, this.editor.value);
     } catch {
@@ -757,8 +952,8 @@ class Playground {
     }
   }
 
-  restoreDraft() {
-    let draft = null;
+  restoreDraft(): boolean {
+    let draft: string | null = null;
     try {
       draft = localStorage.getItem(DRAFT_KEY);
     } catch {
@@ -771,7 +966,7 @@ class Playground {
     return true;
   }
 
-  drawSlots() {
+  drawSlots(): void {
     if (!this.slotList) return;
     this.slotList.textContent = '';
     for (const slot of this.slots.list) {
@@ -806,9 +1001,9 @@ class Playground {
     }
   }
 
-  wireSlots() {
-    const save = document.querySelector('#slot-save');
-    const fresh = document.querySelector('#slot-new');
+  wireSlots(): void {
+    const save = queryMaybe(document, '#slot-save', HTMLElement);
+    const fresh = queryMaybe(document, '#slot-new', HTMLElement);
     if (save) save.addEventListener('click', () => this.saveIntoSlot());
     if (fresh) fresh.addEventListener('click', () => this.saveIntoSlot(true));
     this.buildNameRow();
@@ -816,8 +1011,8 @@ class Playground {
 
   /* The name is asked for inside the page rather than in a browser dialog:
    * one look, one place, and it can be styled like everything else here. */
-  buildNameRow() {
-    const box = document.querySelector('.slots');
+  buildNameRow(): void {
+    const box = queryMaybe(document, '.slots', HTMLElement);
     if (!box) return;
     const row = document.createElement('form');
     row.className = 'slot-name-row';
@@ -860,16 +1055,18 @@ class Playground {
     this.nameField = field;
   }
 
-  askName(suggested, done) {
-    if (!this.nameRow) { done(suggested); return; }
+  askName(suggested: string, done: (name: string) => void): void {
+    const row = this.nameRow;
+    const field = this.nameField;
+    if (!row || !field) { done(suggested); return; }
     this.naming = done;
-    this.nameField.value = suggested;
-    this.nameRow.hidden = false;
-    this.nameField.focus();
-    this.nameField.select();
+    field.value = suggested;
+    row.hidden = false;
+    field.focus();
+    field.select();
   }
 
-  saveIntoSlot(forceNew) {
+  saveIntoSlot(forceNew?: boolean): void {
     const existing = this.slots.list.find((one) => one.id === this.slots.current);
     if (!forceNew && existing) {
       existing.source = this.editor.value;
@@ -883,7 +1080,7 @@ class Playground {
       ? `${TEXT.slotFirst} ${this.slots.list.length + 1}`
       : TEXT.slotFirst;
     this.askName(suggested, (name) => {
-      const slot = { id: `s${Date.now().toString(36)}`, name, source: this.editor.value, updated: Date.now() };
+      const slot: Slot = { id: `s${Date.now().toString(36)}`, name, source: this.editor.value, updated: Date.now() };
       this.slots.list.push(slot);
       this.slots.current = slot.id;
       this.writeSlots();
@@ -892,7 +1089,7 @@ class Playground {
     });
   }
 
-  openSlot(id) {
+  openSlot(id: string): void {
     const slot = this.slots.list.find((one) => one.id === id);
     if (!slot) return;
     this.slots.current = id;
@@ -906,7 +1103,7 @@ class Playground {
     if (this.grow) this.grow();
   }
 
-  renameSlot(id) {
+  renameSlot(id: string): void {
     const slot = this.slots.list.find((one) => one.id === id);
     if (!slot) return;
     this.askName(slot.name, (name) => {
@@ -918,15 +1115,15 @@ class Playground {
 
   /* Deleting asks once, in place: the first press turns the cross into the
    * question, the second answers it, and walking away answers no. */
-  deleteSlot(id, button) {
+  deleteSlot(id: string, button: HTMLElement): void {
     if (button.dataset.sure !== 'true') {
       button.dataset.sure = 'true';
       button.textContent = TEXT.slotDelete;
-      clearTimeout(button.timer);
-      button.timer = setTimeout(() => {
+      clearTimeout(slotDeleteTimers.get(button));
+      slotDeleteTimers.set(button, setTimeout(() => {
         button.dataset.sure = 'false';
         button.textContent = '×';
-      }, 4000);
+      }, 4000));
       return;
     }
     this.slots.list = this.slots.list.filter((one) => one.id !== id);
@@ -935,15 +1132,16 @@ class Playground {
     this.drawSlots();
   }
 
-  flashSaved() {
-    if (!this.slotFlash) return;
-    this.slotFlash.textContent = TEXT.slotSaved;
-    this.slotFlash.dataset.on = 'true';
+  flashSaved(): void {
+    const flash = this.slotFlash;
+    if (!flash) return;
+    flash.textContent = TEXT.slotSaved;
+    flash.dataset.on = 'true';
     clearTimeout(this.flashTimer);
-    this.flashTimer = setTimeout(() => { this.slotFlash.dataset.on = 'false'; }, 1600);
+    this.flashTimer = setTimeout(() => { flash.dataset.on = 'false'; }, 1600);
   }
 
-  load(example) {
+  load(example: Example): void {
     this.slots.current = null;
     this.editor.value = example.source;
     this.chips.querySelectorAll('.chip').forEach((chip) => {
@@ -956,19 +1154,20 @@ class Playground {
     if (this.grow) this.grow();
   }
 
-  compileNow() {
+  compileNow(): void {
     if (!this.compilerReady) {
       this.pythonState.textContent = TEXT.bootCompiler;
       return;
     }
-    const outcome = JSON.parse(compile(this.editor.value));
+    const outcome = readCompileOutcome(compile(this.editor.value));
     // A quick pulse on the Python pane whenever it is rebuilt. Compiling as
     // you type is the thing this page is for, and without a flicker the pane
     // looks static even while it is changing.
-    if (this.pythonPane) {
-      this.pythonPane.dataset.fresh = 'true';
+    const pane = this.pythonPane;
+    if (pane) {
+      pane.dataset.fresh = 'true';
       clearTimeout(this.freshTimer);
-      this.freshTimer = setTimeout(() => { this.pythonPane.dataset.fresh = 'false'; }, 450);
+      this.freshTimer = setTimeout(() => { pane.dataset.fresh = 'false'; }, 450);
     }
     if (outcome.ok) {
       this.compiled = outcome.python;
@@ -993,7 +1192,7 @@ class Playground {
   /* Boot happens in two visible stages: the compiler (small, needed to show
    * any Python at all) and then the engine (large, needed only to press Run).
    * Neither is allowed to fail quietly. */
-  async start() {
+  async start(): Promise<void> {
     this.runButton.disabled = true;
     this.note.textContent = TEXT.bootCompiler;
     this.setProgress(0, COMPILER_BYTES);
@@ -1007,7 +1206,7 @@ class Playground {
     } catch (error) {
       this.hideProgress();
       this.note.textContent = '';
-      this.showAlert(`${TEXT.compilerLate} (${error})`, () => this.start());
+      this.showAlert(`${TEXT.compilerLate} (${String(error)})`, () => { void this.start(); });
       return;
     }
     this.compilerReady = true;
@@ -1015,7 +1214,7 @@ class Playground {
     this.startEngine();
   }
 
-  startEngine() {
+  startEngine(): void {
     this.note.textContent = TEXT.bootEngine;
     this.setProgress(0, 0);
     this.ensureWorker().postMessage({ type: 'preload' });
@@ -1024,24 +1223,26 @@ class Playground {
   /* One worker serves every run: each `run` call builds a fresh interpreter
    * inside it, so nothing carries over, and the 11 MB engine is instantiated
    * once instead of once per press. */
-  ensureWorker() {
-    if (!this.worker) {
-      this.worker = new Worker('/assets/play-worker.js', { type: 'module' });
-      this.worker.onmessage = (event) => this.onWorkerMessage(event.data);
-      this.worker.onerror = (event) => {
+  ensureWorker(): Worker {
+    let worker = this.worker;
+    if (!worker) {
+      worker = new Worker('/assets/play-worker.js', { type: 'module' });
+      worker.onmessage = (event: MessageEvent<unknown>) => this.onWorkerMessage(event.data);
+      worker.onerror = (event: ErrorEvent) => {
         this.engineReady = false;
         this.hideProgress();
-        this.showAlert(`${TEXT.engineLate} (${event.message || event})`, () => {
+        this.showAlert(`${TEXT.engineLate} (${event.message || String(event)})`, () => {
           this.dropWorker();
           this.startEngine();
         });
         if (this.running) this.finish(TEXT.failed);
       };
+      this.worker = worker;
     }
-    return this.worker;
+    return worker;
   }
 
-  dropWorker() {
+  dropWorker(): void {
     if (this.worker) {
       this.worker.terminate();
       this.worker = null;
@@ -1052,14 +1253,17 @@ class Playground {
   /* A terminal control sequence is the only way one line of Python can clear a
    * screen, so `clear the screen` emits one. Here the "screen" is a <pre>:
    * honour the clear, and drop the rest rather than printing their letters. */
-  print(text, className) {
+  print(text: string, className?: string): void {
     if (text.includes('\u001b')) {
       if (/\u001b\[[23]J/.test(text)) this.terminal.textContent = '';
       text = text.replace(/\u001b\[[0-9;?]*[A-Za-z]/g, '');
       if (!text) return;
     }
-    const node = className ? document.createElement('span') : null;
-    if (node) {
+    // One `if` on `className` rather than two: the old shape built the node
+    // first and asked again afterwards, which no longer proves to the compiler
+    // that a node means there is a class name to put on it.
+    if (className) {
+      const node = document.createElement('span');
       node.className = className;
       node.textContent = text;
       this.terminal.append(node);
@@ -1069,9 +1273,9 @@ class Playground {
     this.terminal.scrollTop = this.terminal.scrollHeight;
   }
 
-  run() {
+  run(): void {
     if (!this.compilerReady) {
-      this.showAlert(TEXT.compilerLate, () => this.start());
+      this.showAlert(TEXT.compilerLate, () => { void this.start(); });
       return;
     }
     if (!this.compiled) {
@@ -1100,21 +1304,25 @@ class Playground {
     this.runButton.disabled = true;
     this.stopButton.disabled = false;
 
-    this.ensureWorker().postMessage({
+    const request: RunRequest = {
       type: 'run',
       python: this.compiled,
       sab: this.sharedMemory ? this.sharedMemory.buffer : undefined,
       answers: this.sharedMemory ? undefined : this.collectAnswers(),
-    });
+    };
+    this.ensureWorker().postMessage(request);
   }
 
-  collectAnswers() {
-    if (!this.answers) return [];
-    return this.answers.value.split('\n').filter((line, index, all) =>
+  collectAnswers(): string[] {
+    const answers = this.answers;
+    if (!answers) return [];
+    return answers.value.split('\n').filter((line, index, all) =>
       index < all.length - 1 || line.length > 0);
   }
 
-  onWorkerMessage(message) {
+  onWorkerMessage(data: unknown): void {
+    const message = readWorkerMessage(data);
+    if (!message) return;
     switch (message.type) {
       case 'progress':
         if (!this.engineReady) this.setProgress(message.loaded, message.total);
@@ -1162,15 +1370,16 @@ class Playground {
     }
   }
 
-  askForInput() {
+  askForInput(): void {
     this.inputRow.hidden = false;
     this.note.textContent = TEXT.askHint;
     this.input.value = '';
     this.input.focus();
   }
 
-  answer() {
-    if (this.inputRow.hidden || !this.sharedMemory) return;
+  answer(): void {
+    const shared = this.sharedMemory;
+    if (this.inputRow.hidden || !shared) return;
     const text = this.input.value;
     this.print(text + '\n', 'term-echo');
     this.inputRow.hidden = true;
@@ -1178,13 +1387,13 @@ class Playground {
 
     const encoded = new TextEncoder().encode(text);
     const length = Math.min(encoded.length, ANSWER_CAPACITY);
-    this.sharedMemory.bytes.set(encoded.subarray(0, length));
-    Atomics.store(this.sharedMemory.control, 1, length);
-    Atomics.store(this.sharedMemory.control, 0, 1);
-    Atomics.notify(this.sharedMemory.control, 0);
+    shared.bytes.set(encoded.subarray(0, length));
+    Atomics.store(shared.control, 1, length);
+    Atomics.store(shared.control, 0, 1);
+    Atomics.notify(shared.control, 0);
   }
 
-  finish(note) {
+  finish(note: string): void {
     this.terminal.dataset.running = 'false';
     this.note.textContent = note;
     this.setStatus(note === TEXT.failed ? 'bad' : (this.engineReady ? 'ready' : 'busy'));
@@ -1197,7 +1406,7 @@ class Playground {
   /* Stopping means killing the thread, which throws the loaded engine away
    * with it. A replacement starts fetching straight away, from cache, so the
    * next Run is not held up by this one. */
-  stop(announce) {
+  stop(announce: boolean): void {
     this.pendingRun = false;
     this.dropWorker();
     if (announce) {
@@ -1206,6 +1415,26 @@ class Playground {
     }
     this.startEngine();
   }
+}
+
+/* One saved slot, as it comes back out of storage: everything in there was put
+ * there by `writeSlots`, but nothing stops a visitor editing it by hand, so
+ * each field is checked. An entry with no program text is dropped, which is
+ * what the old one-line filter did; the other three fields fall back rather
+ * than throwing the whole slot away. */
+function readSlot(value: unknown): Slot | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const source = 'source' in value ? value.source : undefined;
+  if (typeof source !== 'string') return null;
+  const id = 'id' in value ? value.id : undefined;
+  const name = 'name' in value ? value.name : undefined;
+  const updated = 'updated' in value ? value.updated : undefined;
+  return {
+    id: typeof id === 'string' ? id : '',
+    name: typeof name === 'string' ? name : '',
+    source,
+    updated: typeof updated === 'number' ? updated : 0,
+  };
 }
 
 /* --- boot ---------------------------------------------------------------- */
@@ -1223,9 +1452,9 @@ wireFileCopyButtons();
 wireDocRail();
 wireGuideFilter();
 
-const playgroundRoot = document.querySelector('#playground');
+const playgroundRoot = queryMaybe(document, '#playground', HTMLElement);
 if (playgroundRoot) {
   const playground = new Playground(playgroundRoot);
-  playground.start();
-  window.addEventListener('hashchange', () => playground.loadFromHash());
+  void playground.start();
+  window.addEventListener('hashchange', () => { playground.loadFromHash(); });
 }

@@ -9,12 +9,53 @@
  */
 
 import { createServer } from 'node:http';
+import { spawnSync } from 'node:child_process';
 import { readFile, stat } from 'node:fs/promises';
+import { readdirSync, statSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..', 'site');
+const REPO = join(fileURLToPath(new URL('.', import.meta.url)), '..');
+const ROOT = join(REPO, 'site');
 const PORT = Number(process.argv[2] || 8787);
+
+/* The four scripts the pages load are compiled from `site/src/*.ts`, so a
+ * fresh checkout has none of them and previewing would serve four 404s. They
+ * are rebuilt here when they are missing or older than anything they are built
+ * from, and left alone otherwise — `scripts/deploy.sh` has already built them
+ * by the time it starts this server, and it expects the port to be listening
+ * about a second later. */
+const BUILT = ['theme.js', 'site.js', 'examples.js', 'play-worker.js']
+  .map((name) => join(ROOT, 'assets', name));
+
+const SOURCES = [
+  ...readdirSync(join(ROOT, 'src')).map((name) => join(ROOT, 'src', name)),
+  join(REPO, 'tsconfig.json'),
+  join(REPO, 'tsconfig.worker.json'),
+  join(REPO, 'scripts/build-scripts.mjs'),
+];
+
+const modified = (path) => {
+  try {
+    return statSync(path).mtimeMs;
+  } catch {
+    return null;
+  }
+};
+
+const newestSource = Math.max(...SOURCES.map((path) => modified(path) ?? 0));
+const stale = BUILT.some((path) => {
+  const built = modified(path);
+  return built === null || built < newestSource;
+});
+
+if (stale) {
+  const built = spawnSync(process.execPath, [join(REPO, 'scripts/build-scripts.mjs')], {
+    cwd: REPO,
+    stdio: 'inherit',
+  });
+  if (built.status !== 0) process.exit(1);
+}
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',

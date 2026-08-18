@@ -18,7 +18,20 @@
  * every program at least one line that always says the same thing.
  */
 
-export const EXAMPLES = {
+/* The shape every entry has. `fails` is present only on the two examples that
+ * are meant not to compile, which is why it is optional. */
+export interface Example {
+  readonly id: string;
+  readonly label: string;
+  readonly answers: readonly string[];
+  readonly expect: string;
+  readonly source: string;
+  readonly fails?: true;
+}
+
+export type ExampleLanguage = 'en' | 'ko';
+
+export const EXAMPLES: Readonly<Record<ExampleLanguage, readonly Example[]>> = {
   en: [
     {
       id: 'hello',

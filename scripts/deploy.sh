@@ -37,6 +37,12 @@ node scripts/stamp-assets.mjs
 echo "== 가이드·문법·프롬프트 문서 페이지 생성 =="
 python3 scripts/build-docs.py
 
+echo "== 브라우저 스크립트 타입 검사·컴파일 =="
+# The page's scripts are TypeScript in site/src/. A static host cannot compile
+# anything, so it happens here — and the type check is part of the gate, before
+# any of the checks below run against the compiled files.
+node scripts/build-scripts.mjs
+
 echo "== 예제 회귀 시험 =="
 node scripts/check-examples.mjs
 

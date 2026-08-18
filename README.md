@@ -10,6 +10,7 @@ anything and without a server anywhere in the path.
 crates/nme-web/    NME source  ->  Python source        (wraps the upstream nme-core)
 crates/nme-run/    Python source -> output              (embeds RustPython)
 site/              the site itself; this folder is what gets published
+site/src/          the pages' scripts, in TypeScript; compiled into site/assets/
 scripts/           build + deploy + a preview server + the example regression check
 ```
 
@@ -30,6 +31,8 @@ therefore nothing to pay for.
 ## Working on it
 
 ```sh
+npm install                        # typescript, esbuild and playwright; once per checkout
+node scripts/build-scripts.mjs     # type-check site/src/*.ts and compile it into site/assets/
 node scripts/serve.mjs             # preview on :8787, with the production headers
 node scripts/check-examples.mjs    # every playground example must compile AND run
 node scripts/check-site-links.mjs  # every internal link resolves, none redirects
@@ -45,9 +48,12 @@ bash scripts/deploy.sh             # build both wasm modules, run every check, p
 ```
 
 The seven `check-site-*` scripts need a preview server running (they take its
-address as an argument) and Playwright, which lives in `~/nmt/web/scripts` and
-is reachable here through the `node_modules` symlink. `deploy.sh` starts and
-stops its own server and refuses to publish if any check fails.
+address as an argument) and Playwright, which `npm install` puts in this
+repository's own `node_modules`. `deploy.sh` starts and stops its own server and
+refuses to publish if any check fails.
+
+`scripts/serve.mjs` compiles `site/src/` first when the output is missing or
+older than the source, so a fresh checkout can be previewed with one command.
 
 `scripts/serve.mjs` sends the two cross-origin isolation headers on purpose. The
 playground's interactive `input()` needs `SharedArrayBuffer`, which the browser
@@ -56,6 +62,12 @@ tests a different code path than production.
 
 ## Things worth knowing before changing anything
 
+- **The pages' scripts are TypeScript.** `site/src/*.ts` is the source;
+  `site/assets/{theme,site,examples,play-worker}.js` is build output, ignored by
+  git and overwritten by `scripts/build-scripts.mjs`. Editing the `.js` file
+  loses the edit at the next build. The type check runs in `deploy.sh` before
+  every other check, so a type error stops a publish. Nothing about the site is
+  less static for it: the browser still receives plain JavaScript.
 - **The compiler is pinned.** `crates/nme-web/Cargo.toml` names one upstream
   commit. Moving it changes what the site teaches, so move it deliberately and
   re-run the example check.

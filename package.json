@@ -1,0 +1,16 @@
+{
+  "name": "needmoreeasy-site",
+  "version": "0.0.0",
+  "private": true,
+  "description": "needmoreeasy.com — the static site. Its browser scripts are TypeScript, type-checked and compiled into site/assets/ before every deploy.",
+  "scripts": {
+    "build": "node scripts/build-scripts.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.worker.json",
+    "serve": "node scripts/serve.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "playwright": "1.60.0",
+    "typescript": "^7.0.2"
+  }
+}

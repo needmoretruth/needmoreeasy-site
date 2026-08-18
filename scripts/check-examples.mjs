@@ -3,7 +3,7 @@
  *
  * The examples are the site's main promise — a visitor clicks a chip and
  * presses Run — so a broken one is a broken site, not a broken sample. Run
- * this after any change to `site/assets/examples.js` or to either crate:
+ * this after any change to `site/src/examples.ts` or to either crate:
  *
  *   node scripts/check-examples.mjs
  *
