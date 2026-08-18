@@ -1,12 +1,21 @@
 /* Example programs for the playground.
  *
- * Every one of these is compiled by the real NME compiler on this page and was
- * checked to actually run in the browser engine before being listed here. They
- * are adapted from the `examples/` folder of the language repository.
+ * `en` and `ko` hold the two sets. They are deliberately the SAME programs in
+ * two languages — same ids, same order, same lesson — so a visitor on either
+ * page sees the same tour of the language.
  *
- * `en` and `ko` hold the two example sets; the page picks one by its language.
- * `interactive: true` means the program calls input(), so the terminal will
- * stop and ask — that is expected, not a hang.
+ * Every entry is compiled by the real compiler and run in the browser engine by
+ * `scripts/check-examples.mjs` before a deploy, and its output is compared with
+ * `expect`. An example that stops working stops the deploy.
+ *
+ *   id        stable name, used by the checker and by the #example= link
+ *   label     the chip text
+ *   answers   lines fed to input() while checking; [] means it never asks
+ *   expect    text that must appear in the output
+ *   fails     true when the program is *meant* not to compile (the error demo)
+ *
+ * Because `expect` is checked, no example may print only random text: give
+ * every program at least one line that always says the same thing.
  */
 
 export const EXAMPLES = {
@@ -14,7 +23,8 @@ export const EXAMPLES = {
     {
       id: 'hello',
       label: 'Hello',
-      interactive: false,
+      answers: [],
+      expect: 'Hello, world!',
       source: `# Sentence syntax: write what you mean.
 show Hello, world!
 repeat 3 times and show NME is easy`,
@@ -22,33 +32,125 @@ repeat 3 times and show NME is easy`,
     {
       id: 'ask',
       label: 'Ask a name',
-      interactive: true,
-      source: `# A question is just a question. The answer becomes a variable.
+      answers: ['Mina'],
+      expect: 'Hello Mina!',
+      source: `# A question is just a question. The answer becomes a name.
 What is your name?
-Hello name!
+show Hello name!
 3 times Welcome to NME`,
     },
     {
       id: 'guess',
       label: 'Guessing game',
-      interactive: true,
+      answers: ['5'],
+      expect: 'Thanks for playing',
       source: `# No quotes, commas, equals signs or colons anywhere.
 set answer to random number from 1 to 10
 ask number guess Pick a number from 1 to 10
 
 if guess equals answer
-    show Correct!
+show Correct!
+else if guess is less than answer
+show Go higher
+else
+show Go lower
+end
+show Thanks for playing`,
+    },
+    {
+      id: 'maths',
+      label: 'Change a value',
+      answers: [],
+      expect: '20',
+      source: `# Add, subtract, multiply and divide without + - * / or =.
+set score to 3
+add 7 to score
+multiply score by 4
+divide score by 2
+show score`,
+    },
+    {
+      id: 'list',
+      label: 'A list, one by one',
+      answers: [],
+      expect: 'Hello Grace!',
+      source: `# Make a list, then walk through it.
+set friends to list of Mina, Ada and Grace
+for each friend in friends
+show Hello friend!
+end`,
+    },
+    {
+      id: 'collect',
+      label: 'Build a list',
+      answers: ['apple', 'pear', 'plum'],
+      expect: 'plum',
+      source: `# Start with an empty list, ask three times, keep every answer.
+set fruits to list of
+repeat 3 times
+ask fruit Name a fruit
+append fruit to fruits
+end
+show fruits`,
+    },
+    {
+      id: 'wait',
+      label: 'Wait a moment',
+      answers: [],
+      expect: 'Done',
+      source: `# Waiting is a sentence too.
+show Ready
+repeat 3 times
+wait 1 second
+show tick
+end
+show Done`,
+    },
+    {
+      id: 'skip',
+      label: 'Skip a round',
+      answers: [],
+      expect: '7',
+      source: `# skip jumps to the next round; break leaves the loop.
+set score to 0
+repeat 8 times
+add 1 to score
+if score equals 3 then skip
+show score
+end`,
+    },
+    {
+      id: 'while',
+      label: 'Repeat while',
+      answers: [],
+      expect: 'finished',
+      source: `# The block closes with end, so indentation is optional.
+set count to 0
+while count is less than 5
+show count
+add 1 to count
+end
+show finished`,
+    },
+    {
+      id: 'conditions',
+      label: 'Two conditions',
+      answers: [],
+      expect: 'Good evening',
+      source: `# and, or, exists, and the comparison words.
+set name to Mina
+set hour to 21
+set tired to False
 
-if guess is less than answer
-    show Go higher
-
-if guess is greater than answer
-    show Go lower`,
+if name exists and hour is greater than 18 then show Good evening name!
+if tired or hour is greater than or equal to 23 then show Time for bed
+if hour is not equal to 12 then show It is not noon`,
     },
     {
       id: 'levels',
       label: 'Three levels at once',
-      interactive: false,
+      answers: [],
+      expect: 'sentence syntax',
       source: `# Advanced Python, beginner NME and sentence NME in one file.
 people = ["Ada", "Grace"]                 # advanced Python
 
@@ -56,133 +158,336 @@ people = ["Ada", "Grace"]                 # advanced Python
     say "beginner syntax"
 
 repeat 2 times                            # sentence
-    show sentence syntax
+show sentence syntax
+end
 
-for person in people:                     # advanced Python
-    show Hello person!                    # sentence`,
+for person in people:                     # advanced again
+    show Hello person!`,
     },
     {
       id: 'mix',
       label: 'English + Korean',
-      interactive: false,
-      source: `# The two languages may share a line. No mode switch exists.
-랜덤 사용
-
-name = "friend"
-pick = 랜덤선택(["a cat", "a dog"])
-
-if name:
-    2번: say f"{pick} for {name}!"`,
+      answers: [],
+      expect: 'friend',
+      source: `# Both languages, on the same line if you like.
+use random latest
+set animal to pick from cat or dog
+3번 반복해서 a animal for friend! 말해줘`,
+    },
+    {
+      id: 'typo',
+      label: 'It fixes a typo',
+      answers: [],
+      expect: 'Again',
+      source: `# repaet is one keystroke away from repeat, and only one
+# action fits here — so NME repairs it instead of guessing.
+repaet 2 times and show Again
+2 timse: say "and again"`,
+    },
+    {
+      id: 'error',
+      label: 'What an error looks like',
+      answers: [],
+      fails: true,
+      expect: 'E0101',
+      source: `# This one is meant to fail — the commonest beginner slip.
+# One loop takes one end; the second one closes nothing, and the
+# compiler points at it and gives the error a stable number.
+repeat 3 times
+show hello
+end
+end`,
     },
     {
       id: 'coin',
       label: 'A tiny blockchain',
-      interactive: false,
-      source: `# Real SHA-256 proof of work, written as sentences.
+      answers: [],
+      expect: 'Block mined',
+      source: `# Real hashing, real proof of work, no punctuation to learn.
 import hashlib
 
-set difficulty to 2
+set difficulty to 3
 set previous to genesis
 set nonce to 0
 
 while True
-    set text to previous + str(nonce)
-    set digest to hashlib.sha256(text.encode()).hexdigest()
-    if digest.startswith("0" * difficulty)
-        show Block mined
-        show digest
+    candidate = previous + str(nonce)
+    digest = hashlib.sha256(candidate.encode()).hexdigest()
+    if digest.startswith("0" * difficulty):
         break
     add 1 to nonce
 
-show Attempts:
-show nonce`,
+show Block mined
+show digest`,
+    },
+    {
+      id: 'zk',
+      label: 'Proof without the secret',
+      answers: [],
+      expect: 'The proof was accepted',
+      source: `# Prove you know a secret without ever showing it.
+use zero_knowledge latest
+
+set context to login
+set secret to zero knowledge secret make
+set shown to secret zero knowledge public make
+set evidence to secret context zero knowledge proof make
+set valid to shown evidence context zero knowledge verify
+
+if valid
+show The proof was accepted
+else
+show The proof was refused
+end`,
+    },
+    {
+      id: 'grow',
+      label: 'Growing into Python',
+      answers: [],
+      expect: 'three',
+      source: `# The same idea written three ways, in one file.
+set word to three
+show word
+
+say word
+
+print(word)`,
     },
   ],
 
   ko: [
     {
       id: 'hello',
-      label: '첫 프로그램',
-      interactive: false,
-      source: `# 문장형 문법: 하고 싶은 말을 그대로 적으세요.
+      label: '인사',
+      answers: [],
+      expect: '안녕하세요!',
+      source: `# 문장형: 하고 싶은 말을 그대로 씁니다.
 안녕하세요! 말해줘
-3번 반복해서 NME는 쉬워요 말해줘`,
+3번 반복해서 NME는 쉽습니다 말해줘`,
     },
     {
       id: 'ask',
       label: '이름 묻기',
-      interactive: true,
-      source: `# 질문은 그냥 질문입니다. 답이 그대로 변수가 됩니다.
+      answers: ['민수'],
+      expect: '안녕하세요 민수!',
+      source: `# 질문은 그냥 질문입니다. 대답이 이름이 됩니다.
 이름이 뭐예요?
-안녕하세요 이름!
-3번 환영합니다`,
+안녕하세요 이름! 말해줘
+3번 반갑습니다`,
     },
     {
       id: 'guess',
       label: '숫자 맞히기',
-      interactive: true,
-      source: `# 따옴표, 괄호, 쉼표, 등호, 콜론이 하나도 없습니다.
+      answers: ['5'],
+      expect: '놀아 주셔서 고맙습니다',
+      source: `# 따옴표도 쉼표도 등호도 콜론도 없습니다.
 정답은 1부터 10까지 랜덤정수
-추측을 숫자로 물어봐 1부터 10까지 숫자를 맞혀 보세요
+추측을 숫자로 물어봐 1부터 10까지 골라 보세요
 
 만약에 추측이 정답과 같으면
-    정답입니다! 말해줘
+맞았어요 말해줘
+아니면 만약에 추측이 정답보다 작으면
+더 큰 수예요 말해줘
+아니면
+더 작은 수예요 말해줘
+끝
+놀아 주셔서 고맙습니다 말해줘`,
+    },
+    {
+      id: 'maths',
+      label: '값 바꾸기',
+      answers: [],
+      expect: '20',
+      source: `# + - * / 와 = 없이 더하고 빼고 곱하고 나눕니다.
+점수는 3
+점수에 7 더해
+점수에 4 곱해
+점수를 2로 나눠
+점수 말해줘`,
+    },
+    {
+      id: 'list',
+      label: '목록 하나씩',
+      answers: [],
+      expect: '안녕하세요 서준!',
+      source: `# 목록을 만들고 하나씩 지나갑니다.
+친구들은 목록 민수, 지안, 서준
+친구들의 친구마다 반복해
+안녕하세요 친구! 말해줘
+끝`,
+    },
+    {
+      id: 'collect',
+      label: '목록 만들기',
+      answers: ['사과', '배', '자두'],
+      expect: '자두',
+      source: `# 빈 목록으로 시작해, 세 번 물어보고 대답을 모두 담습니다.
+과일들은 목록
+3번 반복해
+과일을 물어봐 과일 하나를 알려 주세요
+과일들에 과일 넣어
+끝
+과일들 말해줘`,
+    },
+    {
+      id: 'wait',
+      label: '기다리기',
+      answers: [],
+      expect: '끝났습니다',
+      source: `# 기다리는 것도 문장입니다.
+준비됐습니다 말해줘
+3번 반복해
+1초 기다려
+하나 지났어요 말해줘
+끝
+끝났습니다 말해줘`,
+    },
+    {
+      id: 'skip',
+      label: '건너뛰기',
+      answers: [],
+      expect: '7',
+      source: `# 건너뛰어는 다음 바퀴로, 멈춰는 반복 밖으로 나갑니다.
+점수는 0
+8번 반복해
+점수에 1 더해
+만약에 점수가 3과 같으면 건너뛰어
+점수 말해줘
+끝`,
+    },
+    {
+      id: 'while',
+      label: '조건 반복',
+      answers: [],
+      expect: '끝났어요',
+      source: `# 블록은 끝으로 닫으므로 들여쓰기는 선택입니다.
+횟수는 0
+횟수가 5보다 작을 동안
+횟수 말해줘
+횟수에 1 더해
+끝
+끝났어요 말해줘`,
+    },
+    {
+      id: 'conditions',
+      label: '두 조건',
+      answers: [],
+      expect: '안녕히 주무세요',
+      source: `# 그리고, 또는, 있으면, 그리고 비교하는 말들.
+이름은 민수
+시각은 23
+피곤은 참
 
-만약에 추측이 정답보다 작으면
-    더 큰 수예요 말해줘
-
-만약에 추측이 정답보다 크면
-    더 작은 수예요 말해줘`,
+만약 이름이 있으면 그리고 시각이 18보다 크면 좋은 저녁이에요 이름! 말해줘
+만약 피곤 또는 시각이 23보다 크거나 같으면 안녕히 주무세요 말해줘
+만약에 시각이 12와 같지 않으면 정오가 아니에요 말해줘`,
     },
     {
       id: 'levels',
-      label: '세 문법 한 파일',
-      interactive: false,
+      label: '세 문법 한 번에',
+      answers: [],
+      expect: '문장형 문법',
       source: `# 고급 Python, 초급 NME, 문장형 NME가 한 파일에 있습니다.
-people = ["에이다", "그레이스"]        # 고급 Python
+사람들 = ["지안", "서준"]                  # 고급 Python
 
-2번:                                   # 초급
+2번:                                      # 초급
     말해 "초급 문법"
 
-반복 2번                               # 문장형
-    문장형 문법 말해줘
+2번 반복해                                 # 문장형
+문장형 문법 말해줘
+끝
 
-for person in people:                  # 고급 Python
-    안녕하세요 person! 말해줘          # 문장형`,
+for 사람 in 사람들:                        # 다시 고급
+    안녕하세요 사람! 말해줘`,
     },
     {
       id: 'mix',
       label: '한국어 + 영어',
-      interactive: false,
-      source: `# 두 언어가 한 줄에 같이 있어도 됩니다. 전환 선언이 없습니다.
-랜덤 사용
+      answers: [],
+      expect: '친구',
+      source: `# 두 언어를 한 줄에 섞어도 됩니다.
+랜덤 사용 최신
+동물은 고양이 또는 강아지 중에서 랜덤선택
+3 times 동물 친구가 생겼어요! 말해줘`,
+    },
+    {
+      id: 'typo',
+      label: '오타를 고쳐 줍니다',
+      answers: [],
+      expect: '다시',
+      source: `# 반목해는 반복해에서 한 글자만 다르고, 여기 들어갈 동작은
+# 하나뿐이라 NME가 짐작하지 않고 고쳐서 읽습니다.
+2번 반목해서 다시 말해줘
+2번 반복해서 또 말헤`,
+    },
+    {
+      id: 'error',
+      label: '오류는 이렇게 보입니다',
+      answers: [],
+      fails: true,
+      expect: 'E0101',
+      source: `# 이 프로그램은 일부러 틀렸습니다. 처음 배울 때 가장 자주 하는
+# 실수로, 반복 하나에는 끝이 하나입니다. 두 번째 끝은 닫을 것이
+# 없어서, 컴파일러가 그 자리를 짚고 고정된 번호를 알려 줍니다.
+3번 반복해
+안녕하세요 말해줘
+끝
+끝`,
+    },
+    {
+      id: 'coin',
+      label: '아주 작은 블록체인',
+      answers: [],
+      expect: '블록을 캤습니다',
+      source: `# 진짜 해시와 진짜 작업 증명인데, 배울 문장부호가 없습니다.
+import hashlib
 
-이름 = "친구"
-추천 = 랜덤선택(["고양이", "강아지"])
+난이도는 3
+이전값은 처음
+논스는 0
 
-만약 이름:
-    2번: say f"{이름}에게 {추천} 추천!"`,
+while True
+    후보 = 이전값 + str(논스)
+    해시값 = hashlib.sha256(후보.encode()).hexdigest()
+    if 해시값.startswith("0" * 난이도):
+        break
+    논스에 1 더해
+
+블록을 캤습니다 말해줘
+해시값 말해줘`,
     },
     {
       id: 'zk',
-      label: '영지식 증명',
-      interactive: false,
-      source: `# 3072비트 유한체 슈노어 영지식 증명. 전부 한국어 문장형입니다.
+      label: '비밀 없이 증명하기',
+      answers: [],
+      expect: '증명을 받아들였습니다',
+      source: `# 비밀을 밝히지 않고, 비밀을 안다는 것만 증명합니다.
 영지식 사용 최신
 
+문맥은 로그인
 비밀값은 영지식 비밀 만들기
 공개값은 비밀값으로 영지식 공개값 만들기
-일회값은 영지식 일회값 만들기
-약속값은 일회값으로 영지식 약속 만들기
-도전값은 영지식 도전 만들기
-응답값은 일회값과 비밀값과 도전값으로 영지식 응답 만들기
-검증값은 공개값과 약속값과 도전값과 응답값으로 영지식 검증
+증명값은 비밀값과 문맥으로 영지식 비대화 증명 만들기
+검증값은 공개값과 증명값과 문맥으로 영지식 비대화 검증
 
 만약에 검증값이 참이면
 증명을 받아들였습니다 말해줘
 아니면
 증명을 거절했습니다 말해줘
 끝`,
+    },
+    {
+      id: 'grow',
+      label: '한 줄씩 Python으로',
+      answers: [],
+      expect: '셋',
+      source: `# 같은 뜻을 세 가지로 적어, 한 파일에 나란히 둡니다.
+낱말은 셋
+낱말 말해줘
+
+말해 낱말
+
+print(낱말)`,
     },
   ],
 };

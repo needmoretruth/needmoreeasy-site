@@ -51,6 +51,9 @@ extern "C" {
 
     #[wasm_bindgen(js_namespace = nmeHost, js_name = readLine)]
     fn host_read_line(prompt: &str) -> String;
+
+    #[wasm_bindgen(js_namespace = nmeHost, js_name = sleep)]
+    fn host_sleep(seconds: f64);
 }
 
 /// The bridge module Python sees. Two functions, both of which hand straight
@@ -66,6 +69,20 @@ mod _nmehost {
     #[pyfunction]
     fn read_line(prompt: String) -> String {
         super::host_read_line(&prompt)
+    }
+
+    /// RustPython's `time.sleep` traps on this target, and NME's `wait 3
+    /// seconds` lowers to it. The worker thread is allowed to block, so hand
+    /// the wait over to the page instead of letting the program die.
+    /// `ArgIntoFloat` is what makes `time.sleep(3)` work as well as
+    /// `time.sleep(0.5)`: a bare `f64` argument would refuse the integer that
+    /// `wait 3 seconds` produces.
+    #[pyfunction]
+    fn sleep(seconds: rustpython_vm::function::ArgIntoFloat) {
+        let seconds = *seconds;
+        if seconds.is_finite() && seconds > 0.0 {
+            super::host_sleep(seconds);
+        }
     }
 
     /// RustPython leaves `os.urandom` unimplemented on this target, which
@@ -100,6 +117,12 @@ import sys, builtins, _nmehost
 # `secrets` fails loudly on its own rather than quietly weakening.
 import random
 random._urandom = _nmehost.urandom
+
+# `time.sleep` traps on this target, and NME's `wait 3 seconds` compiles to it.
+# The worker thread this runs on is allowed to block, so the wait is handed to
+# the page rather than killing the program.
+import time
+time.sleep = _nmehost.sleep
 
 class _NmeStream:
     encoding = "utf-8"

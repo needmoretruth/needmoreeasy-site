@@ -31,6 +31,12 @@ echo "== 2/3  파이썬 실행기 wasm 빌드 =="
 rm -f site/assets/wasm/package.json site/assets/wasm-run/package.json \
       site/assets/wasm/*.d.ts site/assets/wasm-run/*.d.ts
 
+echo "== 내려받기 진행률용 크기 기록 =="
+node scripts/stamp-assets.mjs
+
+echo "== 가이드·문법·프롬프트 문서 페이지 생성 =="
+python3 scripts/build-docs.py
+
 echo "== 예제 회귀 시험 =="
 node scripts/check-examples.mjs
 

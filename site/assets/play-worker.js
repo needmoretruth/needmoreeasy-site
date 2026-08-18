@@ -11,17 +11,22 @@
  * file serves them from a queue, so the playground still runs.
  *
  * Protocol
- *   in : {type:'run', python, sab?, answers?}
- *   out: {type:'ready'} | {type:'out', text} | {type:'ask'}
- *        | {type:'done', ok, error?} | {type:'fatal', error}
+ *   in : {type:'run', python, sab?, answers?} | {type:'preload'}
+ *   out: {type:'progress', loaded, total} | {type:'ready'} | {type:'out', text}
+ *        | {type:'ask'} | {type:'done', ok, error?} | {type:'fatal', error}
  *
  * The control block, when present, is an Int32Array over `sab`:
  *   [0] 0 = the page has not answered yet, 1 = an answer is waiting
  *   [1] byte length of that answer
  * followed by the UTF-8 bytes of the answer itself.
+ *
+ * `nmeHost.sleep` is here for the same reason: NME's `wait 3 seconds` becomes
+ * `time.sleep(3)`, which traps in this interpreter. A worker is allowed to
+ * block, so the wait happens here.
  */
 
 import init, { run } from './wasm-run/nmerun.js';
+import { ENGINE_BYTES } from './engine-meta.js';
 
 const DECODER = new TextDecoder();
 const CONTROL_SLOTS = 2;
@@ -32,9 +37,26 @@ let answerBytes = null;
 let queuedAnswers = [];
 let ready = null;
 
+// A private buffer to park on. `Atomics.wait` is the only way to block for a
+// known length of time without spinning the CPU; when the page cannot give us
+// shared memory we spin instead, which still only blocks this worker.
+const SLEEP_LOCK = typeof SharedArrayBuffer === 'undefined'
+  ? null
+  : new Int32Array(new SharedArrayBuffer(4));
+
 globalThis.nmeHost = {
   write(text) {
     postMessage({ type: 'out', text });
+  },
+
+  sleep(seconds) {
+    const milliseconds = Math.min(Math.max(seconds * 1000, 0), 60_000);
+    if (SLEEP_LOCK) {
+      Atomics.wait(SLEEP_LOCK, 0, 0, milliseconds);
+      return;
+    }
+    const until = Date.now() + milliseconds;
+    while (Date.now() < until) { /* the worker is the only thread blocked */ }
   },
 
   readLine(prompt) {
@@ -63,15 +85,50 @@ globalThis.nmeHost = {
   },
 };
 
+/* The engine is the one big download on the site, so it is fetched by hand
+ * rather than by `init()` alone: reading the body in chunks is the only way to
+ * tell the page how far along it is. Cloudflare compresses the transfer, so
+ * `content-length` would be the compressed size — the real uncompressed size
+ * is stamped into `engine-meta.js` at build time and used instead. */
+async function loadEngine() {
+  const url = new URL('./wasm-run/nmerun_bg.wasm', import.meta.url);
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`HTTP ${response.status} for ${url.pathname}`);
+
+  const total = ENGINE_BYTES || Number(response.headers.get('content-length')) || 0;
+  let loaded = 0;
+  postMessage({ type: 'progress', loaded: 0, total });
+
+  const counted = response.body
+    ? response.body.pipeThrough(new TransformStream({
+        transform(chunk, controller) {
+          loaded += chunk.byteLength;
+          postMessage({ type: 'progress', loaded, total });
+          controller.enqueue(chunk);
+        },
+      }))
+    : null;
+
+  const source = counted
+    ? new Response(counted, { headers: { 'content-type': 'application/wasm' } })
+    : response;
+  await init({ module_or_path: source });
+  postMessage({ type: 'progress', loaded: total, total });
+}
+
 async function ensureReady() {
   if (!ready) {
-    ready = init().then(() => postMessage({ type: 'ready' }));
+    ready = loadEngine().then(() => postMessage({ type: 'ready' }));
   }
   return ready;
 }
 
 self.onmessage = async (event) => {
   const message = event.data;
+  if (message.type === 'preload') {
+    ensureReady().catch((error) => postMessage({ type: 'fatal', error: String(error) }));
+    return;
+  }
   if (message.type !== 'run') return;
 
   if (message.sab) {
@@ -100,6 +157,6 @@ self.onmessage = async (event) => {
   }
 };
 
-// Start fetching the engine as soon as the worker exists, so the first Run
-// does not also pay for the download.
+// The page creates this worker while the visitor is still reading, so the
+// engine download starts before Run is pressed rather than during it.
 ensureReady().catch((error) => postMessage({ type: 'fatal', error: String(error) }));

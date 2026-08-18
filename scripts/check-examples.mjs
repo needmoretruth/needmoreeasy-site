@@ -7,7 +7,17 @@
  *
  *   node scripts/check-examples.mjs
  *
- * Interactive examples are fed the canned answers below, in order.
+ * Each example carries what it needs to be checked without guessing:
+ *
+ *   answers  the lines fed to input(), in order
+ *   expect   text that must appear in the output
+ *   fails    true when the program is meant NOT to compile (the error demo),
+ *            in which case `expect` is matched against the diagnostic
+ *
+ * There is no per-example timeout: the engine runs on this thread, so a
+ * runaway example would hang the process rather than fail it. That is what the
+ * job timeout in CI is for, and it is why no example may contain an unbounded
+ * loop.
  */
 
 import { readFileSync } from 'node:fs';
@@ -15,15 +25,17 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const SITE = join(fileURLToPath(new URL('.', import.meta.url)), '..', 'site');
-const ANSWERS = ['7', '3', 'Minsu', '5', '1', '2'];
 
 let output = '';
 let answers = [];
+let asked = 0;
 
 globalThis.nmeHost = {
   write(text) { output += text; },
+  sleep() { /* the site's worker really waits; the checker must not */ },
   readLine(prompt) {
     if (prompt) output += prompt;
+    asked += 1;
     const answer = answers.shift() ?? '';
     output += answer + '\n';
     return answer;
@@ -39,29 +51,68 @@ await engine.default({ module_or_path: readFileSync(join(SITE, 'assets/wasm-run/
 const { EXAMPLES } = await import(join(SITE, 'assets/examples.js'));
 
 let failures = 0;
+
+function fail(where, message, detail) {
+  failures += 1;
+  console.log(`FAIL  ${where}  ${message}`);
+  if (detail) console.log(String(detail).split('\n').map((line) => `      ${line}`).join('\n'));
+}
+
+/* The two language lists are meant to be the same tour, so a chip that exists
+ * in one language and not the other is a bug in the site, not a translation
+ * choice. */
+const ids = Object.fromEntries(
+  Object.entries(EXAMPLES).map(([language, list]) => [language, list.map((one) => one.id)]),
+);
+if (ids.en.join(',') !== ids.ko.join(',')) {
+  fail('examples.js', 'the English and Korean lists do not match',
+    `en: ${ids.en.join(', ')}\nko: ${ids.ko.join(', ')}`);
+}
+
 for (const [language, list] of Object.entries(EXAMPLES)) {
   for (const example of list) {
     output = '';
-    answers = ANSWERS.slice();
+    asked = 0;
+    answers = (example.answers ?? []).slice();
+
+    for (const field of ['id', 'label', 'source', 'expect']) {
+      if (!example[field]) fail(`${language}/${example.id ?? '?'}`, `missing \`${field}\``);
+    }
 
     const compiled = JSON.parse(compiler.compile(example.source));
+
+    if (example.fails) {
+      if (compiled.ok) {
+        fail(`${language}/${example.id}`, 'was supposed to fail, but compiled');
+      } else if (!compiled.diagnostic.includes(example.expect)) {
+        fail(`${language}/${example.id}`, `the error does not mention ${example.expect}`, compiled.diagnostic);
+      } else {
+        console.log(`ok    ${language}/${example.id}  fails with ${example.expect}`);
+      }
+      continue;
+    }
+
     if (!compiled.ok) {
-      failures += 1;
-      console.log(`FAIL  ${language}/${example.id}  did not compile`);
-      console.log(compiled.diagnostic);
+      fail(`${language}/${example.id}`, 'did not compile', compiled.diagnostic);
       continue;
     }
 
     const outcome = JSON.parse(engine.run(compiled.python));
     if (!outcome.ok) {
-      failures += 1;
-      console.log(`FAIL  ${language}/${example.id}  ran with an error`);
-      console.log(outcome.error);
+      fail(`${language}/${example.id}`, 'ran with an error', outcome.error);
+      continue;
+    }
+    if (!output.includes(example.expect)) {
+      fail(`${language}/${example.id}`, `the output never contains ${JSON.stringify(example.expect)}`, output);
+      continue;
+    }
+    if (asked > answers.length + (example.answers ?? []).length) {
+      fail(`${language}/${example.id}`, `asked ${asked} questions but only ${(example.answers ?? []).length} answers are listed`);
       continue;
     }
 
     const firstLine = output.trim().split('\n')[0] ?? '(no output)';
-    console.log(`ok    ${language}/${example.id}  ${firstLine.slice(0, 60)}`);
+    console.log(`ok    ${language}/${example.id}  ${firstLine.slice(0, 56)}`);
   }
 }
 
@@ -69,4 +120,4 @@ if (failures > 0) {
   console.log(`\n${failures} example(s) broken`);
   process.exit(1);
 }
-console.log('\nevery example compiles and runs');
+console.log('\nevery example compiles, runs, and says what it should');

@@ -24,7 +24,7 @@
     <nav class="head-nav" aria-label="Site">
       <a href="#playground">Try it</a>
       <a href="#install">Install</a>
-      <a class="nav-hide-sm" href="#learn">Learn</a>
+      <a href="/learn/">Learn</a>
       <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
       <span class="lang-toggle">
         <a href="/" aria-current="true" data-lang-choice="en">EN</a>
@@ -99,9 +99,16 @@ for _ in range(3): print("Welcome to NME")</pre>
     </div>
 
     <div class="run-bar">
-      <button class="btn btn-primary" id="run" type="button">Run</button>
+      <button class="btn btn-primary" id="run" type="button" disabled>Run</button>
       <button class="btn btn-ghost" id="stop" type="button" disabled>Stop</button>
       <span class="run-note" id="engine-note" aria-live="polite"></span>
+      <div class="progress" id="boot-progress" role="progressbar" aria-valuemin="0"
+           aria-valuemax="100" aria-label="Download progress" data-mode="loading" hidden><i></i></div>
+    </div>
+
+    <div class="alert" id="boot-alert" role="alert" hidden>
+      <p></p>
+      <button class="btn btn-ghost" id="boot-retry" type="button">try again</button>
     </div>
 
     <div class="terminal" id="terminal" data-placeholder="Output appears here." aria-live="polite" aria-label="Program output"></div>
@@ -198,8 +205,8 @@ show Hello 이름!
           all in the installation guide.
         </p>
         <p class="fineprint">
-          <a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/install.md">Installation guide</a> ·
-          <a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/getting-started.md">Five-minute guide</a>
+          <a href="/learn/install.html">Installation guide</a> ·
+          <a href="/learn/start.html">Five-minute guide</a>
         </p>
       </div>
       <div class="copy-wrap">
@@ -218,22 +225,29 @@ nme run examples/hello-sentence</pre>
 <section id="learn">
   <div class="wrap">
     <p class="eyebrow">Learn</p>
-    <h2>Everything is in the repository.</h2>
+    <h2>The guides and the syntax list live on this site.</h2>
+    <p class="lede">
+      You never have to open GitHub. All 85 guides and the complete syntax list
+      are readable here, and every example can be opened in the playground and
+      run in the same tab — on a phone too.
+    </p>
     <ul class="links">
-      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/getting-started.md">Five-minute guide</a>
+      <li><a href="/learn/start.html">Five-minute guide</a>
         <span>Starts from no programming knowledge at all.</span></li>
-      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/tutorial.md">Learning path</a>
-        <span>Six projects, ending with a tiny compiler you write yourself.</span></li>
-      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/language.md">Language reference</a>
+      <li><a href="/learn/guides.html">All 85 guides</a>
+        <span>One short guide per idea, in order of difficulty.</span></li>
+      <li><a href="/learn/syntax.html">Syntax list</a>
+        <span>Every spelling the compiler accepts, beside the Python it becomes.</span></li>
+      <li><a href="/learn/prompts.html">AI prompts</a>
+        <span>Paste one file into ChatGPT or Claude and it can write NME.</span></li>
+      <li><a href="/learn/reference.html">Language reference</a>
         <span>All three levels, exact meanings, mixing rules, limitations.</span></li>
-      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/guides/index.md">Learning guides</a>
-        <span>Short guides labelled by difficulty and topic.</span></li>
-      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/converting-python.md">Convert Python into NME</a>
+      <li><a href="/learn/tutorial.html">Learning path</a>
+        <span>Six projects, ending with a tiny compiler you write yourself.</span></li>
+      <li><a href="/learn/converting-python.html">Convert Python into NME</a>
         <span>Take a Python file and get an easier version back.</span></li>
-      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/editors.md">VS Code, Cursor, Zed</a>
-        <span>Ready-made tasks and file setup.</span></li>
-      <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/docs/ai-assistants.md">AI coding assistants</a>
-        <span>One link to give Claude Code, Codex or OpenCode first.</span></li>
+      <li><a href="/learn/install.html">Installation guide</a>
+        <span>Windows, macOS and Linux, on your own computer.</span></li>
       <li><a href="https://github.com/needmoretruth/needmoreeasy/blob/main/CHANGELOG.md">Changelog</a>
         <span>What changed in every beta.</span></li>
     </ul>

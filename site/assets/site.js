@@ -12,17 +12,22 @@
 
 import init, { compile } from './wasm/nme.js';
 import { EXAMPLES } from './examples.js';
+import { COMPILER_BYTES } from './engine-meta.js';
 
 const LANG = document.documentElement.lang === 'ko' ? 'ko' : 'en';
 const STORE_KEY = 'nme-lang';
 
 const TEXT = {
   en: {
-    compiling: 'compiling…',
     compiled: 'Python',
     errorLabel: 'what the compiler says',
-    engineLoading: 'loading the Python engine (about 6 MB, once)…',
-    engineReady: 'Python engine ready',
+    bootCompiler: 'fetching the compiler…',
+    bootEngine: 'fetching the Python engine — 11 MB, once…',
+    engineReady: 'ready to run',
+    waitingToRun: 'the engine has not arrived yet — this will run the moment it does',
+    compilerLate: 'The compiler has not arrived, so nothing can run yet. Check your connection and try again.',
+    engineLate: 'The Python engine could not be fetched, so the program cannot run here. Check your connection and try again.',
+    retry: 'try again',
     running: 'running…',
     finished: 'finished',
     stopped: 'stopped',
@@ -37,11 +42,15 @@ const TEXT = {
     fixFirst: 'Fix the program first — the compiler could not read it.',
   },
   ko: {
-    compiling: '변환 중…',
     compiled: 'Python',
     errorLabel: '컴파일러가 알려주는 내용',
-    engineLoading: '파이썬 실행기를 내려받는 중입니다(약 6MB, 처음 한 번)…',
-    engineReady: '파이썬 실행기 준비 완료',
+    bootCompiler: '컴파일러를 내려받는 중입니다…',
+    bootEngine: '파이썬 실행기를 내려받는 중입니다 — 11MB, 처음 한 번만…',
+    engineReady: '실행 준비가 됐습니다',
+    waitingToRun: '실행기가 아직 도착하지 않았습니다. 도착하는 즉시 실행합니다.',
+    compilerLate: '컴파일러가 도착하지 않아 아직 아무것도 실행할 수 없습니다. 연결을 확인하고 다시 시도해 주세요.',
+    engineLate: '파이썬 실행기를 내려받지 못해서 여기서는 실행할 수 없습니다. 연결을 확인하고 다시 시도해 주세요.',
+    retry: '다시 시도',
     running: '실행 중…',
     finished: '실행이 끝났습니다',
     stopped: '멈췄습니다',
@@ -146,6 +155,70 @@ function highlightPython(source) {
   return result + escapeHtml(source.slice(last));
 }
 
+/* --- documentation pages -------------------------------------------------- */
+
+/* The index rail is a <details> so that it collapses on a phone. On a wide
+ * screen it is a permanent column, and a reader with JavaScript off still gets
+ * a working disclosure rather than an empty box. */
+function wireDocRail() {
+  const rail = document.querySelector('.doc-rail');
+  if (!rail) return;
+  const wide = matchMedia('(min-width: 900px)');
+  const sync = () => { rail.open = wide.matches; };
+  sync();
+  wide.addEventListener('change', sync);
+
+  const current = rail.querySelector('[aria-current="page"]');
+  if (current) current.scrollIntoView({ block: 'center' });
+}
+
+/* Eighty-five guides is too many to scroll through on a phone, so the list
+ * filters as you type. Filtering happens over text the page already carries;
+ * nothing is fetched. */
+function wireGuideFilter() {
+  const input = document.querySelector('#guide-filter');
+  const list = document.querySelector('#guide-list');
+  const count = document.querySelector('#guide-count');
+  if (!input || !list) return;
+  const items = [...list.children];
+  const template = count ? count.textContent.replace(/\d+/, '%d') : '';
+
+  input.addEventListener('input', () => {
+    const needle = input.value.trim().toLowerCase();
+    let shown = 0;
+    for (const item of items) {
+      const hit = !needle || (item.dataset.find || '').includes(needle);
+      item.hidden = !hit;
+      if (hit) shown += 1;
+    }
+    if (count) count.textContent = template.replace('%d', String(shown));
+  });
+}
+
+/* --- downloads the visitor can watch ------------------------------------- */
+
+/* `init()` would happily fetch the WebAssembly itself, but then nobody can say
+ * how far along it is. Reading the body in chunks costs nothing and turns a
+ * blank wait into a progress bar. `expected` is the uncompressed size stamped
+ * in at build time, because `content-length` describes the compressed bytes. */
+async function fetchWithProgress(url, expected, onProgress) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+  if (!response.body) return response;
+
+  const total = expected || Number(response.headers.get('content-length')) || 0;
+  let loaded = 0;
+  onProgress(0, total);
+  const counted = response.body.pipeThrough(new TransformStream({
+    transform(chunk, controller) {
+      loaded += chunk.byteLength;
+      onProgress(loaded, total);
+      controller.enqueue(chunk);
+    },
+  }));
+  return new Response(counted, { headers: { 'content-type': 'application/wasm' } });
+}
+
 /* --- the playground ------------------------------------------------------ */
 
 const ANSWER_CAPACITY = 4096;
@@ -165,15 +238,82 @@ class Playground {
     this.note = root.querySelector('#engine-note');
     this.answersWrap = root.querySelector('#answers-wrap');
     this.answers = root.querySelector('#answers');
+    this.progress = root.querySelector('#boot-progress');
+    this.progressFill = this.progress.querySelector('i');
+    this.alert = root.querySelector('#boot-alert');
+    this.alertText = this.alert.querySelector('p');
+    this.retryButton = root.querySelector('#boot-retry');
 
     this.worker = null;
     this.compiled = '';
     this.debounce = 0;
+    this.compilerReady = false;
+    this.engineReady = false;
+    this.pendingRun = false;
+    this.running = false;
     this.sharedMemory = this.makeSharedMemory();
 
     this.buildChips();
     this.wire();
-    this.load(EXAMPLES[LANG][0]);
+    this.runButton.disabled = true;
+    if (!this.loadFromHash()) this.load(EXAMPLES[LANG][0]);
+  }
+
+  /* A guide links here with the program it is teaching in the URL, so a
+   * reader on a phone can run the example without retyping it. */
+  loadFromHash() {
+    const hash = location.hash.slice(1);
+    const asked = /(?:^|&)example=([\w-]+)/.exec(hash);
+    if (asked) {
+      const found = EXAMPLES[LANG].find((example) => example.id === asked[1]);
+      if (found) {
+        this.load(found);
+        return true;
+      }
+    }
+    const carried = /(?:^|&)code=([A-Za-z0-9_-]+)/.exec(hash);
+    if (!carried) return false;
+    try {
+      const base64 = carried[1].replace(/-/g, '+').replace(/_/g, '/');
+      const bytes = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
+      this.editor.value = new TextDecoder().decode(bytes);
+      this.terminal.textContent = '';
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  setProgress(loaded, total) {
+    this.progress.hidden = false;
+    if (!total) {
+      this.progress.dataset.mode = 'waiting';
+      this.progress.removeAttribute('aria-valuenow');
+      return;
+    }
+    const percent = Math.max(0, Math.min(100, Math.round((loaded / total) * 100)));
+    this.progress.dataset.mode = 'loading';
+    this.progressFill.style.width = `${percent}%`;
+    this.progress.setAttribute('aria-valuenow', String(percent));
+  }
+
+  hideProgress() {
+    this.progress.hidden = true;
+    this.progress.removeAttribute('aria-valuenow');
+  }
+
+  /* Every failure a visitor can hit here is a failed download, so the notice
+   * always carries the one action that can fix it. */
+  showAlert(text, retry) {
+    this.alertText.textContent = text;
+    this.alert.hidden = false;
+    this.retryButton.hidden = !retry;
+    this.retryAction = retry || null;
+  }
+
+  hideAlert() {
+    this.alert.hidden = true;
+    this.retryAction = null;
   }
 
   /* SharedArrayBuffer exists only on a cross-origin-isolated page. When it is
@@ -214,6 +354,11 @@ class Playground {
       this.debounce = setTimeout(() => this.compileNow(), 180);
     });
     this.runButton.addEventListener('click', () => this.run());
+    this.retryButton.addEventListener('click', () => {
+      const action = this.retryAction;
+      this.hideAlert();
+      if (action) action();
+    });
     this.stopButton.addEventListener('click', () => this.stop(true));
     this.sendButton.addEventListener('click', () => this.answer());
     this.input.addEventListener('keydown', (event) => {
@@ -234,14 +379,18 @@ class Playground {
   }
 
   compileNow() {
-    if (!this.ready) return;
+    if (!this.compilerReady) {
+      this.pythonState.textContent = TEXT.bootCompiler;
+      return;
+    }
     const outcome = JSON.parse(compile(this.editor.value));
     if (outcome.ok) {
       this.compiled = outcome.python;
       this.python.dataset.state = 'ok';
       this.python.innerHTML = highlightPython(outcome.python);
       this.pythonState.textContent = TEXT.compiled;
-      this.runButton.disabled = false;
+      this.runButton.disabled = this.running;
+      if (this.alertText.textContent === TEXT.fixFirst) this.hideAlert();
     } else {
       this.compiled = '';
       this.python.dataset.state = 'error';
@@ -251,10 +400,63 @@ class Playground {
     }
   }
 
+  /* Boot happens in two visible stages: the compiler (small, needed to show
+   * any Python at all) and then the engine (large, needed only to press Run).
+   * Neither is allowed to fail quietly. */
   async start() {
-    await init();
-    this.ready = true;
+    this.runButton.disabled = true;
+    this.note.textContent = TEXT.bootCompiler;
+    this.setProgress(0, COMPILER_BYTES);
+    try {
+      const source = await fetchWithProgress(
+        new URL('./wasm/nme_bg.wasm', import.meta.url).href,
+        COMPILER_BYTES,
+        (loaded, total) => this.setProgress(loaded, total),
+      );
+      await init({ module_or_path: source });
+    } catch (error) {
+      this.hideProgress();
+      this.note.textContent = '';
+      this.showAlert(`${TEXT.compilerLate} (${error})`, () => this.start());
+      return;
+    }
+    this.compilerReady = true;
     this.compileNow();
+    this.startEngine();
+  }
+
+  startEngine() {
+    this.note.textContent = TEXT.bootEngine;
+    this.setProgress(0, 0);
+    this.ensureWorker().postMessage({ type: 'preload' });
+  }
+
+  /* One worker serves every run: each `run` call builds a fresh interpreter
+   * inside it, so nothing carries over, and the 11 MB engine is instantiated
+   * once instead of once per press. */
+  ensureWorker() {
+    if (!this.worker) {
+      this.worker = new Worker('/assets/play-worker.js', { type: 'module' });
+      this.worker.onmessage = (event) => this.onWorkerMessage(event.data);
+      this.worker.onerror = (event) => {
+        this.engineReady = false;
+        this.hideProgress();
+        this.showAlert(`${TEXT.engineLate} (${event.message || event})`, () => {
+          this.dropWorker();
+          this.startEngine();
+        });
+        if (this.running) this.finish(TEXT.failed);
+      };
+    }
+    return this.worker;
+  }
+
+  dropWorker() {
+    if (this.worker) {
+      this.worker.terminate();
+      this.worker = null;
+    }
+    this.engineReady = false;
   }
 
   print(text, className) {
@@ -270,23 +472,35 @@ class Playground {
   }
 
   run() {
-    if (!this.compiled) {
-      this.print(TEXT.fixFirst + '\n', 'term-error');
+    if (!this.compilerReady) {
+      this.showAlert(TEXT.compilerLate, () => this.start());
       return;
     }
-    this.stop(false);
+    if (!this.compiled) {
+      this.showAlert(TEXT.fixFirst, null);
+      return;
+    }
+    this.hideAlert();
+
+    // The engine may still be on its way. Say so, keep the bar moving, and
+    // run by itself the moment it lands — pressing Run should never look
+    // like it did nothing.
+    if (!this.engineReady) {
+      this.pendingRun = true;
+      this.note.textContent = TEXT.waitingToRun;
+      this.runButton.disabled = true;
+      this.stopButton.disabled = false;
+      this.ensureWorker().postMessage({ type: 'preload' });
+      return;
+    }
+
     this.terminal.textContent = '';
     this.note.textContent = TEXT.running;
+    this.running = true;
     this.runButton.disabled = true;
     this.stopButton.disabled = false;
 
-    this.worker = new Worker('/assets/play-worker.js', { type: 'module' });
-    this.worker.onmessage = (event) => this.onWorkerMessage(event.data);
-    this.worker.onerror = (event) => {
-      this.print('\n' + String(event.message || event) + '\n', 'term-error');
-      this.finish(TEXT.failed);
-    };
-    this.worker.postMessage({
+    this.ensureWorker().postMessage({
       type: 'run',
       python: this.compiled,
       sab: this.sharedMemory ? this.sharedMemory.buffer : undefined,
@@ -302,8 +516,19 @@ class Playground {
 
   onWorkerMessage(message) {
     switch (message.type) {
+      case 'progress':
+        if (!this.engineReady) this.setProgress(message.loaded, message.total);
+        break;
       case 'ready':
-        if (this.note.textContent === TEXT.engineLoading) this.note.textContent = TEXT.running;
+        this.engineReady = true;
+        this.hideProgress();
+        this.hideAlert();
+        if (this.pendingRun) {
+          this.pendingRun = false;
+          this.run();
+        } else if (!this.running) {
+          this.note.textContent = TEXT.engineReady;
+        }
         break;
       case 'out':
         this.print(message.text);
@@ -316,6 +541,18 @@ class Playground {
         this.finish(message.ok ? TEXT.finished : TEXT.failed);
         break;
       case 'fatal':
+        if (!this.engineReady) {
+          // It never started, so this is a download problem, not the
+          // visitor's program failing.
+          this.hideProgress();
+          this.pendingRun = false;
+          this.showAlert(`${TEXT.engineLate} (${message.error})`, () => {
+            this.dropWorker();
+            this.startEngine();
+          });
+          this.finish('');
+          break;
+        }
         this.print('\n' + message.error + '\n', 'term-error');
         this.finish(TEXT.failed);
         break;
@@ -349,22 +586,22 @@ class Playground {
   finish(note) {
     this.note.textContent = note;
     this.inputRow.hidden = true;
-    this.runButton.disabled = false;
+    this.running = false;
+    this.runButton.disabled = !this.compiled;
     this.stopButton.disabled = true;
-    if (this.worker) {
-      this.worker.terminate();
-      this.worker = null;
-    }
   }
 
+  /* Stopping means killing the thread, which throws the loaded engine away
+   * with it. A replacement starts fetching straight away, from cache, so the
+   * next Run is not held up by this one. */
   stop(announce) {
-    if (!this.worker) return;
-    this.worker.terminate();
-    this.worker = null;
+    this.pendingRun = false;
+    this.dropWorker();
     if (announce) {
       this.print('\n' + TEXT.stoppedByYou + '\n', 'term-meta');
       this.finish(TEXT.stopped);
     }
+    this.startEngine();
   }
 }
 
@@ -373,13 +610,12 @@ class Playground {
 forwardKoreanSpeakersOnce();
 rememberLanguageChoice();
 wireCopyButtons();
+wireDocRail();
+wireGuideFilter();
 
 const playgroundRoot = document.querySelector('#playground');
 if (playgroundRoot) {
   const playground = new Playground(playgroundRoot);
-  playground.note.textContent = TEXT.compiling;
-  playground.start().then(
-    () => { playground.note.textContent = ''; },
-    (error) => { playground.note.textContent = String(error); },
-  );
+  playground.start();
+  window.addEventListener('hashchange', () => playground.loadFromHash());
 }
