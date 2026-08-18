@@ -773,6 +773,7 @@ def prompt_hub_extra(lang: str, pages: list[Page], docs: Path) -> str:
     by_slug = {page.slug: page for page in pages if page.lang == lang}
     copy_label = "copy the whole prompt" if lang == "en" else "전체 복사"
     read_label = "read it" if lang == "en" else "읽기"
+    save_label = "save the file" if lang == "en" else "파일로 저장"
     cards = []
     for slug, recommended, blurb_en, blurb_ko in PROMPT_CARDS:
         page = by_slug.get(slug)
@@ -789,7 +790,8 @@ def prompt_hub_extra(lang: str, pages: list[Page], docs: Path) -> str:
             f'<p class="prompt-actions">'
             f'<button class="btn btn-primary" type="button" data-copy-file="{raw}">'
             f"{copy_label}</button>"
-            f'<a class="btn btn-ghost" href="{page.url}">{read_label} →</a></p>'
+            f'<a class="btn btn-ghost" href="{page.url}">{read_label} →</a>'
+            f'<a class="btn btn-ghost" href="{raw}" download>{save_label}</a></p>'
             "</div>"
         )
     return f'<div class="prompt-grid">{"".join(cards)}</div>'

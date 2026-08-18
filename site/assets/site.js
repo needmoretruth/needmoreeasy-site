@@ -192,6 +192,36 @@ function wireHeaderEdge() {
   addEventListener('scroll', sync, { passive: true });
 }
 
+/* The grid behind the glass is almost invisible until light falls on it. The
+ * pointer is that light: a soft circle where the structure shows through.
+ * It is one element and one custom property, and phones never get it because
+ * there is no pointer to follow. */
+function wireBeam() {
+  const stage = document.querySelector('.stage');
+  if (!stage) return;
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const beam = document.createElement('i');
+  beam.className = 'beam';
+  stage.append(beam);
+
+  let x = 0;
+  let y = 0;
+  let queued = false;
+  addEventListener('pointermove', (event) => {
+    x = event.clientX;
+    y = event.clientY;
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      stage.style.setProperty('--px', `${x}px`);
+      stage.style.setProperty('--py', `${y}px`);
+    });
+  }, { passive: true });
+}
+
 /* Glass has a highlight where the light hits it, and here the light is the
  * pointer. Touch screens have no pointer to follow, so they never pay for it. */
 function wirePointerSheen() {
@@ -1078,6 +1108,7 @@ wireHeroLines();
 wireHeaderEdge();
 wireReveal();
 wirePointerSheen();
+wireBeam();
 wireCopyButtons();
 wireFileCopyButtons();
 wireDocRail();

@@ -1628,3 +1628,26 @@ main > section + section::before {
 @media (prefers-reduced-motion: reduce) {
   .code-line { animation: none; }
 }
+
+/* Cards in a row keep the same height, and their buttons line up at the
+ * bottom, so the row reads as a row rather than as three loose boxes. */
+.prompt-grid { align-items: stretch; }
+.prompt-card { grid-template-rows: auto auto auto 1fr; }
+.prompt-card .prompt-actions { margin-top: auto; align-items: flex-end; }
+
+/* The pointer's beam: the same grid, brighter, shown only where the light is.
+ * `--px`/`--py` are set by script; before the first pointer move the mask sits
+ * off-screen, so nothing shows. */
+.stage .beam {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--grid) 300%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--grid) 300%, transparent) 1px, transparent 1px),
+    radial-gradient(340px circle at var(--px, -1000px) var(--py, -1000px),
+      color-mix(in srgb, var(--edge-top) 45%, transparent), transparent 70%);
+  background-size: 64px 64px, 64px 64px, 100% 100%;
+  -webkit-mask-image: radial-gradient(340px circle at var(--px, -1000px) var(--py, -1000px), #000 10%, transparent 72%);
+  mask-image: radial-gradient(340px circle at var(--px, -1000px) var(--py, -1000px), #000 10%, transparent 72%);
+}
