@@ -2,6 +2,7 @@
   "name": "needmoreeasy-site",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "description": "needmoreeasy.com — the static site. Its browser scripts are TypeScript, type-checked and compiled into site/assets/ before every deploy.",
   "scripts": {
     "build": "node scripts/build-scripts.mjs",
