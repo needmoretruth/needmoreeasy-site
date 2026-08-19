@@ -72,6 +72,16 @@
     <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/01-hello"/>
   </url>
   <url>
+    <loc>https://needmoreeasy.com/learn/guides/02-story</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/02-story"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/02-story"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/02-story</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/02-story"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/02-story"/>
+  </url>
+  <url>
     <loc>https://needmoreeasy.com/learn/guides/03-slow-story</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/03-slow-story"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/03-slow-story"/>
@@ -170,6 +180,16 @@
     <loc>https://needmoreeasy.com/ko/learn/guides/12-random</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/12-random"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/12-random"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/guides/13-chance</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/13-chance"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/13-chance"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/guides/13-chance</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/guides/13-chance"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/guides/13-chance"/>
   </url>
   <url>
     <loc>https://needmoreeasy.com/learn/guides/14-screen</loc>
