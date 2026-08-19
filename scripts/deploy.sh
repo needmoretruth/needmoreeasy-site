@@ -42,6 +42,7 @@ NME_REPO="${NME_REPO:-$HOME/nmt/needmoreeasy}"
 if [ -d "$NME_REPO/scripts" ]; then
   ( cd "$NME_REPO" \
     && python3 scripts/check-guide-code.py \
+    && python3 scripts/check-guide-output.py \
     && python3 scripts/check-guide-silent.py \
     && python3 scripts/check-guide-index.py )
 else
