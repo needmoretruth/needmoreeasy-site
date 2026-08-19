@@ -934,8 +934,8 @@ dependencies = [
 
 [[package]]
 name = "nme-core"
-version = "0.0.1-beta.160"
-source = "git+https://github.com/needmoretruth/needmoreeasy?rev=2e11541b48d8bdfc6f68438bd1c6440c0a0fdc18#2e11541b48d8bdfc6f68438bd1c6440c0a0fdc18"
+version = "0.1.0"
+source = "git+https://github.com/needmoretruth/needmoreeasy?rev=0cc601c305e06f4de7d122fb21a51e04c1873b59#0cc601c305e06f4de7d122fb21a51e04c1873b59"
 dependencies = [
  "rustpython-parser",
  "unicode-width 0.2.2",
