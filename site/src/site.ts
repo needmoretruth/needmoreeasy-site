@@ -51,6 +51,11 @@ const TEXT = {
     focusOff: 'Back to the page',
     focusOffShort: 'Exit',
     focusHint: 'Give the whole window to the editor (Esc comes back)',
+    lineWord: 'line',
+    problemMore: 'error code',
+    goToLine: 'take me to that line',
+    blockedHint: 'One line cannot be read yet — the note under the editor says which.',
+    noPythonYet: 'No Python yet. The band under the editor says which line stopped it, and why.',
     slotSaved: 'saved',
     slotName: 'Name for this slot',
     slotFirst: 'My program',
@@ -105,6 +110,11 @@ const TEXT = {
     focusOff: '페이지로 돌아가기',
     focusOffShort: '나가기',
     focusHint: '창 전체를 편집 칸에 씁니다 (Esc를 누르면 돌아옵니다)',
+    lineWord: '줄',
+    problemMore: '오류 번호',
+    goToLine: '그 줄로 가기',
+    blockedHint: '아직 읽지 못한 줄이 하나 있습니다. 편집 칸 아래에 어느 줄인지 적혀 있습니다.',
+    noPythonYet: '아직 파이썬을 만들지 못했습니다. 편집 칸 아래에 어느 줄이 왜 걸렸는지 적혀 있습니다.',
     slotSaved: '저장했습니다',
     slotName: '이 슬롯의 이름',
     slotFirst: '내 프로그램',
@@ -276,6 +286,23 @@ function wireHeaderEdge(): void {
   const sync = (): void => head.setAttribute('data-scrolled', String(window.scrollY > 8));
   sync();
   addEventListener('scroll', sync, { passive: true });
+}
+
+/* The header stays at the top of the window, so an anchor has to leave room for
+ * it or the heading you tapped for lands underneath it. The room needed is not
+ * a constant: at 320 and 360 the header wraps onto three rows and is 138px
+ * tall, while the CSS reserved 80. Measure it and let the CSS do the rest. */
+function wireHeaderHeight(): void {
+  const head = queryMaybe(document, '.site-head', HTMLElement);
+  if (!head) return;
+  const sync = (): void => {
+    const height = Math.round(head.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--head-h', `${height}px`);
+  };
+  sync();
+  addEventListener('resize', sync);
+  // Web fonts and the wrapping they change arrive after the first measurement.
+  if ('fonts' in document) void document.fonts.ready.then(sync);
 }
 
 /* The grid behind the glass is almost invisible until light falls on it. The
@@ -671,15 +698,54 @@ interface CompileOutcome {
   readonly ok: boolean;
   readonly python: string;
   readonly diagnostic: string;
+  readonly problems: readonly CompileProblem[];
+}
+
+/* One problem the compiler found, already taken apart by `nme-web`: which
+ * line, what is wrong in plain language, and what to try instead. The page
+ * carries both languages and picks the one the page is written in. */
+interface CompileProblem {
+  readonly code: string;
+  readonly line: number;
+  readonly title: string;
+  readonly message: string;
+  readonly hint: string;
+}
+
+function textAt(value: object, key: string): string {
+  if (!(key in value)) return '';
+  const found: unknown = Reflect.get(value, key);
+  return typeof found === 'string' ? found : '';
+}
+
+function readProblems(raw: object): readonly CompileProblem[] {
+  if (!('problems' in raw)) return [];
+  const list: unknown = raw.problems;
+  if (!Array.isArray(list)) return [];
+  const problems: CompileProblem[] = [];
+  for (const entry of list) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    const line: unknown = 'line' in entry ? Reflect.get(entry, 'line') : 0;
+    problems.push({
+      code: textAt(entry, 'code'),
+      line: typeof line === 'number' && line > 0 ? line : 0,
+      title: textAt(entry, LANG === 'ko' ? 'titleKo' : 'titleEn'),
+      message: textAt(entry, LANG === 'ko' ? 'messageKo' : 'messageEn'),
+      hint: textAt(entry, LANG === 'ko' ? 'hintKo' : 'hintEn'),
+    });
+  }
+  return problems;
 }
 
 function readCompileOutcome(json: string): CompileOutcome {
   const raw: unknown = JSON.parse(json);
-  if (typeof raw !== 'object' || raw === null) return { ok: false, python: '', diagnostic: json };
+  if (typeof raw !== 'object' || raw === null) {
+    return { ok: false, python: '', diagnostic: json, problems: [] };
+  }
   const ok = 'ok' in raw && raw.ok === true;
   const python = 'python' in raw && typeof raw.python === 'string' ? raw.python : '';
   const diagnostic = 'diagnostic' in raw && typeof raw.diagnostic === 'string' ? raw.diagnostic : '';
-  return { ok, python, diagnostic };
+  return { ok, python, diagnostic, problems: readProblems(raw) };
 }
 
 /* What the worker sends back. Both ends of this are in this repository, so the
@@ -955,6 +1021,16 @@ class Playground {
   /* The button that hands the whole window to the editor. Optional for the
    * same reason as the values panel: documentation pages have no playground. */
   readonly focusToggle: HTMLButtonElement | null;
+  /* The band under the editor that says which line the compiler could not
+   * read. Optional for the same reason as the rest: documentation pages run
+   * this file and have no playground. */
+  readonly problem: HTMLElement | null;
+  readonly problemLine: HTMLButtonElement | null;
+  readonly problemTitle: HTMLElement | null;
+  readonly problemSource: HTMLElement | null;
+  readonly problemWhy: HTMLElement | null;
+  readonly problemFix: HTMLElement | null;
+  readonly problemCode: HTMLElement | null;
 
   worker: Worker | null;
   compiled: string;
@@ -1017,6 +1093,13 @@ class Playground {
     this.alertText = queryOne(this.alert, 'p', HTMLElement);
     this.retryButton = queryOne(root, '#boot-retry', HTMLButtonElement);
     this.focusToggle = queryMaybe(root, '#focus-toggle', HTMLButtonElement);
+    this.problem = queryMaybe(root, '#problem', HTMLElement);
+    this.problemLine = queryMaybe(root, '#problem-line', HTMLButtonElement);
+    this.problemTitle = queryMaybe(root, '#problem-title', HTMLElement);
+    this.problemSource = queryMaybe(root, '#problem-source', HTMLElement);
+    this.problemWhy = queryMaybe(root, '#problem-why', HTMLElement);
+    this.problemFix = queryMaybe(root, '#problem-fix', HTMLElement);
+    this.problemCode = queryMaybe(root, '#problem-code', HTMLElement);
 
     this.worker = null;
     this.compiled = '';
@@ -1207,6 +1290,12 @@ class Playground {
     this.wireChipStrip();
     this.wireFocus();
     this.runButton.addEventListener('click', () => this.run());
+    if (this.problemLine) {
+      this.problemLine.addEventListener('click', () => {
+        const line = this.problemLine?.textContent?.match(/\d+/)?.[0];
+        if (line) this.goToLine(Number(line));
+      });
+    }
     // Ctrl/Cmd + Enter runs, the way every editor a programmer will meet next
     // already does. The button carries the same shortcut in its tooltip.
     this.editor.addEventListener('keydown', (event) => {
@@ -1884,18 +1973,94 @@ class Playground {
       this.pythonState.textContent = TEXT.compiled;
       if (this.pythonNote) this.pythonNote.textContent = TEXT.compiledNote;
       this.runButton.disabled = this.running;
+      this.runButton.removeAttribute('data-blocked');
+      this.runButton.title = TEXT.runHint;
+      this.showProblem(null);
       if (this.alertText.textContent === TEXT.fixFirst) this.hideAlert();
     } else {
       this.compiled = '';
       this.python.dataset.state = 'error';
       if (this.echoNote) this.echoNote.hidden = true;
-      this.python.textContent = outcome.diagnostic;
+      // The compiler's own rendered text says everything twice, once in each
+      // language, with a caret line. That belongs in the band below, taken
+      // apart and in this page's language; here it was a wall of text a
+      // beginner reads as noise. The fallback stays for the day the band is
+      // not there or the compiler sends no structured problem.
+      const first = outcome.problems[0];
+      this.python.textContent = this.problem && first ? TEXT.noPythonYet : outcome.diagnostic;
       this.pythonState.textContent = TEXT.errorLabel;
       // The subtitle said "what the compiler produced" next to a message that
       // says the opposite. One of them has to change with the state.
       if (this.pythonNote) this.pythonNote.textContent = TEXT.errorNote;
-      this.runButton.disabled = true;
+      // The button stays alive on purpose. A dead button is not information:
+      // it says "no" without saying why, and that is exactly what a beginner
+      // cannot get past. Pressing it now takes you to the line.
+      this.runButton.disabled = this.running;
+      this.runButton.dataset.blocked = 'true';
+      this.runButton.title = TEXT.blockedHint;
+      this.showProblem(outcome.problems[0] ?? null);
     }
+  }
+
+  /* --- what is wrong, where, and what to try ----------------------------- */
+
+  showProblem(problem: CompileProblem | null): void {
+    const band = this.problem;
+    if (!band) return;
+    if (!problem) {
+      band.hidden = true;
+      return;
+    }
+    const lines = this.editor.value.split('\n');
+    const said = problem.line > 0 ? lines[problem.line - 1] ?? '' : '';
+    if (this.problemLine) {
+      this.problemLine.hidden = problem.line === 0;
+      this.problemLine.textContent = `${TEXT.lineWord} ${problem.line}`;
+      this.problemLine.title = TEXT.goToLine;
+    }
+    if (this.problemTitle) this.problemTitle.textContent = problem.title;
+    if (this.problemSource) {
+      this.problemSource.hidden = said.trim() === '';
+      this.problemSource.textContent = said;
+    }
+    if (this.problemWhy) {
+      this.problemWhy.hidden = problem.message === '';
+      this.problemWhy.textContent = problem.message;
+    }
+    if (this.problemFix) {
+      this.problemFix.hidden = problem.hint === '';
+      this.problemFix.textContent = problem.hint;
+    }
+    if (this.problemCode) {
+      this.problemCode.hidden = problem.code === '';
+      this.problemCode.textContent = `${TEXT.problemMore} ${problem.code}`;
+    }
+    band.hidden = false;
+  }
+
+  /* Put the caret on a line and show it. A number is only useful if it takes
+   * you somewhere. */
+  goToLine(line: number): void {
+    const lines = this.editor.value.split('\n');
+    if (line < 1 || line > lines.length) return;
+    let at = 0;
+    for (let index = 0; index < line - 1; index += 1) at += (lines[index] ?? '').length + 1;
+    this.editor.focus();
+    this.editor.setSelectionRange(at, at + (lines[line - 1] ?? '').length);
+    // A textarea does not scroll to the caret on its own when the caret was
+    // moved by script rather than by typing.
+    const rows = this.editor.value.substring(0, at).split('\n').length;
+    const height = this.editor.scrollHeight / Math.max(1, lines.length);
+    this.editor.scrollTop = Math.max(0, (rows - 3) * height);
+    this.markLine();
+  }
+
+  flashProblem(): void {
+    const band = this.problem;
+    if (!band || band.hidden) return;
+    band.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    band.dataset.flash = 'true';
+    setTimeout(() => { band.removeAttribute('data-flash'); }, 600);
   }
 
   /* Boot happens in two visible stages: the compiler (small, needed to show
@@ -2090,7 +2255,13 @@ class Playground {
       return;
     }
     if (!this.compiled) {
-      this.showAlert(TEXT.fixFirst, null);
+      // Not an alert any more: the band under the editor already says which
+      // line and why, so the press takes you there instead of adding a second
+      // message that says less.
+      this.flashProblem();
+      const line = this.problemLine?.textContent?.match(/\d+/)?.[0];
+      if (line) this.goToLine(Number(line));
+      else this.showAlert(TEXT.fixFirst, null);
       return;
     }
     this.hideAlert();
@@ -2276,6 +2447,7 @@ rememberLanguageChoice();
 wireTheme();
 wireHeroLines();
 wireHeaderEdge();
+wireHeaderHeight();
 wireReveal();
 wirePointerSheen();
 wireBeam();

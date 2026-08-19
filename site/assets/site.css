@@ -2267,3 +2267,138 @@ main > section + section::before {
   :root[data-focus="true"] #playground[data-tall="true"] .pane-nme .editor { padding-bottom: 1rem; }
   :root[data-focus="true"] .pane-nme .editor { flex: 1 1 auto; }
 }
+
+/* ── 핸드폰에서 읽고 누를 수 있게 ─────────────────────────────────────────
+ * 2026-08-19 실측으로 나온 결함을 고친 자리입니다. 320·360·390·414 폭에서
+ * 224쪽을 밝은 화면·어두운 화면 모두 재어 나온 것들입니다.
+ */
+
+/* 「다음 가이드」 카드가 화면 밖으로 잘려 나갔습니다. flex 항목의 기본
+ * `min-width: auto`가 카드를 가장 긴 낱말(transactions) 폭 아래로 못 줄이는데,
+ * `body`에 `overflow-x: hidden`이 걸려 있어 넘친 쪽으로 밀어 볼 수도 없었습니다.
+ * 320px에서 68px이 화면 밖이었고, 읽는 사람은 다음 글이 무엇인지 알 수 없었습니다. */
+.doc-turn a { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 559px) {
+  .doc-turn { flex-direction: column; }
+  .doc-turn .turn-next { text-align: left; }
+}
+
+/* 목차의 링크를 누르면 그 제목이 붙박이 머리 아래로 완전히 숨었습니다.
+ * 머리는 320·360폭에서 세 줄로 접혀 138px이 되는데 여백은 80px로 고정이었기
+ * 때문입니다. 이제 머리 높이를 재서 `--head-h`에 넣고 그 값을 씁니다. */
+section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
+.prose :is(h2, h3, h4) { scroll-margin-top: calc(var(--head-h, 5rem) + 1rem); }
+
+/* 손가락으로 누르는 화면에서 작은 글자·작은 표적을 키웁니다.
+ * 세로 안쪽 여백은 줄 높이를 바꾸지 않으면서 누를 수 있는 넓이만 키웁니다. */
+@media (pointer: coarse) {
+  /* 코드는 초보자가 한 글자씩 옮겨 적는 글입니다. 13.8px은 그러기에 작습니다. */
+  pre.code, .readout { font-size: 0.92rem; }
+  /* 머리의 두 토글이 30px로 줄어 있었습니다. 폭은 그대로 두고 높이만 되돌립니다. */
+  .lang-toggle a, .theme-toggle button { min-height: 44px; }
+  .doc-crumbs a, .site-foot a, .fineprint a, .doc-meta dl dd a { padding: 0.5rem 0.2rem; }
+  .prose li a, .prose p a { padding: 0.45rem 0.25rem; }
+  .snippet-tools a, .snippet-tools button { min-height: 36px; }
+  .doc-rail summary, .doc-rail a { min-height: 44px; display: flex; align-items: center; }
+}
+
+/* 가장 작은 글자들이 밝은 화면에서 3.03:1이었습니다. 4.5:1이 기준입니다.
+ * 흐린 먹(--ink-faint)은 장식에만 두고, 읽어야 하는 작은 글자는 한 단계 진한
+ * 먹(--ink-soft)으로 올립니다. 크기도 11.2~11.8px에서 12.5px 위로 올립니다. */
+.badge, .doc-turn a span, .rail-group h3, .figure-label {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+.fineprint { color: var(--ink-soft); }
+.snippet-tools a, .snippet-tools button { color: var(--ink-soft); font-size: 0.78rem; }
+.doc-crumbs { color: var(--ink-soft); }
+.lang-toggle a, .theme-toggle button { font-size: 0.78rem; }
+
+/* 여러 개의 짧은 번호 링크가 한 줄에 늘어선 곳(가이드 목차의 「주제로 찾기」)은
+ * 링크 하나가 20×19px이고 사이가 10px이었습니다. 칩으로 바꿔 벌려 놓습니다. */
+.numstrip { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.numstrip > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--glass);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+.numstrip > a:hover { background: var(--glass-hover); }
+
+/* ── 무엇이 · 어디서 · 왜 잘못됐는지 ──────────────────────────────────────
+ * 전에는 컴파일이 실패하면 실행 단추가 꺼지기만 했습니다. 오류 글은 파이썬
+ * 칸에 들어갔고, 편집 칸만 보던 사람에게는 「눌러도 아무 일이 없는 단추」로만
+ * 보였습니다. 이 띠는 편집 칸 바로 아래에 항상 나오고, 몇째 줄인지·그 줄이
+ * 무엇인지·무엇이 잘못됐는지·어떻게 고치는지를 한자리에 적습니다.
+ *
+ * 빨강을 쓰는 자리입니다. 이 사이트에서 색은 기계의 상태를 말할 때만 쓰고,
+ * 이것이 바로 그 상태입니다. */
+.problem {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--bad) 34%, transparent);
+  border-left-width: 3px;
+  border-radius: var(--r-md);
+  background: var(--bad-soft);
+}
+.problem p { margin: 0; }
+.problem-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.6rem;
+}
+.problem-head strong { font-size: 0.98rem; font-weight: 600; }
+.problem-line {
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-height: 32px;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--bad) 40%, transparent);
+  background: var(--glass-2);
+  color: var(--bad);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.problem-line:hover { background: var(--glass-hover); }
+/* The line itself, quoted back. A person recognises their own sentence faster
+ * than they find a line number. */
+.problem-source {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--r-sm, 8px);
+  background: var(--glass-sunk);
+  border: 1px solid var(--hairline);
+  font-family: var(--mono);
+  font-size: 0.86rem;
+  overflow-x: auto;
+  white-space: pre;
+}
+.problem-why { font-size: 0.92rem; color: var(--ink); }
+.problem-fix { font-size: 0.92rem; color: var(--ink-soft); }
+.problem-code { font-size: 0.78rem; color: var(--ink-soft); font-family: var(--mono); }
+/* Pressing Run on a program that cannot compile used to do nothing at all.
+ * Now it says why, and the button says so about itself too. */
+.btn[data-blocked="true"] { opacity: 0.72; }
+.problem[data-flash="true"] { animation: problem-flash 0.5s var(--ease); }
+@keyframes problem-flash {
+  0%, 100% { transform: none; }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .problem[data-flash="true"] { animation: none; outline: 2px solid var(--bad); }
+}
+@media (pointer: coarse) {
+  .problem-line { min-height: 40px; }
+}

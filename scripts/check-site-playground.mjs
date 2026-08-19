@@ -230,6 +230,88 @@ console.log(errors.length
   ? 'FAIL 색: ' + errors.join(' | ')
   : '프로그램이 칠한 색이 그려지고, 코드 글자는 새어 나오지 않음');
 
+// A program that does not compile used to turn the Run button off and put a
+// wall of bilingual compiler text in the Python pane. Someone looking at the
+// editor saw a button that did nothing. The band under the editor has to say
+// which line, quote it, say what is wrong and what to try, and pressing Run
+// has to take the caret to that line.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '안녕하세요 말해줘\n끝\n세 번째 줄';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(700);
+const band = await page.evaluate(() => ({
+  hidden: document.querySelector('#problem').hidden,
+  line: document.querySelector('#problem-line').textContent,
+  title: document.querySelector('#problem-title').textContent,
+  source: document.querySelector('#problem-source').textContent,
+  why: document.querySelector('#problem-why').textContent,
+  fix: document.querySelector('#problem-fix').textContent,
+  code: document.querySelector('#problem-code').textContent,
+  runAlive: document.querySelector('#run').disabled === false,
+  blocked: document.querySelector('#run').dataset.blocked === 'true',
+}));
+if (band.hidden) errors.push('컴파일이 실패했는데 오류 띠가 숨어 있음');
+if (band.line !== '줄 2') errors.push('오류 띠가 줄 번호를 틀림: ' + band.line);
+if (band.source !== '끝') errors.push('오류 띠가 그 줄을 그대로 보여 주지 않음: ' + band.source);
+for (const [what, value] of [['제목', band.title], ['이유', band.why], ['고치는 법', band.fix]]) {
+  if (!value || value.trim() === '') errors.push(`오류 띠에 ${what}이 비어 있음`);
+}
+if (!/E\d{4}/.test(band.code)) errors.push('오류 번호가 없음: ' + band.code);
+if (!band.runAlive) errors.push('실행 단추가 꺼져 있음 — 왜 안 되는지 말할 기회가 사라짐');
+if (!band.blocked) errors.push('실행 단추가 막힌 상태로 표시되지 않음');
+await page.click('#run');
+await page.waitForTimeout(400);
+const caret = await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  return {
+    line: editor.value.slice(0, editor.selectionStart).split('\n').length,
+    picked: editor.value.slice(editor.selectionStart, editor.selectionEnd),
+  };
+});
+if (caret.line !== 2 || caret.picked !== '끝') {
+  errors.push('실행을 눌러도 그 줄로 데려가지 않음: ' + JSON.stringify(caret));
+}
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '안녕하세요 말해줘';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(700);
+const bandGone = await page.evaluate(() => ({
+  hidden: document.querySelector('#problem').hidden,
+  blocked: document.querySelector('#run').dataset.blocked ?? null,
+}));
+if (!bandGone.hidden || bandGone.blocked !== null) errors.push('고쳤는데 오류 띠가 남아 있음');
+console.log(errors.length ? 'FAIL 오류 알림' : '어느 줄이 왜 걸렸는지 편집 칸 아래에서 보임');
+
+// The coding screen hands the whole window to the editor. What must hold is
+// that the editor really grows, the page chrome really goes, and the way back
+// exists — including for someone who arrived by link and never saw a button.
+await page.evaluate(() => { location.hash = 'screen=code'; });
+await page.waitForTimeout(500);
+const opened = await page.evaluate(() => {
+  const editor = document.querySelector('#editor').getBoundingClientRect();
+  return {
+    on: document.documentElement.dataset.focus === 'true',
+    editorHeight: Math.round(editor.height),
+    headVisible: getComputedStyle(document.querySelector('.site-head')).display !== 'none',
+    runVisible: document.querySelector('#run').getBoundingClientRect().bottom <= window.innerHeight,
+    sideways: document.scrollingElement.scrollWidth - document.scrollingElement.clientWidth,
+  };
+});
+if (!opened.on) errors.push('주소의 screen=code로 코딩 화면이 열리지 않음');
+if (opened.editorHeight < 240) errors.push('코딩 화면인데 편집 칸이 작음: ' + opened.editorHeight);
+if (opened.headVisible) errors.push('코딩 화면인데 페이지 머리가 남아 있음');
+if (!opened.runVisible) errors.push('코딩 화면에서 실행 단추가 화면 밖에 있음');
+if (opened.sideways > 1) errors.push('코딩 화면이 옆으로 넘침: ' + opened.sideways);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+const closed = await page.evaluate(() => document.documentElement.dataset.focus ?? null);
+if (closed !== null) errors.push('Esc를 눌러도 코딩 화면이 닫히지 않음');
+console.log(errors.length ? 'FAIL 코딩 화면' : '코딩 화면이 창 전체를 쓰고 Esc로 돌아옴');
+
 console.log(errors.length ? 'FAIL 콘솔 오류: ' + errors.join(' | ') : '콘솔 오류 없음');
 await browser.close();
 process.exit(errors.length ? 1 : 0);
