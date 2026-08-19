@@ -149,6 +149,61 @@ for (const path of ['/ko/index.html', '/index.html']) {
   check(await overflow() <= 0, `${path} 가 가로로 넘치지 않음`, `${await overflow()}px`);
 }
 
+/* 9. Reading pages on a phone. Three defects were measured on 2026-08-19 and
+ * fixed; these are the guards. The widths that matter are 320 and 360, where
+ * the header wraps onto three rows and a flex card cannot shrink. */
+for (const width of [320, 360]) {
+  const reader = await browser.newContext({
+    ...devices['Pixel 7'],
+    viewport: { width, height: 740 },
+    colorScheme: 'light',
+  });
+  const sheet = await reader.newPage();
+
+  // The next-guide card used to be sliced by the screen edge, and `body`
+  // hides the overflow, so the rest could not even be scrolled to.
+  await sheet.goto(`${BASE}/learn/guides/68-compare`, { waitUntil: 'domcontentloaded' });
+  await sheet.waitForTimeout(300);
+  const cardRight = await sheet.evaluate(() => {
+    const next = document.querySelector('.doc-turn .turn-next');
+    return next ? Math.round(next.getBoundingClientRect().right) : 0;
+  });
+  check(cardRight <= width + 1, `${width}px: 다음 가이드 카드가 화면 안에 있음`, `${cardRight}px`);
+
+  // Tapping an in-page link used to land the heading behind the sticky header.
+  await sheet.goto(`${BASE}/learn/guides`, { waitUntil: 'domcontentloaded' });
+  await sheet.waitForTimeout(400);
+  const jump = await sheet.evaluate(async () => {
+    const link = document.querySelector('.prose a[href^="#"]');
+    if (!link) return null;
+    link.click();
+    await new Promise((done) => setTimeout(done, 700));
+    const target = document.querySelector(link.getAttribute('href'));
+    return {
+      headBottom: Math.round(document.querySelector('.site-head').getBoundingClientRect().bottom),
+      top: Math.round(target.getBoundingClientRect().top),
+    };
+  });
+  check(jump !== null && jump.top >= jump.headBottom,
+    `${width}px: 목차 링크를 누르면 그 제목이 보임`, JSON.stringify(jump));
+
+  // A row of two-digit links used to be 20x19px targets 10px apart.
+  const chips = await sheet.evaluate(() => {
+    const links = [...document.querySelectorAll('li.numstrip a')];
+    if (!links.length) return null;
+    const boxes = links.map((a) => a.getBoundingClientRect());
+    return {
+      count: links.length,
+      width: Math.round(Math.min(...boxes.map((b) => b.width))),
+      height: Math.round(Math.min(...boxes.map((b) => b.height))),
+    };
+  });
+  check(chips !== null && chips.width >= 40 && chips.height >= 36,
+    `${width}px: 번호 링크가 손가락으로 누를 만함`, JSON.stringify(chips));
+
+  await reader.close();
+}
+
 check(errors.length === 0, '콘솔 오류 없음', errors.slice(0, 2).join(' | '));
 
 await browser.close();

@@ -423,6 +423,26 @@ def wrap_tables(body: str) -> str:
     )
 
 
+# A run of links whose whole text is a number or one word — the "topic lookup"
+# rows of the guide index — rendered as 20x19px targets 10px apart. On a phone
+# that is smaller than a fingertip and no reader could hit the one they meant.
+# The row becomes a wrapped strip of 44px chips instead. Recognized by shape,
+# not by page: any list item that is a label plus several very short links.
+NUMBER_STRIP = re.compile(
+    r"<li>([^<]*?)((?:<a [^>]*>[^<]{1,3}</a>(?:, |、|·| · )?){4,})</li>"
+)
+
+
+def number_strips(body: str) -> str:
+    def replace(match: re.Match[str]) -> str:
+        label, links = match.group(1).strip(), match.group(2)
+        links = re.sub(r"</a>(?:, |、|·| · )", "</a>", links)
+        head = f"<span>{label}</span>" if label else ""
+        return f'<li class="numstrip">{head}{links}</li>'
+
+    return NUMBER_STRIP.sub(replace, body)
+
+
 def add_anchors(body: str) -> str:
     def replace(match: re.Match[str]) -> str:
         level, ident, rest = match.group(1), match.group(2), match.group(3)
@@ -896,6 +916,7 @@ def render_page(
     rewrite = make_link_rewriter(page, by_key, docs)
     body = md.render(page.text, rewrite)
     body = wrap_tables(body)
+    body = number_strips(body)
     body = add_anchors(body)
     body = decorate_snippets(body, page, compiler)
     strip = meta_strip(page, rewrite) + copy_bar(page)
@@ -1022,7 +1043,7 @@ def build(docs: Path, binary: Path | None) -> None:
             index_page = make_page("guides/index", lang, "guides", index_source, "guides")
             index_page.text = index_text
             index_body = decorate_snippets(
-                add_anchors(wrap_tables(md.render(index_text, make_link_rewriter(index_page, by_key, docs)))),
+                add_anchors(number_strips(wrap_tables(md.render(index_text, make_link_rewriter(index_page, by_key, docs))))),
                 index_page,
                 compiler,
             )
