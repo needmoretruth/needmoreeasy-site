@@ -50,6 +50,44 @@ const cleared = (await page.textContent('#terminal')).trim();
 console.log('화면 지우기 뒤 출력:', JSON.stringify(cleared));
 if (cleared !== 'after') errors.push('화면 지우기가 듣지 않음: ' + cleared);
 
+// A program that opens a file cannot work in a browser. What the engine says
+// about that is `ImportError: no os specific module found` after a dozen frames
+// of its own machinery, which tells a beginner nothing. The page has to say it
+// plainly, and it must not bury the real line under the engine's frames.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '"일기.txt" 파일에 "오늘"을 저장해\n메모에 "일기.txt" 읽어서\n메모 말해줘';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(500);
+await page.click('#run');
+await page.waitForFunction(() => /finish|끝났|오류/.test(document.querySelector('#engine-note').textContent), null, { timeout: 20000 });
+await page.waitForTimeout(400);
+const fileRun = (await page.textContent('#terminal')).trim();
+console.log('파일 프로그램 출력:', JSON.stringify(fileRun.slice(0, 60)));
+if (!/파일을 씁니다|works with files/.test(fileRun)) {
+  errors.push('파일 프로그램에 쉬운 설명이 붙지 않음: ' + fileRun.slice(0, 80));
+}
+if (/_frozen_importlib/.test(fileRun)) {
+  errors.push('실행기 내부 줄이 그대로 보임');
+}
+
+// An ordinary mistake must still show its own traceback, pointing at the
+// visitor's line — the filtering above must not eat that.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = 'print("one")\nprint(1 / 0)';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(500);
+await page.click('#run');
+await page.waitForFunction(() => /finish|끝났|오류/.test(document.querySelector('#engine-note').textContent), null, { timeout: 20000 });
+await page.waitForTimeout(400);
+const divide = (await page.textContent('#terminal')).trim();
+if (!/ZeroDivisionError/.test(divide) || !/line 2/.test(divide)) {
+  errors.push('보통 오류의 역추적이 사라짐: ' + divide.slice(0, 80));
+}
+
 console.log(errors.length ? 'FAIL 콘솔 오류: ' + errors.join(' | ') : '콘솔 오류 없음');
 await browser.close();
 process.exit(errors.length ? 1 : 0);

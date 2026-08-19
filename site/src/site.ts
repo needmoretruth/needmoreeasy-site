@@ -67,6 +67,10 @@ const TEXT = {
       'This browser is refusing to store anything, so these files last only until you leave the page. Copy or download anything you want to keep.',
     promptClipped:
       '… the first part only. Copy takes the whole message; "open as a page" shows all of it.',
+    needsFiles:
+      'This program works with files on your computer, and a browser has nowhere to keep them. Install NME on your own machine and it will run there.',
+    needsNetwork:
+      'This program uses the network, which a program on this page cannot reach. Install NME on your own machine and it will run there.',
   },
   ko: {
     compiled: 'Python',
@@ -113,6 +117,10 @@ const TEXT = {
       '이 브라우저가 저장을 막고 있어서, 이 파일들은 창을 닫으면 사라집니다. 남기고 싶은 것은 복사하거나 내려받아 두세요.',
     promptClipped:
       '… 여기까지만 보여 줍니다. 「전체 복사」는 글 전체를 복사하고, 「문서로 열기」는 전부 보여 줍니다.',
+    needsFiles:
+      '이 프로그램은 컴퓨터의 파일을 씁니다. 브라우저 안에는 파일을 둘 곳이 없어서 여기서는 되지 않습니다. 본인 컴퓨터에 NME를 설치하면 그곳에서 됩니다.',
+    needsNetwork:
+      '이 프로그램은 인터넷을 씁니다. 이 화면에서 도는 프로그램은 인터넷에 닿을 수 없습니다. 본인 컴퓨터에 NME를 설치하면 그곳에서 됩니다.',
   },
 }[LANG];
 
@@ -742,6 +750,31 @@ function flashLabel(button: HTMLElement, text: string, milliseconds = 1400): voi
 }
 
 const labelTimers = new WeakMap<HTMLElement, number>();
+
+/* Some failures are not the program's fault and not the writer's either — they
+ * are this page's. A program that opens a file gets
+ * `ImportError: no os specific module found` from the engine, which tells a
+ * beginner nothing at all. Guide 37 warns about it; this says the same thing at
+ * the moment it happens. */
+/* The engine's own machinery shows up in a traceback — twelve frames of
+ * `_frozen_importlib` before the line that matters. None of it is the visitor's
+ * program and none of it helps. */
+function withoutEngineFrames(error: string): string {
+  const kept = error
+    .split('\n')
+    .filter((line) => !/_frozen_importlib|^\s*File "(fnmatch|os|pathlib|importlib)"/.test(line));
+  return kept.join('\n').replace(/\n{3,}/g, '\n\n');
+}
+
+function whatWentWrong(error: string): string | null {
+  if (/no os specific module found|No module named '(os|pathlib|shutil|glob)'/.test(error)) {
+    return TEXT.needsFiles;
+  }
+  if (/No module named '(urllib|socket|http|ssl|requests)'/.test(error)) {
+    return TEXT.needsNetwork;
+  }
+  return null;
+}
 
 class Playground {
   readonly editor: HTMLTextAreaElement;
@@ -1765,7 +1798,16 @@ class Playground {
         this.askForInput();
         break;
       case 'done':
-        if (message.error) this.print('\n' + message.error, 'term-error');
+        if (message.error) {
+          const plainly = whatWentWrong(message.error);
+          // When the cause is understood, the last line of the traceback is the
+          // only part worth showing; the explanation replaces the rest.
+          const shown = plainly
+            ? (withoutEngineFrames(message.error).trim().split('\n').pop() ?? '')
+            : withoutEngineFrames(message.error);
+          this.print('\n' + shown, 'term-error');
+          if (plainly) this.print('\n' + plainly + '\n', 'term-meta');
+        }
         this.finish(message.ok ? TEXT.finished : TEXT.failed);
         break;
       case 'fatal':
@@ -1781,7 +1823,12 @@ class Playground {
           this.finish('');
           break;
         }
-        this.print('\n' + message.error + '\n', 'term-error');
+        const plainly = whatWentWrong(message.error);
+        const shown = plainly
+          ? (withoutEngineFrames(message.error).trim().split('\n').pop() ?? '')
+          : withoutEngineFrames(message.error);
+        this.print('\n' + shown + '\n', 'term-error');
+        if (plainly) this.print(plainly + '\n', 'term-meta');
         this.finish(TEXT.failed);
         break;
       default:
