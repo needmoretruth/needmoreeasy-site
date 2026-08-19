@@ -283,7 +283,14 @@ function wireReveal(): void {
 function wireHeaderEdge(): void {
   const head = queryMaybe(document, '.site-head', HTMLElement);
   if (!head) return;
-  const sync = (): void => head.setAttribute('data-scrolled', String(window.scrollY > 8));
+  const sync = (): void => {
+    head.setAttribute('data-scrolled', String(window.scrollY > 8));
+    // Once a reader is well into a page, the row of section links is not what
+    // they are here for, and on a 740px-tall phone the header was taking 22%
+    // of the screen. Deep in the page it keeps only the brand and the two
+    // toggles; at the top everything is back.
+    head.setAttribute('data-deep', String(window.scrollY > 240));
+  };
   sync();
   addEventListener('scroll', sync, { passive: true });
 }

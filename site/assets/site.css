@@ -2402,3 +2402,12 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
 @media (pointer: coarse) {
   .problem-line { min-height: 40px; }
 }
+
+/* 좁은 화면에서 머리는 글 읽는 자리를 22%까지 먹었습니다. 페이지 위쪽에서는
+ * 그대로 두고, 한참 내려간 뒤에는 이름표와 두 토글만 남깁니다. 위로 올리면
+ * 메뉴가 다시 나옵니다. */
+@media (max-width: 819px) {
+  .site-head[data-deep="true"] .head-nav { display: none; }
+  /* 320px에서 마지막 메뉴가 5px 잘려 「AI에게 묻기」가 다 보이는 것처럼 읽혔습니다. */
+  .head-nav a { padding-inline: 0.38rem; }
+}
