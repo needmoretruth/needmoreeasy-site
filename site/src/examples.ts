@@ -115,6 +115,25 @@ end
 show fruits`,
     },
     {
+      id: 'listwork',
+      label: 'A list, made and used',
+      answers: [],
+      expect: 'the milk is still there',
+      source: `# A whole list program with no brackets and no punctuation.
+set items to an empty list
+append apples to items
+append bread to items
+append milk to items
+show how many items
+sort items
+show items joined by comma
+show the first of items
+remove bread from items
+if items contains milk
+    show the milk is still there
+end`,
+    },
+    {
       id: 'conditions',
       label: 'Two conditions',
       answers: [],
@@ -563,6 +582,25 @@ print(word)`,
 과일들에 과일 넣어
 끝
 과일들 말해줘`,
+    },
+    {
+      id: 'listwork',
+      label: '목록 다루기',
+      answers: [],
+      expect: '우유는 아직 있어요',
+      source: `# 괄호도 기호도 없이 목록 프로그램 하나를 통째로.
+장바구니는 빈 목록
+장바구니에 사과 넣어
+장바구니에 빵 넣어
+장바구니에 우유 넣어
+장바구니 개수 말해줘
+장바구니 정렬해
+장바구니를 쉼표로 이어 말해줘
+장바구니 첫 번째 말해줘
+장바구니에서 빵 빼
+만약에 장바구니에 우유가 있으면
+    우유는 아직 있어요 말해줘
+끝`,
     },
     {
       id: 'conditions',

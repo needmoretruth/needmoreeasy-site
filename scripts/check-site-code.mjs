@@ -148,6 +148,19 @@ for (const page of PAGES) {
     }
     const python = compile(`${page}  “${first}”`, source);
     if (python === null) continue;
+    /* A block on this page is here to show a sentence doing something. If every
+     * line of it comes back as a verbatim print of itself, nothing was
+     * understood — the compiler read the whole thing as prose and echoed it.
+     * That still "compiles", and the Python is still valid Python, so neither
+     * of the checks above sees it. It is how a page can advertise grammar the
+     * shipped compiler does not have yet. */
+    const written = source.split('\n').map((line) => line.trim()).filter(Boolean);
+    const produced = python.split('\n').map((line) => line.trim()).filter(Boolean);
+    const echoed = written.length > 0 && written.every((line, index) =>
+      line.startsWith('#') || produced[index] === `print("${line.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}")`);
+    if (echoed) {
+      fail(`${page}  “${first}”`, 'every line was only echoed — the compiler understood none of it', python);
+    }
     // A program that quietly means something else is worse than one that fails
     // to compile: `say Hello name` printing the word "name" reads as correct.
     // Any name the page introduces with `ask`/`물어봐` must actually reach the
