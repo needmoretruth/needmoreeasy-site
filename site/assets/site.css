@@ -1003,6 +1003,39 @@ pre code {
 .sgr-bg-white { background: #e9eaec; color: #14161a; }
 .sgr-bg-grey { background: #6b7280; color: #fff; }
 
+/* What each of the program's own names held when it stopped. Closed by default:
+ * the answer is usually what the writer expected, and the terminal above is the
+ * thing being read. Achromatic, like every other surface on this page. */
+.values {
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--glass-sunk);
+  padding: 0.5rem 0.85rem;
+  font-size: 0.9rem;
+}
+.values > summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+.values > summary:hover { color: var(--ink); }
+.values dl {
+  margin: 0.5rem 0 0.2rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2rem 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+.values dt { color: var(--ink); white-space: nowrap; }
+.values dd {
+  margin: 0;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
 .term-input-row { display: flex; gap: 0.55rem; }
 .term-input-row[hidden] { display: none; }
 

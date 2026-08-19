@@ -648,12 +648,23 @@ function readCompileOutcome(json: string): CompileOutcome {
  * union below is the whole protocol; `readWorkerMessage` turns the `unknown`
  * that arrives on the wire into one of these, or into nothing at all, which
  * the switch ignores exactly as the old `default: break` did. */
+/* One name the program made and what it held when the program stopped. */
+interface NameValue {
+  readonly name: string;
+  readonly shown: string;
+}
+
 type WorkerMessage =
   | { readonly type: 'progress'; readonly loaded: number; readonly total: number }
   | { readonly type: 'ready' }
   | { readonly type: 'out'; readonly text: string }
   | { readonly type: 'ask' }
-  | { readonly type: 'done'; readonly ok: boolean; readonly error: string | null }
+  | {
+      readonly type: 'done';
+      readonly ok: boolean;
+      readonly error: string | null;
+      readonly values: readonly NameValue[];
+    }
   | { readonly type: 'fatal'; readonly error: string };
 
 function readWorkerMessage(data: unknown): WorkerMessage | null {
@@ -675,7 +686,16 @@ function readWorkerMessage(data: unknown): WorkerMessage | null {
     const ok = 'ok' in data ? data.ok : undefined;
     const error = 'error' in data ? data.error : undefined;
     if (typeof ok !== 'boolean') return null;
-    return { type: 'done', ok, error: typeof error === 'string' ? error : null };
+    const values: NameValue[] = [];
+    if ('values' in data && Array.isArray(data.values)) {
+      for (const item of data.values) {
+        if (typeof item !== 'object' || item === null) continue;
+        if (!('name' in item) || !('shown' in item)) continue;
+        const { name, shown } = item;
+        if (typeof name === 'string' && typeof shown === 'string') values.push({ name, shown });
+      }
+    }
+    return { type: 'done', ok, error: typeof error === 'string' ? error : null, values };
   }
   if (kind === 'fatal') {
     const error = 'error' in data ? data.error : undefined;
@@ -861,6 +881,10 @@ class Playground {
   readonly pythonState: HTMLElement;
   readonly pythonNote: HTMLElement | null;
   readonly terminal: HTMLElement;
+  /* Where the program's own names are listed once it stops. Optional: the
+   * documentation pages run this same file and have no playground. */
+  readonly values: HTMLElement | null = null;
+  readonly valuesList: HTMLElement | null = null;
   /* Which SGR classes are switched on right now. A program sets a colour once
    * and everything after it is in that colour, so this outlives one `print`. */
   private readonly ink = new Set<string>();
@@ -927,6 +951,8 @@ class Playground {
     this.stopButton = queryOne(root, '#stop', HTMLButtonElement);
     this.chips = queryOne(root, '#examples', HTMLElement);
     this.inputRow = queryOne(root, '#input-row', HTMLElement);
+    this.values = queryMaybe(root, '#values', HTMLElement);
+    this.valuesList = queryMaybe(root, '#values-list', HTMLElement);
     this.input = queryOne(root, '#term-input', HTMLInputElement);
     this.sendButton = queryOne(root, '#send', HTMLButtonElement);
     this.note = queryOne(root, '#engine-note', HTMLElement);
@@ -1856,6 +1882,35 @@ class Playground {
     this.terminal.scrollTop = this.terminal.scrollHeight;
   }
 
+  /* What each of the program's own names held when it stopped.
+   *
+   * A beginner's first real question about a running program is *what is in it
+   * now*, and until this the playground could only answer with whatever the
+   * program remembered to print. It is shown closed, because the answer is
+   * usually "what I expected" and the terminal is the thing being read.
+   *
+   * It is shown after a failure too, and that is when it matters most: a
+   * program that stopped half way is exactly when someone wants to know what
+   * was in the names at the time. */
+  showValues(values: readonly NameValue[]): void {
+    const box = this.values;
+    const list = this.valuesList;
+    if (!box || !list) return;
+    list.textContent = '';
+    if (values.length === 0) {
+      box.hidden = true;
+      return;
+    }
+    for (const { name, shown } of values) {
+      const term = document.createElement('dt');
+      term.textContent = name;
+      const said = document.createElement('dd');
+      said.textContent = shown;
+      list.append(term, said);
+    }
+    box.hidden = false;
+  }
+
   /* Which line of the Python is the one the caret is on. Called on every
    * keystroke and every click, so it does no work beyond counting newlines. */
   markLine(): void {
@@ -1946,6 +2001,7 @@ class Playground {
     }
 
     this.terminal.textContent = '';
+    this.showValues([]);
     this.note.textContent = TEXT.running;
     this.setStatus('busy');
     this.running = true;
@@ -2010,6 +2066,7 @@ class Playground {
           this.print('\n' + shown, 'term-error');
           if (plainly) this.print('\n' + plainly + '\n', 'term-meta');
         }
+        this.showValues(message.values);
         this.finish(message.ok ? TEXT.finished : TEXT.failed);
         break;
       case 'fatal':

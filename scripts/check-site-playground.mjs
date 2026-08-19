@@ -88,6 +88,69 @@ if (!/ZeroDivisionError/.test(divide) || !/line 2/.test(divide)) {
   errors.push('보통 오류의 역추적이 사라짐: ' + divide.slice(0, 80));
 }
 
+// What each of the program's own names held when it stopped. It is shown after
+// a failure too, which is the case it matters most in.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = 'set friends to an empty list\nappend Mina to friends\nset count to how many friends\nshow count';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(600);
+await page.click('#run');
+await page.waitForFunction(() => /finish|끝났/.test(document.querySelector('#engine-note').textContent), null, { timeout: 20000 });
+await page.waitForTimeout(300);
+const named = await page.evaluate(() => {
+  const box = document.querySelector('#values');
+  if (!box || box.hidden) return null;
+  const rows = [...document.querySelectorAll('#values-list dt')].map((dt) => [
+    dt.textContent, dt.nextElementSibling?.textContent,
+  ]);
+  return Object.fromEntries(rows);
+});
+if (!named) errors.push('프로그램이 만든 이름 칸이 나오지 않음');
+else {
+  if (named.friends !== "['Mina']") errors.push('목록 값이 다름: ' + named.friends);
+  if (named.count !== '1') errors.push('숫자 값이 다름: ' + named.count);
+  // The eight helpers `use date latest` binds are the language's, not the
+  // writer's; if they ever appear here the filter has stopped working.
+  if ('input' in named || 'print' in named) errors.push('파이썬 내장이 섞여 나옴');
+}
+
+// A module's own furniture is the language's, not the writer's: `use date
+// latest` binds eight helpers and two version strings, and none of them are
+// what the person wrote.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = 'use date latest\nset mine to 5\nshow mine';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(600);
+await page.click('#run');
+await page.waitForFunction(() => /finish|끝났/.test(document.querySelector('#engine-note').textContent), null, { timeout: 20000 });
+await page.waitForTimeout(300);
+const afterModule = await page.evaluate(() =>
+  [...document.querySelectorAll('#values-list dt')].map((n) => n.textContent));
+if (JSON.stringify(afterModule) !== JSON.stringify(['mine'])) {
+  errors.push('모듈이 묶은 이름이 섞여 나옴: ' + JSON.stringify(afterModule));
+}
+
+// A program that stopped half way still says what was in its names.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = 'set half to 7\nprint(1 / 0)';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(600);
+await page.click('#run');
+await page.waitForFunction(() => /finish|끝났|오류|fail/.test(document.querySelector('#engine-note').textContent), null, { timeout: 20000 });
+await page.waitForTimeout(300);
+const afterFailure = await page.evaluate(() => {
+  const dt = [...document.querySelectorAll('#values-list dt')].find((n) => n.textContent === 'half');
+  return dt ? dt.nextElementSibling?.textContent : null;
+});
+if (afterFailure !== '7') errors.push('멈춘 프로그램의 이름 값이 안 보임: ' + afterFailure);
+console.log(errors.length ? 'FAIL 이름 값' : '프로그램이 만든 이름과 값이 보임(멈췄을 때도)');
+
 // One NME statement is exactly one Python line, so the caret's line marks the
 // line it became. If the two ever stop lining up this is what says so.
 await page.evaluate(() => {

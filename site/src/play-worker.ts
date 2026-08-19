@@ -13,7 +13,7 @@
  * Protocol
  *   in : {type:'run', python, sab?, answers?} | {type:'preload'}
  *   out: {type:'progress', loaded, total} | {type:'ready'} | {type:'out', text}
- *        | {type:'ask'} | {type:'done', ok, error?} | {type:'fatal', error}
+ *        | {type:'ask'} | {type:'done', ok, error?, values} | {type:'fatal', error}
  *
  * The control block, when present, is an Int32Array over `sab`:
  *   [0] 0 = the page has not answered yet, 1 = an answer is waiting
@@ -172,17 +172,38 @@ function readHostMessage(data: unknown): HostMessage | null {
 
 /* The engine answers in JSON, the same way the compiler does: `{ok}` on a
  * clean finish, `{ok, error}` when the program raised. */
+interface NameValue {
+  readonly name: string;
+  readonly shown: string;
+}
+
 interface RunOutcome {
   readonly ok: boolean;
   readonly error: string | undefined;
+  readonly values: NameValue[];
 }
 
 function readRunOutcome(json: string): RunOutcome {
   const raw: unknown = JSON.parse(json);
-  if (typeof raw !== 'object' || raw === null) return { ok: false, error: json };
+  if (typeof raw !== 'object' || raw === null) return { ok: false, error: json, values: [] };
   const ok = 'ok' in raw && raw.ok === true;
   const error = 'error' in raw && typeof raw.error === 'string' ? raw.error : undefined;
-  return { ok, error };
+  return { ok, error, values: readValues(raw) };
+}
+
+/* What the program's own names held when it stopped. The engine sends them as
+ * `{name, shown}` pairs; anything else in that field is ignored rather than
+ * trusted, because this crosses a language boundary. */
+function readValues(raw: object): NameValue[] {
+  if (!('values' in raw) || !Array.isArray(raw.values)) return [];
+  const out: NameValue[] = [];
+  for (const item of raw.values) {
+    if (typeof item !== 'object' || item === null) continue;
+    if (!('name' in item) || !('shown' in item)) continue;
+    const { name, shown } = item;
+    if (typeof name === 'string' && typeof shown === 'string') out.push({ name, shown });
+  }
+  return out;
 }
 
 self.onmessage = async (event: MessageEvent<unknown>) => {
@@ -211,7 +232,7 @@ self.onmessage = async (event: MessageEvent<unknown>) => {
 
   try {
     const outcome = readRunOutcome(run(message.python));
-    postMessage({ type: 'done', ok: outcome.ok, error: outcome.error });
+    postMessage({ type: 'done', ok: outcome.ok, error: outcome.error, values: outcome.values });
   } catch (error) {
     // A trap inside the interpreter (out of memory, stack exhaustion) lands
     // here. Say so plainly instead of leaving the page waiting forever.

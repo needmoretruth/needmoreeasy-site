@@ -169,11 +169,112 @@ struct Outcome {
     ok: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<String>,
+    /// What the program's own names held when it stopped, in the order they
+    /// were made. Empty when it made none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    values: Vec<Value>,
 }
 
+/// One name the program made, and what was in it, as the writer would see it.
+#[derive(Serialize)]
+struct Value {
+    name: String,
+    shown: String,
+}
+
+/// How many names to hand back, and how long each may be. A program that fills
+/// a list with ten thousand things should not send ten thousand characters
+/// through the message channel to say so.
+const VALUE_LIMIT: usize = 40;
+const SHOWN_LIMIT: usize = 120;
+
 fn finish(ok: bool, error: Option<String>) -> String {
-    serde_json::to_string(&Outcome { ok, error })
+    finish_with(ok, error, Vec::new())
+}
+
+fn finish_with(ok: bool, error: Option<String>, values: Vec<Value>) -> String {
+    serde_json::to_string(&Outcome { ok, error, values })
         .unwrap_or_else(|_| r#"{"ok":false,"error":"internal error"}"#.to_string())
+}
+
+/// Every name a scope holds right now.
+fn scope_names(
+    vm: &rustpython_vm::VirtualMachine,
+    scope: &rustpython_vm::scope::Scope,
+) -> std::collections::HashSet<String> {
+    let mut names = std::collections::HashSet::new();
+    let Ok(keys) = scope.globals.as_object().to_owned().get_attr("keys", vm) else {
+        return names;
+    };
+    let Ok(listed) = keys.call((), vm) else { return names };
+    let Ok(items) = listed.try_to_value::<Vec<rustpython_vm::PyObjectRef>>(vm) else {
+        return names;
+    };
+    for key in items {
+        if let Ok(name) = key.str(vm) {
+            names.insert(name.as_str().to_owned());
+        }
+    }
+    names
+}
+
+/// The names the program itself made, with what they hold.
+///
+/// A beginner's first real question about a running program is *what is in it
+/// now*, and until this the playground could only answer with whatever the
+/// program remembered to print. The names are told apart from the prelude's and
+/// the builtins' by taking a snapshot of the scope before the program runs and
+/// keeping only what is new or changed.
+///
+/// Modules and functions are left out: `use date latest` binds eight helpers
+/// that are the language's, not the writer's, and showing them would bury the
+/// two names the writer actually made.
+fn program_values(
+    vm: &rustpython_vm::VirtualMachine,
+    scope: &rustpython_vm::scope::Scope,
+    before: &std::collections::HashSet<String>,
+) -> Vec<Value> {
+    let mut values = Vec::new();
+    let Ok(names) = scope.globals.as_object().to_owned().get_attr("keys", vm) else {
+        return values;
+    };
+    let Ok(keys) = names.call((), vm) else {
+        return values;
+    };
+    let Ok(listed) = keys.try_to_value::<Vec<rustpython_vm::PyObjectRef>>(vm) else {
+        return values;
+    };
+    for key in listed {
+        let Ok(name) = key.str(vm) else { continue };
+        let name = name.as_str().to_owned();
+        if name.starts_with('_') || before.contains(&name) {
+            continue;
+        }
+        let Ok(Some(held)) = scope.globals.get_item_opt(&*name, vm) else {
+            continue;
+        };
+        // A function or a module is the language's furniture, not the writer's
+        // value; `_nme_` names are this playground's own. Each bundled module
+        // also binds its own version as a plain string (`date_version` and
+        // `날짜버전`), and those are not callable, so they are named here.
+        if held.is_callable()
+            || held.class().name().to_string() == "module"
+            || name.ends_with("_version")
+            || name.ends_with("버전")
+        {
+            continue;
+        }
+        let Ok(shown) = held.repr(vm) else { continue };
+        let mut shown = shown.as_str().to_owned();
+        if shown.chars().count() > SHOWN_LIMIT {
+            shown = shown.chars().take(SHOWN_LIMIT).collect::<String>() + "…";
+        }
+        values.push(Value { name, shown });
+        if values.len() >= VALUE_LIMIT {
+            break;
+        }
+    }
+    values
 }
 
 /// Executes Python source. See the module docs for the JSON shape.
@@ -223,15 +324,25 @@ pub fn run(python: &str) -> String {
             }
         };
 
-        match vm.run_code_obj(code, scope) {
-            Ok(_) => finish(true, None),
+        // Everything the scope holds before the program starts belongs to the
+        // prelude or to Python itself. Whatever is there afterwards and is not
+        // in here is the writer's.
+        let before = scope_names(vm, &scope);
+
+        match vm.run_code_obj(code, scope.clone()) {
+            Ok(_) => finish_with(true, None, program_values(vm, &scope, &before)),
             Err(exception) => {
                 // `raise SystemExit` / `sys.exit()` is how a Python program
                 // ends on purpose; showing a traceback for it would be wrong.
+                let values = program_values(vm, &scope, &before);
                 if exception.class().is(vm.ctx.exceptions.system_exit) {
-                    finish(true, None)
+                    finish_with(true, None, values)
                 } else {
-                    finish(false, Some(render(vm, &exception)))
+                    // The values are handed back on a failure too, and that is
+                    // the case they matter most in: a program that stopped
+                    // half way is exactly when someone wants to know what was
+                    // in the names at the time.
+                    finish_with(false, Some(render(vm, &exception)), values)
                 }
             }
         }
