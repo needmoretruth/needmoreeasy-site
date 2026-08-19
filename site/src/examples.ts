@@ -152,6 +152,42 @@ for each fruit in fruits with place
 end`,
     },
     {
+      id: 'record',
+      label: 'A value under each name',
+      answers: [],
+      expect: 'Seoul',
+      source: `# A record: found by name rather than by place.
+set book to an empty record
+put Mina at Seoul in book
+put Sana at Busan in book
+show how many book
+show Mina in book
+for each name in book
+    show name
+    show name in book
+end
+if book contains Sana
+    show Sana is in the book
+end`,
+    },
+    {
+      id: 'job',
+      label: 'A job with a name',
+      answers: [],
+      expect: 'Nice to meet you',
+      source: `# Give several lines a name, then run them by that name.
+to greet:
+    show Hello
+    show Nice to meet you
+end
+do greet
+to praise someone:
+    show well done
+    show someone
+end
+do praise with Mina`,
+    },
+    {
       id: 'conditions',
       label: 'Two conditions',
       answers: [],
@@ -637,6 +673,42 @@ print(word)`,
     과일 말해줘
     막대 말해줘
 끝`,
+    },
+    {
+      id: 'record',
+      label: '이름마다 값 하나',
+      answers: [],
+      expect: '서울',
+      source: `# 표: 순서가 아니라 이름으로 찾습니다.
+주소록은 빈 표
+주소록에 민수를 서울로 넣어
+주소록에 지안을 부산으로 넣어
+주소록 개수 말해줘
+주소록의 민수 말해줘
+주소록의 이름마다 반복해
+    이름 말해줘
+    주소록의 이름 말해줘
+끝
+만약에 주소록에 지안이 있으면
+    지안도 있습니다 말해줘
+끝`,
+    },
+    {
+      id: 'job',
+      label: '이름 붙인 일',
+      answers: [],
+      expect: '반가워요',
+      source: `# 여러 줄에 이름을 붙여 두고 그 이름으로 실행합니다.
+인사하기라는 일:
+    안녕하세요 말해줘
+    반가워요 말해줘
+끝
+인사하기 해줘
+이름에게 칭찬하기라는 일:
+    잘했어요 말해줘
+    이름 말해줘
+끝
+민수에게 칭찬하기 해줘`,
     },
     {
       id: 'conditions',
