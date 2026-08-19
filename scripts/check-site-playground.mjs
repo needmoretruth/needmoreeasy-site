@@ -88,6 +88,30 @@ if (!/ZeroDivisionError/.test(divide) || !/line 2/.test(divide)) {
   errors.push('보통 오류의 역추적이 사라짐: ' + divide.slice(0, 80));
 }
 
+// A line that came back as its own text is marked, and the note under the pane
+// appears only when a program has both kinds. That is the "why isn't this
+// working?" case; a story where every line is words is not surprising.
+for (const [what, program, wantMarks, wantNote] of [
+  ['half and half', 'show hello\nthe door opened slowly\nset friends to an empty list', 1, true],
+  ['all words', 'the door opened slowly\nnobody was there', 2, false],
+  ['all commands', 'show hello\nset friends to an empty list', 0, false],
+]) {
+  await page.evaluate((t) => {
+    const editor = document.querySelector('#editor');
+    editor.value = t;
+    editor.dispatchEvent(new Event('input'));
+  }, program);
+  await page.waitForTimeout(600);
+  const seen = await page.evaluate(() => ({
+    marks: document.querySelectorAll('#python .pyline[data-echo="true"]').length,
+    note: !document.querySelector('#echo-note').hidden,
+  }));
+  if (seen.marks !== wantMarks || seen.note !== wantNote) {
+    errors.push(`그대로 나오는 줄 표시가 어긋남 (${what}): ${JSON.stringify(seen)}`);
+  }
+}
+console.log(errors.length ? 'FAIL 그대로 나오는 줄' : '그대로 나오는 줄이 표시되고, 안내는 섞였을 때만 뜸');
+
 // What each of the program's own names held when it stopped. It is shown after
 // a failure too, which is the case it matters most in.
 await page.evaluate(() => {

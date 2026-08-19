@@ -531,7 +531,34 @@ function highlightPython(source: string): string {
  * Highlighting runs over the whole text first so a triple-quoted string spanning
  * several lines is still tokenised as one string; the result is then cut on the
  * newlines that are outside a tag. */
-function byLine(html: string): string {
+/* A line that came back as its own text.
+ *
+ * NME's whole promise is that ordinary words stay ordinary words, so a line
+ * becoming `print("that same line")` is correct and expected — for a story.
+ * It is also exactly what happens when someone meant a command and the
+ * compiler did not read it as one, and that is the "why isn't this working?"
+ * the owner reported on 2026-08-19.
+ *
+ * Nothing here guesses which of the two it was. The lines are marked, and the
+ * note under the pane appears only when the program has **both** kinds: a
+ * story where every line is words has nothing surprising in it, and neither
+ * does a program with no words in it at all. A program that is half and half
+ * is the one worth pointing at.
+ */
+function echoedLines(source: string, python: string): Set<number> {
+  const wrote = source.split('\n');
+  const made = python.split('\n');
+  const echoed = new Set<number>();
+  for (let at = 0; at < made.length && at < wrote.length; at += 1) {
+    const line = (made[at] ?? '').trim();
+    const said = (wrote[at] ?? '').trim();
+    if (!said || !line.startsWith('print("') || !line.endsWith('")')) continue;
+    if (line.slice(7, -2) === said) echoed.add(at);
+  }
+  return echoed;
+}
+
+function byLine(html: string, echoed: Set<number>): string {
   let depth = 0;
   let line = '';
   const lines: string[] = [];
@@ -548,7 +575,10 @@ function byLine(html: string): string {
   }
   lines.push(line);
   return lines
-    .map((text, at) => `<span class="pyline" data-line="${at}">${text}</span>`)
+    .map((text, at) => {
+      const mark = echoed.has(at) ? ' data-echo="true"' : '';
+      return `<span class="pyline" data-line="${at}"${mark}>${text}</span>`;
+    })
     .join('\n');
 }
 
@@ -880,6 +910,7 @@ class Playground {
   readonly python: HTMLElement;
   readonly pythonState: HTMLElement;
   readonly pythonNote: HTMLElement | null;
+  readonly echoNote: HTMLElement | null;
   readonly terminal: HTMLElement;
   /* Where the program's own names are listed once it stops. Optional: the
    * documentation pages run this same file and have no playground. */
@@ -946,6 +977,7 @@ class Playground {
     this.python = queryOne(root, '#python', HTMLElement);
     this.pythonState = queryOne(root, '#python-state', HTMLElement);
     this.pythonNote = queryMaybe(root, '#python-note', HTMLElement);
+    this.echoNote = queryMaybe(root, '#echo-note', HTMLElement);
     this.terminal = queryOne(root, '#terminal', HTMLElement);
     this.runButton = queryOne(root, '#run', HTMLButtonElement);
     this.stopButton = queryOne(root, '#stop', HTMLButtonElement);
@@ -1773,8 +1805,17 @@ class Playground {
     if (outcome.ok) {
       this.compiled = outcome.python;
       this.python.dataset.state = 'ok';
-      this.python.innerHTML = byLine(highlightPython(outcome.python));
+      const echoed = echoedLines(this.editor.value, outcome.python);
+      this.python.innerHTML = byLine(highlightPython(outcome.python), echoed);
       this.markLine();
+      // Both kinds in one program is the case worth pointing at; all words or
+      // all commands is not surprising and says nothing.
+      if (this.echoNote) {
+        const statements = outcome.python
+          .split('\n')
+          .filter((line, at) => line.trim() !== '' && !echoed.has(at)).length;
+        this.echoNote.hidden = echoed.size === 0 || statements === 0;
+      }
       this.pythonState.textContent = TEXT.compiled;
       if (this.pythonNote) this.pythonNote.textContent = TEXT.compiledNote;
       this.runButton.disabled = this.running;
@@ -1782,6 +1823,7 @@ class Playground {
     } else {
       this.compiled = '';
       this.python.dataset.state = 'error';
+      if (this.echoNote) this.echoNote.hidden = true;
       this.python.textContent = outcome.diagnostic;
       this.pythonState.textContent = TEXT.errorLabel;
       // The subtitle said "what the compiler produced" next to a message that

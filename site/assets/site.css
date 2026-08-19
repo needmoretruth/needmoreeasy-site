@@ -834,6 +834,30 @@ pre code {
   background: var(--glass-2);
   box-shadow: inset 2px 0 0 var(--ink-faint);
 }
+
+/* A line that came back as its own text. Marked, never judged: for a story
+ * this is the point, and for a mistyped command it is the answer to "why isn't
+ * this working?". Achromatic — red would call it an error, and it is not one. */
+.pyline[data-echo="true"] { opacity: 0.72; }
+.pyline[data-echo="true"]::after {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  vertical-align: middle;
+  margin-left: 0.55rem;
+}
+.pyline[data-at="true"][data-echo="true"] { opacity: 1; }
+
+.echo-note {
+  margin: 0;
+  padding: 0.5rem 1.15rem 0.85rem;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+}
+.echo-note strong { color: var(--ink); font-weight: 600; }
 .readout[data-state="error"] {
   color: var(--bad);
   white-space: pre-wrap;
