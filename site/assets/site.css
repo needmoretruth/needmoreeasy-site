@@ -764,7 +764,9 @@ pre code {
 
 #playground .wrap { display: grid; gap: 1.25rem; }
 
-.play-head { display: grid; gap: 0.2rem; }
+.play-head { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.75rem 1rem; }
+.play-head > div:first-child { flex: 1 1 20rem; min-width: 0; display: grid; gap: 0.2rem; }
+.play-head-tools { flex: none; display: flex; gap: 0.4rem; margin-left: auto; }
 
 .examples {
   display: flex;
@@ -2167,4 +2169,101 @@ main > section + section::before {
 }
 @media (prefers-reduced-motion: reduce) {
   .terminal[data-running="true"]::after { animation: none; }
+}
+
+/* ── 코딩 화면 ────────────────────────────────────────────────────────────
+ * The page becomes the editor and nothing else. What stays is what you need
+ * while writing: the program, the Python it turns into, the run bar, and what
+ * the program says. Everything that explains the page goes away, because a
+ * person who is writing code has already read it. Esc, or the same button,
+ * brings the page back.
+ *
+ * Achromatic like the rest of the site: this is a change of size, not a mode
+ * with its own mood. */
+:root[data-focus="true"], :root[data-focus="true"] body { overflow: hidden; }
+:root[data-focus="true"] body > .site-head,
+:root[data-focus="true"] body > .site-foot,
+:root[data-focus="true"] main > section:not(#playground) { display: none; }
+
+:root[data-focus="true"] #playground {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  overflow: hidden;
+}
+:root[data-focus="true"] #playground .wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  width: 100%;
+  height: 100dvh;
+  padding: 0.55rem 0.75rem 0.75rem;
+  gap: 0.5rem;
+  overflow: auto;
+}
+/* The prose that introduces the box, the example shelf and the saved-slot
+ * drawer are all "before you start" surfaces. */
+:root[data-focus="true"] .play-head > div:first-child,
+:root[data-focus="true"] .examples,
+:root[data-focus="true"] .file-note,
+:root[data-focus="true"] .slots { display: none; }
+/* The way out rides the corner of the file strip instead of taking a row of
+ * its own. On a 740px-tall phone a row is eight per cent of the screen, and
+ * this screen exists to give that space to the program. */
+:root[data-focus="true"] .play-head {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.75rem;
+  z-index: 3;
+  margin: 0;
+  gap: 0;
+}
+:root[data-focus="true"] .file-tabs {
+  padding-inline-end: 7.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+:root[data-focus="true"] .file-tabs::-webkit-scrollbar { display: none; }
+:root[data-focus="true"] .file-tabs,
+:root[data-focus="true"] .play-tabs,
+:root[data-focus="true"] .run-bar,
+:root[data-focus="true"] .tidy-bar { flex: none; }
+:root[data-focus="true"] .panes { flex: 1 1 auto; min-height: 11rem; }
+:root[data-focus="true"] .pane { min-height: 0; }
+:root[data-focus="true"] .editor,
+:root[data-focus="true"] .readout { min-height: 0; resize: none; }
+/* The pane's own floor is there so a box inside a page is not a slit; here the
+ * height comes from the window and the floor would only fight it. */
+:root[data-focus="true"] .pane { min-height: 0; }
+/* The explanation about the browser's Python belongs to the page, not to the
+ * writing surface. */
+:root[data-focus="true"] #playground .wrap > p.notice { display: none; }
+/* The output takes the room it needs and no more, up to a third of the window.
+ * An empty terminal reserving a third of the screen would be taking it from
+ * the one thing this screen exists for. */
+:root[data-focus="true"] .terminal {
+  flex: 0 1 auto;
+  min-height: 4.5rem;
+  max-height: 32%;
+  overflow: auto;
+}
+
+/* On a phone the floating run bar and the grown-to-fit editor both exist to
+ * solve a scrolling problem that the coding screen does not have. */
+@media (max-width: 819px) {
+  :root[data-focus="true"] #playground[data-tall="true"] .run-bar {
+    position: static;
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  :root[data-focus="true"] #playground[data-tall="true"] .pane-nme .editor { padding-bottom: 1rem; }
+  :root[data-focus="true"] .pane-nme .editor { flex: 1 1 auto; }
 }

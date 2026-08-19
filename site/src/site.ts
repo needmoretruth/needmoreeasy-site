@@ -47,6 +47,10 @@ const TEXT = {
     copied: 'copied',
     fixFirst: 'Fix the program first — the compiler could not read it.',
     runHint: 'Run (Ctrl+Enter)',
+    focusOn: 'Coding screen',
+    focusOff: 'Back to the page',
+    focusOffShort: 'Exit',
+    focusHint: 'Give the whole window to the editor (Esc comes back)',
     slotSaved: 'saved',
     slotName: 'Name for this slot',
     slotFirst: 'My program',
@@ -97,6 +101,10 @@ const TEXT = {
     copied: '복사했습니다',
     fixFirst: '먼저 프로그램을 고쳐 주세요. 컴파일러가 읽지 못했습니다.',
     runHint: '실행 (Ctrl+Enter)',
+    focusOn: '코딩 화면',
+    focusOff: '페이지로 돌아가기',
+    focusOffShort: '나가기',
+    focusHint: '창 전체를 편집 칸에 씁니다 (Esc를 누르면 돌아옵니다)',
     slotSaved: '저장했습니다',
     slotName: '이 슬롯의 이름',
     slotFirst: '내 프로그램',
@@ -944,6 +952,9 @@ class Playground {
   readonly alert: HTMLElement;
   readonly alertText: HTMLElement;
   readonly retryButton: HTMLButtonElement;
+  /* The button that hands the whole window to the editor. Optional for the
+   * same reason as the values panel: documentation pages have no playground. */
+  readonly focusToggle: HTMLButtonElement | null;
 
   worker: Worker | null;
   compiled: string;
@@ -1005,6 +1016,7 @@ class Playground {
     this.alert = queryOne(root, '#boot-alert', HTMLElement);
     this.alertText = queryOne(this.alert, 'p', HTMLElement);
     this.retryButton = queryOne(root, '#boot-retry', HTMLButtonElement);
+    this.focusToggle = queryMaybe(root, '#focus-toggle', HTMLButtonElement);
 
     this.worker = null;
     this.compiled = '';
@@ -1193,6 +1205,7 @@ class Playground {
     });
     this.wireEditorHeight();
     this.wireChipStrip();
+    this.wireFocus();
     this.runButton.addEventListener('click', () => this.run());
     // Ctrl/Cmd + Enter runs, the way every editor a programmer will meet next
     // already does. The button carries the same shortcut in its tooltip.
@@ -1238,13 +1251,65 @@ class Playground {
     mark();
   }
 
+  /* --- the coding screen ------------------------------------------------
+   *
+   * Some visits are for reading the page and some are for writing a program.
+   * The second kind wants the window, not a box inside an explanation: a big
+   * editor, the Python beside it, and Run within reach. It is one attribute on
+   * the root element, so nothing here has to know about layout.
+   *
+   * `#screen=code` in the address opens it directly, which is what a link
+   * called "coding screen" needs. A hash-only move never reloads the page, so
+   * `hashchange` has to be listened for as well as read at boot. */
+  setFocus(on: boolean): void {
+    const root = document.documentElement;
+    if (on) root.dataset.focus = 'true';
+    else root.removeAttribute('data-focus');
+    if (this.focusToggle) {
+      // In the corner of the file strip on a phone there is room for a word,
+      // not for a sentence.
+      const narrow = matchMedia('(max-width: 819px)').matches;
+      const out = narrow ? TEXT.focusOffShort : TEXT.focusOff;
+      this.focusToggle.textContent = on ? out : TEXT.focusOn;
+      this.focusToggle.setAttribute('aria-pressed', String(on));
+    }
+    // The editor's height is measured in one mode and set by CSS in the other.
+    if (this.grow) this.grow();
+    if (on) this.editor.focus();
+  }
+
+  wireFocus(): void {
+    const asked = (): boolean => /(?:^|[#&])screen=code(?:&|$)/.test(location.hash);
+    if (this.focusToggle) {
+      this.focusToggle.title = TEXT.focusHint;
+      this.focusToggle.textContent = TEXT.focusOn;
+      this.focusToggle.addEventListener('click', () => {
+        this.setFocus(document.documentElement.dataset.focus !== 'true');
+      });
+    }
+    addEventListener('hashchange', () => {
+      if (asked()) this.setFocus(true);
+    });
+    // Esc is what every full-window surface answers to, and it is the only way
+    // back for someone who opened this from a link and never saw the button.
+    addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (document.documentElement.dataset.focus !== 'true') return;
+      event.preventDefault();
+      this.setFocus(false);
+    });
+    if (asked()) this.setFocus(true);
+  }
+
   /* On a phone the editor is the whole screen's worth of space there is, so
    * it grows with the program instead of making the writer scroll inside a
    * box eight lines tall. On a wide screen the two panes stay level. */
   wireEditorHeight(): void {
     const narrow = matchMedia('(max-width: 819px)');
     const grow = (): void => {
-      if (!narrow.matches) {
+      // On the coding screen the editor fills the height the layout gives it,
+      // so an inline height measured from the program would fight the CSS.
+      if (!narrow.matches || document.documentElement.dataset.focus === 'true') {
         this.editor.style.height = '';
         return;
       }

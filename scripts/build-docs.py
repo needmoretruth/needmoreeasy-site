@@ -70,6 +70,7 @@ STRINGS = {
         "site_title": "NeedMoreEasy",
         "docs": "Learn",
         "try": "Try it",
+        "code_screen": "Coding screen",
         "install": "Install",
         "guides": "Guides",
         "syntax": "Syntax list",
@@ -109,6 +110,7 @@ STRINGS = {
         "site_title": "NeedMoreEasy",
         "docs": "배우기",
         "try": "써 보기",
+        "code_screen": "코딩 화면",
         "install": "설치",
         "guides": "가이드",
         "syntax": "문법 목록",
@@ -581,6 +583,7 @@ def page_shell(
     <nav class="head-nav" aria-label="{escape(words["docs"])}">
       <a href="{words["home"]}#playground">{escape(words["try"])}</a>
       <a href="{words["learn"]}">{escape(words["docs"])}</a>
+      <a class="nav-hide-sm" href="{words["home"]}#screen=code">{escape(words["code_screen"])}</a>
       <a class="nav-hide-sm" href="{words["learn"]}guides">{escape(words["guides"])}</a>
       <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
     </nav>
