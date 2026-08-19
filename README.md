@@ -46,7 +46,7 @@ node scripts/check-site-docs.mjs       # the guide filter, a wide table, the ind
 node scripts/check-site-files.mjs      # the three files, the example tab, the AI band
 node scripts/check-live.mjs        # open the published site and check it from outside
 node scripts/make-og-image.mjs     # redraw the link-preview card from the site's own CSS
-bash scripts/deploy.sh             # build both wasm modules, run every check, publish, verify
+bash scripts/deploy.sh             # build both wasm modules, check the guides' code, run every check, publish, verify
 ```
 
 The `check-site-*` scripts that take an address need a preview server running (they take its
