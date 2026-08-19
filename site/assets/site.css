@@ -1710,11 +1710,12 @@ table.syntax tr:last-child td { border-bottom: 0; }
  * where it is only read; the boxes you type into go up to 16px. */
 @media (pointer: coarse) {
   .editor, .term-input, .answers-box { font-size: 16px; }
-  /* A finger is about 9mm across. These are the controls a visitor presses
-   * most, and several of them were 30px tall to fit a 390px header. Only the
-   * height grows, so nothing is pushed off the line. */
+  /* A finger is about 9mm across. Apple asks for 44 and Android for 48; 44 is
+   * the smaller of the two and the one this site keeps. These were 40, and
+   * before that 30 to fit a 390px header. Only the height grows, so nothing is
+   * pushed off the line. */
   .copy-btn, .chip, .slot button, .lang-toggle a, .theme-toggle button,
-  .file-tabs button, .ai-open, .slot-drop, .slot-edit { min-height: 40px; }
+  .file-tabs button, .ai-open, .slot-drop, .slot-edit { min-height: 44px; }
   .ai-open { display: inline-flex; align-items: center; }
 }
 
@@ -1730,10 +1731,13 @@ table.syntax tr:last-child td { border-bottom: 0; }
   .panes[data-view="python"] .pane-nme { display: none; }
   /* The editor sets its own height from the program on a narrow screen. */
   .pane-nme .editor { flex: none; }
-  /* Small enough that the label, the file suffix and the three tools sit on
-   * one line even at 320px. */
-  .pane-head { padding: 0.6rem 0.85rem; }
-  .pane-tools .copy-btn { font-size: 0.7rem; padding: 0.18rem 0.5rem; min-height: 30px; }
+  /* These three used to be squeezed to 30px tall so that the label, the file
+   * suffix and all three tools fitted one line at 320px. A 30px target is
+   * half a fingertip, and one of the three is the link-copying button. They
+   * take a row of their own instead and share it evenly. */
+  .pane-head { padding: 0.6rem 0.85rem; flex-wrap: wrap; }
+  .pane-head .pane-tools { width: 100%; margin-left: 0; }
+  .pane-tools .copy-btn { flex: 1; justify-content: center; font-size: 0.78rem; }
   .nav-hide-sm { display: none; }
   .head-nav { gap: 0; }
   .head-nav a { padding: 0.5rem 0.45rem; font-size: 0.88rem; }

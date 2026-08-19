@@ -92,6 +92,9 @@ node scripts/check-site-slow-engine.mjs http://127.0.0.1:8788
 node scripts/check-site-docs.mjs http://127.0.0.1:8788
 # The three files are a promise that nothing but the visitor writes to them.
 node scripts/check-site-files.mjs http://127.0.0.1:8788
+# A phone, driven by real taps, with the keyboard taking half the screen. The
+# width sweep above cannot see any of that: it never touches and never types.
+node scripts/check-site-mobile.mjs http://127.0.0.1:8788
 kill "$SERVE_PID" 2>/dev/null || true
 trap - EXIT
 
