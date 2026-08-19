@@ -1016,14 +1016,32 @@ class Playground {
       }, 180);
     });
 
-    // On a phone the two code panes become two tabs over one panel.
-    for (const tab of this.tabs) {
-      tab.addEventListener('click', () => {
-        const view = tab.dataset.view;
-        if (this.panes && view !== undefined) this.panes.dataset.view = view;
-        this.tabs.forEach((other) => {
-          other.setAttribute('aria-selected', String(other === tab));
-        });
+    // On a phone the two code panes become two tabs over one panel. They carry
+    // the tablist roles, so they owe a reader the same keyboard behaviour the
+    // file tabs give: one stop in the page's tab order, arrows between them.
+    const showPane = (tab: HTMLElement): void => {
+      const view = tab.dataset.view;
+      if (this.panes && view !== undefined) this.panes.dataset.view = view;
+      this.tabs.forEach((other) => {
+        const open = other === tab;
+        other.setAttribute('aria-selected', String(open));
+        other.tabIndex = open ? 0 : -1;
+      });
+    };
+    for (const [at, tab] of this.tabs.entries()) {
+      tab.tabIndex = tab.getAttribute('aria-selected') === 'true' ? 0 : -1;
+      tab.addEventListener('click', () => showPane(tab));
+      tab.addEventListener('keydown', (event) => {
+        const step = KEY_STEPS[event.key];
+        if (step === undefined) return;
+        event.preventDefault();
+        const last = this.tabs.length - 1;
+        const to = step === 'first' ? 0 : step === 'last' ? last
+          : Math.min(last, Math.max(0, at + step));
+        const next = this.tabs[to];
+        if (next === undefined) return;
+        next.focus();
+        showPane(next);
       });
     }
 

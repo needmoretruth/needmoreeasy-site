@@ -221,6 +221,22 @@ for (const key of ['ArrowRight', 'ArrowRight', 'End', 'Home']) {
   walked.push(await page.evaluate(() =>
     document.querySelector('.file-tabs button[aria-selected="true"]')?.dataset.file));
 }
+const paneOrder = await page.evaluate(() =>
+  [...document.querySelectorAll('.play-tabs button')].map((tab) => ({
+    stop: tab.tabIndex, open: tab.getAttribute('aria-selected') === 'true',
+  })));
+ok('쓴 글·파이썬 탭도 이동 순서에서 한 자리만 차지함',
+   paneOrder.filter((tab) => tab.stop === 0).length === 1
+   && paneOrder.every((tab) => (tab.stop === 0) === tab.open),
+   JSON.stringify(paneOrder));
+await page.focus('.play-tabs [data-view="nme"]');
+await page.keyboard.press('ArrowRight');
+await page.waitForTimeout(250);
+ok('화살표로 파이썬 칸이 열림',
+   (await page.evaluate(() => document.querySelector('.panes')?.dataset.view)) === 'python');
+await page.keyboard.press('ArrowLeft');
+await page.waitForTimeout(250);
+
 ok('화살표·End·Home으로 파일을 옮겨 다님',
    JSON.stringify(walked) === JSON.stringify(['1', '2', '3', 'example']),
    JSON.stringify(walked));
