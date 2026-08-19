@@ -735,6 +735,10 @@ interface CompileProblem {
   readonly title: string;
   readonly message: string;
   readonly hint: string;
+  /* The error code's own page, in a few sentences: what the rule is and how
+   * to get out of it. The band shows it folded away, because the line and
+   * the fix above it answer most cases on their own. */
+  readonly detail: string;
 }
 
 function textAt(value: object, key: string): string {
@@ -757,6 +761,7 @@ function readProblems(raw: object): readonly CompileProblem[] {
       title: textAt(entry, LANG === 'ko' ? 'titleKo' : 'titleEn'),
       message: textAt(entry, LANG === 'ko' ? 'messageKo' : 'messageEn'),
       hint: textAt(entry, LANG === 'ko' ? 'hintKo' : 'hintEn'),
+      detail: textAt(entry, LANG === 'ko' ? 'detailKo' : 'detailEn'),
     });
   }
   return problems;
@@ -1078,6 +1083,8 @@ class Playground {
   readonly problemWhy: HTMLElement | null;
   readonly problemFix: HTMLElement | null;
   readonly problemCode: HTMLElement | null;
+  readonly problemDetail: HTMLDetailsElement | null;
+  readonly problemDetailText: HTMLElement | null;
   /* The row that rewrites the program into one level and one language.
    * Optional for the same reason as the rest: documentation pages run this
    * file and have no playground. */
@@ -1157,6 +1164,8 @@ class Playground {
     this.problemWhy = queryMaybe(root, '#problem-why', HTMLElement);
     this.problemFix = queryMaybe(root, '#problem-fix', HTMLElement);
     this.problemCode = queryMaybe(root, '#problem-code', HTMLElement);
+    this.problemDetail = queryMaybe(root, '#problem-detail', HTMLDetailsElement);
+    this.problemDetailText = queryMaybe(root, '#problem-detail-text', HTMLElement);
     this.tidyButton = queryMaybe(root, '#tidy', HTMLButtonElement);
     this.tidyUndoButton = queryMaybe(root, '#tidy-undo', HTMLButtonElement);
     this.tidyNote = queryMaybe(root, '#tidy-note', HTMLElement);
@@ -2181,6 +2190,12 @@ class Playground {
     if (this.problemCode) {
       this.problemCode.hidden = problem.code === '';
       this.problemCode.textContent = `${TEXT.problemMore} ${problem.code}`;
+    }
+    if (this.problemDetail && this.problemDetailText) {
+      this.problemDetail.hidden = problem.detail === '';
+      this.problemDetailText.textContent = problem.detail;
+      // Whoever opened this once wants it open: the next error is the next
+      // thing they do not understand, not a reason to fold the answer away.
     }
     band.hidden = false;
   }

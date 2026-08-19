@@ -271,6 +271,36 @@ for (const [what, value] of [['제목', band.title], ['이유', band.why], ['고
 }
 if (!/E\d{4}/.test(band.code)) errors.push('오류 번호가 없음: ' + band.code);
 if (!band.runAlive) errors.push('실행 단추가 꺼져 있음 — 왜 안 되는지 말할 기회가 사라짐');
+
+// The four lines above answer most errors. The one they do not answer is
+// "what is this rule, and why". That is the error code's own page, and it
+// belongs in the band, folded, in the language of the page — not behind a
+// number the reader is expected to look up somewhere else.
+// Measured on the `<details>` itself: a browser that hides folded content
+// keeps the inner paragraph's own box alive, so only the box around it tells
+// the truth about what the reader sees.
+const detail = await page.evaluate(() => {
+  const box = document.querySelector('#problem-detail');
+  const text = document.querySelector('#problem-detail-text');
+  box.open = false;
+  const shut = Math.round(box.getBoundingClientRect().height);
+  box.open = true;
+  return {
+    hidden: box.hidden,
+    shut,
+    open: Math.round(box.getBoundingClientRect().height),
+    words: text.textContent.trim(),
+    summary: document.querySelector('#problem-detail-summary').textContent.trim(),
+  };
+});
+if (detail.hidden) errors.push('오류 설명 접이식이 숨어 있음');
+if (detail.open <= detail.shut + 10) {
+  errors.push(`펼쳐도 설명이 나타나지 않음: 접었을 때 ${detail.shut}px · 폈을 때 ${detail.open}px`);
+}
+if (detail.words.length < 40) errors.push('오류 설명이 너무 짧음: ' + detail.words);
+for (const [what, value] of [['설명', detail.words], ['접이식 이름', detail.summary]]) {
+  if (!/[가-힣]/.test(value)) errors.push(`한국어 쪽 ${what}이 한국어가 아님: ` + value);
+}
 if (!band.blocked) errors.push('실행 단추가 막힌 상태로 표시되지 않음');
 await page.click('#run');
 await page.waitForTimeout(400);

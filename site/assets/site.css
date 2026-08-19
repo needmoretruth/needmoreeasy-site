@@ -2392,6 +2392,26 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
 .problem-why { font-size: 0.92rem; color: var(--ink); }
 .problem-fix { font-size: 0.92rem; color: var(--ink-soft); }
 .problem-code { font-size: 0.78rem; color: var(--ink-soft); font-family: var(--mono); }
+
+/* The error code's own page, folded away. A beginner who cannot get past a
+ * message needs more words, and a reader who already understood the fix does
+ * not want them in the way — so it opens on a press and stays open. */
+.problem-detail { font-size: 0.86rem; }
+.problem-detail > summary {
+  cursor: pointer;
+  width: fit-content;
+  padding: 0.12rem 0.1rem;
+  color: var(--ink-soft);
+  border-radius: var(--r-sm);
+}
+.problem-detail > summary:hover { color: var(--ink); }
+.problem-detail > p {
+  margin: 0.4rem 0 0;
+  padding-left: 0.75rem;
+  border-left: 2px solid color-mix(in srgb, var(--bad) 30%, transparent);
+  color: var(--ink-soft);
+  line-height: 1.62;
+}
 /* Pressing Run on a program that cannot compile used to do nothing at all.
  * Now it says why, and the button says so about itself too. */
 .btn[data-blocked="true"] { opacity: 0.72; }
