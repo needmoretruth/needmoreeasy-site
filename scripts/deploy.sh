@@ -34,6 +34,21 @@ rm -f site/assets/wasm/package.json site/assets/wasm-run/package.json \
 echo "== 내려받기 진행률용 크기 기록 =="
 node scripts/stamp-assets.mjs
 
+echo "== 가이드 안의 프로그램 전수 시험 =="
+# The guides are written in the language repository and published from here, so
+# this is the last place their code can be checked before it reaches a reader.
+# Nothing else in this deploy compiles a guide's ```nme blocks.
+NME_REPO="${NME_REPO:-$HOME/nmt/needmoreeasy}"
+if [ -d "$NME_REPO/scripts" ]; then
+  ( cd "$NME_REPO" \
+    && python3 scripts/check-guide-code.py \
+    && python3 scripts/check-guide-silent.py \
+    && python3 scripts/check-guide-index.py )
+else
+  echo "  언어 저장소를 찾지 못해 건너뜁니다: $NME_REPO" >&2
+  exit 1
+fi
+
 echo "== 가이드·문법·프롬프트 문서 페이지 생성 =="
 python3 scripts/build-docs.py
 
