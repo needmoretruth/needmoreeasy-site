@@ -171,6 +171,20 @@ if book contains Sana
 end`,
     },
     {
+      id: 'dates',
+      label: 'Today, in the program',
+      answers: [],
+      expect: 'a week from today',
+      source: `# The computer already knows the date. The clock is UTC.
+use date latest
+show todays date is
+say today()
+show and the day is
+say weekday()
+show a week from today
+say days_after(7)`,
+    },
+    {
       id: 'job',
       label: 'A job with a name',
       answers: [],
@@ -692,6 +706,20 @@ print(word)`,
 만약에 주소록에 지안이 있으면
     지안도 있습니다 말해줘
 끝`,
+    },
+    {
+      id: 'dates',
+      label: '오늘 날짜 쓰기',
+      answers: [],
+      expect: '일주일 뒤',
+      source: `# 날짜는 컴퓨터가 이미 압니다. 시계는 세계 표준시입니다.
+날짜 사용 최신
+오늘 날짜는 말해줘
+말해 오늘()
+요일은 말해줘
+말해 요일()
+일주일 뒤 말해줘
+말해 며칠뒤(7)`,
     },
     {
       id: 'job',
