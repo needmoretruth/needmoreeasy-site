@@ -127,6 +127,19 @@ for (const [language, list] of Object.entries(EXAMPLES)) {
       }
     }
 
+    /* And the other way round, which is how `ko/password` broke: the program
+     * plainly asks a question and the Python that came out never does. A loop
+     * waiting on that answer never ends. An example that lists answers has, by
+     * its own account, a question in it. */
+    if ((example.answers ?? []).length > 0 && !compiled.python.includes('input(')) {
+      fail(
+        `${language}/${example.id}`,
+        'lists answers but the Python never asks for any',
+        compiled.python,
+      );
+      continue;
+    }
+
     let outcome;
     try {
       outcome = JSON.parse(engine.run(compiled.python));
