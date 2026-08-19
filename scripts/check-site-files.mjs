@@ -198,6 +198,33 @@ ok('영어 화면도 링크로 들어오면 파일이 안전',
    (await english.inputValue('#editor')) === 'show my English program');
 await english.close();
 
+/* --- the tabs by keyboard ------------------------------------------------
+ * The row calls itself a tablist, so a screen reader tells its user that the
+ * arrow keys move between the four. They did nothing until 2026-08-19, and all
+ * four tabs sat in the page's tab order. */
+await page.goto('about:blank');
+await page.goto(BASE + '/ko/index.html', { waitUntil: 'load' });
+await page.waitForTimeout(1200);
+const order = await page.evaluate(() =>
+  [...document.querySelectorAll('.file-tabs button')].map((tab) => ({
+    stop: tab.tabIndex, open: tab.getAttribute('aria-selected') === 'true',
+  })));
+ok('탭 줄 전체가 이동 순서에서 한 자리만 차지하고, 그 자리가 열린 탭임',
+   order.filter((tab) => tab.stop === 0).length === 1
+   && order.every((tab) => (tab.stop === 0) === tab.open),
+   JSON.stringify(order));
+await page.focus('.file-tabs [data-file="example"]');
+const walked = [];
+for (const key of ['ArrowRight', 'ArrowRight', 'End', 'Home']) {
+  await page.keyboard.press(key);
+  await page.waitForTimeout(250);
+  walked.push(await page.evaluate(() =>
+    document.querySelector('.file-tabs button[aria-selected="true"]')?.dataset.file));
+}
+ok('화살표·End·Home으로 파일을 옮겨 다님',
+   JSON.stringify(walked) === JSON.stringify(['1', '2', '3', 'example']),
+   JSON.stringify(walked));
+
 ok('콘솔 오류 없음', errors.length === 0, errors.slice(0, 2).join(' / '));
 
 await browser.close();

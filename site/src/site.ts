@@ -669,6 +669,17 @@ const FILES_KEY = 'nme-files-v1';
  * example to look — and your program is gone. So an example never lands in a
  * file. It opens in its own tab, and it takes a deliberate press to move it
  * into File 1, 2 or 3. Nothing else writes to those three. */
+/* Which way each key moves along the file tabs. `first` and `last` are the
+ * ends; the numbers are one step either way. */
+const KEY_STEPS: Readonly<Record<string, number | 'first' | 'last' | undefined>> = {
+  ArrowLeft: -1,
+  ArrowRight: 1,
+  ArrowUp: -1,
+  ArrowDown: 1,
+  Home: 'first',
+  End: 'last',
+};
+
 const FILE_IDS = ['example', '1', '2', '3'] as const;
 type FileId = (typeof FILE_IDS)[number];
 type FileShelf = Record<FileId, string>;
@@ -1285,7 +1296,13 @@ class Playground {
     for (const tab of this.fileTabs) {
       const id = tab.dataset.file;
       if (id === undefined || !isFileId(id)) continue;
-      tab.setAttribute('aria-selected', String(id === this.activeFile));
+      const open = id === this.activeFile;
+      tab.setAttribute('aria-selected', String(open));
+      // A tablist holds one stop in the page's tab order: Tab reaches the open
+      // tab, and the arrow keys move between them from there. Without this the
+      // markup promises a tablist to a screen reader and then behaves like
+      // four ordinary buttons.
+      tab.tabIndex = open ? 0 : -1;
       const held = id === this.activeFile ? this.editor.value : this.files[id];
       tab.dataset.used = String(id !== 'example' && held.trim() !== '');
     }
@@ -1378,10 +1395,26 @@ class Playground {
   }
 
   wireFiles(): void {
-    for (const tab of this.fileTabs) {
+    for (const [at, tab] of this.fileTabs.entries()) {
       tab.addEventListener('click', () => {
         const id = tab.dataset.file;
         if (id !== undefined && isFileId(id)) this.switchFile(id);
+      });
+      // Left and right walk the tabs, Home and End jump to the ends. Switching
+      // a file is cheap and undoable, so the tab that gains focus opens — the
+      // pattern a reader of these roles expects.
+      tab.addEventListener('keydown', (event) => {
+        const step = KEY_STEPS[event.key];
+        if (step === undefined) return;
+        event.preventDefault();
+        const last = this.fileTabs.length - 1;
+        const to = step === 'first' ? 0 : step === 'last' ? last
+          : Math.min(last, Math.max(0, at + step));
+        const next = this.fileTabs[to];
+        const id = next?.dataset.file;
+        if (next === undefined || id === undefined || !isFileId(id)) return;
+        next.focus();
+        this.switchFile(id);
       });
     }
     for (const button of queryAll(document, '[data-copy-to]', HTMLElement)) {
