@@ -39,7 +39,7 @@
 //!   literal below exists so the signature never has to be fallible.
 
 use nme_core::diagnostics::{render_all_bilingual, Diagnostic};
-use nme_core::transpile;
+use nme_core::{tidy as tidy_source, transpile, Language, SyntaxLevel};
 use serde::Serialize;
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -101,6 +101,70 @@ fn problem_of(diagnostic: &Diagnostic, source: &str) -> Problem {
         detail_en: explanation.detail_en,
         detail_ko: explanation.detail_ko,
     }
+}
+
+/// The result of tidying: the rewritten program and how many lines moved.
+#[derive(Serialize)]
+struct Tidied<'a> {
+    ok: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    nme: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    changed: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    diagnostic: Option<&'a str>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    problems: Vec<Problem>,
+}
+
+/// Rewrites a working NME program into one level and one language.
+///
+/// `level` is `sentence`, `beginner` or `advanced`; `language` is `ko` or
+/// `en`. Anything else is read as sentence-level English, because a wrong
+/// spelling from the page is a bug in the page and not something a visitor
+/// should be shown an error for.
+///
+/// The program has to compile: tidying reads what the program *means*, and a
+/// line NME cannot read has no meaning to rewrite. A program that does not
+/// compile comes back with the same `problems` shape [`compile`] returns, so
+/// the page can point at the line without knowing which call produced it.
+#[wasm_bindgen]
+#[must_use]
+pub fn tidy(source: &str, level: &str, language: &str) -> String {
+    let level = match level {
+        "advanced" => SyntaxLevel::Advanced,
+        "beginner" => SyntaxLevel::Beginner,
+        _ => SyntaxLevel::Sentence,
+    };
+    let language = if language == "ko" {
+        Language::Korean
+    } else {
+        Language::English
+    };
+    match tidy_source(source, level, language) {
+        Ok(conversion) => serde_json::to_string(&Tidied {
+            ok: true,
+            nme: Some(conversion.source),
+            changed: Some(conversion.changed_lines),
+            diagnostic: None,
+            problems: Vec::new(),
+        }),
+        Err(found) => {
+            let rendered = render_all_bilingual(&found, source, VIRTUAL_PATH);
+            let problems = found
+                .iter()
+                .map(|diagnostic| problem_of(diagnostic, source))
+                .collect();
+            serde_json::to_string(&Tidied {
+                ok: false,
+                nme: None,
+                changed: None,
+                diagnostic: Some(&rendered),
+                problems,
+            })
+        }
+    }
+    .unwrap_or_else(|_| r#"{"ok":false,"diagnostic":"internal error"}"#.to_string())
 }
 
 /// Compiles NME source to Python source.

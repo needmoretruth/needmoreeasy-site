@@ -25,6 +25,12 @@ declare module '*/nme.js' {
   }
   /** NME source in, one JSON string out: `{ok, python}` or `{ok, diagnostic}`. */
   export function compile(source: string): string;
+  /**
+   * NME source in, the same program written one way out:
+   * `{ok, nme, changed}`, or `{ok: false, problems}` when it does not compile.
+   * `level` is `sentence`, `beginner` or `advanced`; `language` is `ko` or `en`.
+   */
+  export function tidy(source: string, level: string, language: string): string;
   export default function init(
     module_or_path?: { module_or_path: InitInput } | InitInput,
   ): Promise<InitOutput>;

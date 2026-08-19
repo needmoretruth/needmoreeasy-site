@@ -13,7 +13,7 @@
  * it to `site/assets/site.js`, which is the file the page loads.
  */
 
-import init, { compile } from './wasm/nme.js';
+import init, { compile, tidy } from './wasm/nme.js';
 import { EXAMPLES } from './examples.js';
 import { COMPILER_BYTES } from './engine-meta.js';
 import type { Example, ExampleLanguage } from './examples.js';
@@ -80,6 +80,16 @@ const TEXT = {
       'This program works with files on your computer, and a browser has nowhere to keep them. Install NME on your own machine and it will run there.',
     needsNetwork:
       'This program uses the network, which a program on this page cannot reach. Install NME on your own machine and it will run there.',
+    tidyIdle:
+      'Write it any way you like. This rewrites it in one way of writing, and the program stays the same.',
+    tidyBlocked:
+      'Tidying reads what the program means, so it has to run first. The band below says which line stopped it.',
+    tidySame: 'Already written this way — nothing moved.',
+    tidyDone: (lines: number): string =>
+      lines === 1 ? 'Rewrote 1 line. The program does the same thing.'
+        : `Rewrote ${lines} lines. The program does the same thing.`,
+    tidyUndone: 'Put back the way you wrote it.',
+    tidyWait: 'The compiler has not arrived yet.',
   },
   ko: {
     compiled: 'Python',
@@ -139,6 +149,14 @@ const TEXT = {
       '이 프로그램은 컴퓨터의 파일을 씁니다. 브라우저 안에는 파일을 둘 곳이 없어서 여기서는 되지 않습니다. 본인 컴퓨터에 NME를 설치하면 그곳에서 됩니다.',
     needsNetwork:
       '이 프로그램은 인터넷을 씁니다. 이 화면에서 도는 프로그램은 인터넷에 닿을 수 없습니다. 본인 컴퓨터에 NME를 설치하면 그곳에서 됩니다.',
+    tidyIdle:
+      '아무렇게나 쓰셔도 됩니다. 한 가지 표기로 다시 써 드리고, 프로그램이 하는 일은 그대로입니다.',
+    tidyBlocked:
+      '정리는 프로그램의 뜻을 읽어서 다시 쓰는 것이라, 먼저 실행되는 상태여야 합니다. 아래 칸에 어느 줄에서 막혔는지 적혀 있습니다.',
+    tidySame: '이미 이 표기로 쓰여 있어서 바뀐 줄이 없습니다.',
+    tidyDone: (lines: number): string => `${lines}줄을 다시 썼습니다. 프로그램이 하는 일은 그대로입니다.`,
+    tidyUndone: '쓰셨던 그대로 되돌렸습니다.',
+    tidyWait: '컴파일러가 아직 도착하지 않았습니다.',
   },
 }[LANG];
 
@@ -744,6 +762,28 @@ function readProblems(raw: object): readonly CompileProblem[] {
   return problems;
 }
 
+/* What tidying produced: the rewritten program and how many lines moved. A
+ * program that does not compile comes back with the same problems `compile`
+ * reports, because tidying reads what the program means and a line the
+ * compiler cannot read has no meaning to rewrite. */
+interface TidyOutcome {
+  readonly ok: boolean;
+  readonly nme: string;
+  readonly changed: number;
+  readonly problems: readonly CompileProblem[];
+}
+
+function readTidyOutcome(json: string): TidyOutcome {
+  const raw: unknown = JSON.parse(json);
+  if (typeof raw !== 'object' || raw === null) {
+    return { ok: false, nme: '', changed: 0, problems: [] };
+  }
+  const ok = 'ok' in raw && raw.ok === true;
+  const nme = 'nme' in raw && typeof raw.nme === 'string' ? raw.nme : '';
+  const changed = 'changed' in raw && typeof raw.changed === 'number' ? raw.changed : 0;
+  return { ok, nme, changed, problems: readProblems(raw) };
+}
+
 function readCompileOutcome(json: string): CompileOutcome {
   const raw: unknown = JSON.parse(json);
   if (typeof raw !== 'object' || raw === null) {
@@ -1038,6 +1078,13 @@ class Playground {
   readonly problemWhy: HTMLElement | null;
   readonly problemFix: HTMLElement | null;
   readonly problemCode: HTMLElement | null;
+  /* The row that rewrites the program into one level and one language.
+   * Optional for the same reason as the rest: documentation pages run this
+   * file and have no playground. */
+  readonly tidyButton: HTMLButtonElement | null;
+  readonly tidyUndoButton: HTMLButtonElement | null;
+  readonly tidyNote: HTMLElement | null;
+  readonly tidyBar: HTMLElement | null;
 
   worker: Worker | null;
   compiled: string;
@@ -1061,6 +1108,9 @@ class Playground {
   nameField: HTMLInputElement | null = null;
   grow: (() => void) | null = null;
   freshTimer: number | undefined = undefined;
+  /* What the editor held before the last tidy, so one press puts it back.
+   * Empty means there is nothing to undo. */
+  beforeTidy: string | null = null;
   flashTimer: number | undefined = undefined;
 
   constructor(root: ParentNode) {
@@ -1107,6 +1157,10 @@ class Playground {
     this.problemWhy = queryMaybe(root, '#problem-why', HTMLElement);
     this.problemFix = queryMaybe(root, '#problem-fix', HTMLElement);
     this.problemCode = queryMaybe(root, '#problem-code', HTMLElement);
+    this.tidyButton = queryMaybe(root, '#tidy', HTMLButtonElement);
+    this.tidyUndoButton = queryMaybe(root, '#tidy-undo', HTMLButtonElement);
+    this.tidyNote = queryMaybe(root, '#tidy-note', HTMLElement);
+    this.tidyBar = queryMaybe(root, '.tidy-bar', HTMLElement);
 
     this.worker = null;
     this.compiled = '';
@@ -1296,6 +1350,7 @@ class Playground {
     this.wireEditorHeight();
     this.wireChipStrip();
     this.wireFocus();
+    this.wireTidy();
     this.runButton.addEventListener('click', () => this.run());
     if (this.problemLine) {
       this.problemLine.addEventListener('click', () => {
@@ -1372,6 +1427,91 @@ class Playground {
     // The editor's height is measured in one mode and set by CSS in the other.
     if (this.grow) this.grow();
     if (on) this.editor.focus();
+  }
+
+  /* --- tidying ----------------------------------------------------------
+   *
+   * The owner asked for this in one sentence: write the program fast and
+   * badly — abbreviations, words in the wrong order, whichever language comes
+   * to mind — and then have it rewritten cleanly. The compiler already
+   * accepts all of that; this is the other half, the part that puts it back
+   * into one way of writing so somebody else can read it.
+   *
+   * The program has to compile first. Tidying rewrites what each line
+   * *means*, so a line the compiler cannot read has no meaning to rewrite,
+   * and saying that plainly is better than tidying half a program.
+   *
+   * Every rewrite is checked by the compiler before it is offered: the Python
+   * has to come out byte for byte the same. So pressing this can change how
+   * the program reads and never what it does. */
+  tidyChoice(kind: 'lang' | 'level'): string {
+    const chosen = this.tidyBar?.querySelector(`[data-tidy-${kind}][aria-pressed="true"]`);
+    const value = chosen instanceof HTMLElement ? chosen.dataset[kind === 'lang' ? 'tidyLang' : 'tidyLevel'] : undefined;
+    return value ?? (kind === 'lang' ? LANG : 'sentence');
+  }
+
+  sayTidy(message: string): void {
+    if (this.tidyNote) this.tidyNote.textContent = message;
+  }
+
+  tidyNow(): void {
+    if (!this.compilerReady) {
+      this.sayTidy(TEXT.tidyWait);
+      return;
+    }
+    const before = this.editor.value;
+    const outcome = readTidyOutcome(tidy(before, this.tidyChoice('level'), this.tidyChoice('lang')));
+    if (!outcome.ok) {
+      // The band under the editor is where a line number belongs, and it is
+      // already there for the same reason. Point at it rather than repeat it.
+      this.sayTidy(TEXT.tidyBlocked);
+      const first = outcome.problems[0];
+      if (first) {
+        this.showProblem(first);
+        this.flashProblem();
+      }
+      return;
+    }
+    if (outcome.changed === 0 || outcome.nme === before) {
+      this.sayTidy(TEXT.tidySame);
+      return;
+    }
+    this.beforeTidy = before;
+    this.editor.value = outcome.nme;
+    this.sayTidy(TEXT.tidyDone(outcome.changed));
+    if (this.tidyUndoButton) this.tidyUndoButton.hidden = false;
+    this.compileNow();
+    this.writeFiles();
+    this.drawFiles();
+    if (this.grow) this.grow();
+  }
+
+  undoTidy(): void {
+    if (this.beforeTidy === null) return;
+    this.editor.value = this.beforeTidy;
+    this.beforeTidy = null;
+    if (this.tidyUndoButton) this.tidyUndoButton.hidden = true;
+    this.sayTidy(TEXT.tidyUndone);
+    this.compileNow();
+    this.writeFiles();
+    this.drawFiles();
+    if (this.grow) this.grow();
+  }
+
+  wireTidy(): void {
+    if (!this.tidyBar) return;
+    this.sayTidy(TEXT.tidyIdle);
+    this.tidyButton?.addEventListener('click', () => this.tidyNow());
+    this.tidyUndoButton?.addEventListener('click', () => this.undoTidy());
+    for (const kind of ['lang', 'level'] as const) {
+      const group = this.tidyBar.querySelectorAll(`[data-tidy-${kind}]`);
+      group.forEach((button) => {
+        button.addEventListener('click', () => {
+          group.forEach((other) => other.setAttribute('aria-pressed', String(other === button)));
+          this.sayTidy(TEXT.tidyIdle);
+        });
+      });
+    }
   }
 
   wireFocus(): void {

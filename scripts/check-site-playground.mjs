@@ -230,6 +230,17 @@ console.log(errors.length
   ? 'FAIL 색: ' + errors.join(' | ')
   : '프로그램이 칠한 색이 그려지고, 코드 글자는 새어 나오지 않음');
 
+// A band that says nothing must not be standing there. `.problem { display:
+// grid }` beat the browser's own rule for the `hidden` attribute, so an empty
+// red-tinted stripe sat under the editor of every program that was fine. The
+// attribute alone proves nothing; the measured height does.
+const quietBand = await page.evaluate(() => {
+  const el = document.querySelector('#problem');
+  return { attr: el.hidden, height: Math.round(el.getBoundingClientRect().height) };
+});
+if (!quietBand.attr) errors.push('문제가 없는데 오류 띠가 켜져 있음');
+if (quietBand.height !== 0) errors.push('숨긴 오류 띠가 자리를 차지함: ' + quietBand.height + 'px');
+
 // A program that does not compile used to turn the Run button off and put a
 // wall of bilingual compiler text in the Python pane. Someone looking at the
 // editor saw a button that did nothing. The band under the editor has to say
@@ -311,6 +322,70 @@ await page.waitForTimeout(300);
 const closed = await page.evaluate(() => document.documentElement.dataset.focus ?? null);
 if (closed !== null) errors.push('Esc를 눌러도 코딩 화면이 닫히지 않음');
 console.log(errors.length ? 'FAIL 코딩 화면' : '코딩 화면이 창 전체를 쓰고 Esc로 돌아옴');
+
+// 정리하기 — 아무렇게나 쓴 프로그램을 한 표기로 다시 쓴다. 지켜야 하는 것은
+// 셋이다: 글자가 실제로 바뀔 것, 파이썬이 글자 하나까지 그대로일 것, 되돌리면
+// 쓴 그대로 돌아올 것. 「바뀌었다」만 보면 프로그램을 망가뜨려도 통과한다.
+const MESSY = 'store score as 1\nplease repeat 2 times\n  give score\nend\n';
+await page.evaluate((text) => {
+  const editor = document.querySelector('#editor');
+  editor.value = text;
+  editor.dispatchEvent(new Event('input', { bubbles: true }));
+}, MESSY);
+await page.waitForTimeout(500);
+const beforeTidy = await page.evaluate(() => ({
+  nme: document.querySelector('#editor').value,
+  python: document.querySelector('#python').textContent,
+}));
+await page.evaluate(() => {
+  document.querySelector('[data-tidy-level="sentence"]').click();
+  document.querySelector('[data-tidy-lang="ko"]').click();
+});
+await page.click('#tidy');
+await page.waitForTimeout(600);
+const afterTidy = await page.evaluate(() => ({
+  nme: document.querySelector('#editor').value,
+  python: document.querySelector('#python').textContent,
+  note: document.querySelector('#tidy-note').textContent.trim(),
+  undoShown: !document.querySelector('#tidy-undo').hidden,
+  lines: document.querySelector('#editor').value.split('\n').length,
+}));
+if (afterTidy.nme === beforeTidy.nme) errors.push('정리했는데 글자가 그대로임');
+if (afterTidy.python !== beforeTidy.python) errors.push('정리했더니 파이썬이 달라짐');
+if (afterTidy.lines !== beforeTidy.nme.split('\n').length) errors.push('정리했더니 줄 수가 달라짐');
+if (!afterTidy.undoShown) errors.push('정리한 뒤 되돌리기 단추가 없음');
+if (!/줄/.test(afterTidy.note)) errors.push('몇 줄을 다시 썼는지 알려 주지 않음: ' + afterTidy.note);
+if (!afterTidy.nme.includes('말해줘') && !afterTidy.nme.includes('보여줘')) {
+  errors.push('한국어 문장 표기로 정리되지 않음: ' + JSON.stringify(afterTidy.nme.slice(0, 60)));
+}
+await page.click('#tidy-undo');
+await page.waitForTimeout(400);
+const undone = await page.evaluate(() => ({
+  nme: document.querySelector('#editor').value,
+  undoShown: !document.querySelector('#tidy-undo').hidden,
+}));
+if (undone.nme !== MESSY) errors.push('되돌렸는데 쓴 그대로가 아님');
+if (undone.undoShown) errors.push('되돌린 뒤에도 되돌리기 단추가 남아 있음');
+
+// 실행되지 않는 프로그램은 정리할 수 없다. 조용히 실패하지 말고 어느 줄인지
+// 가리켜야 한다.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '안녕하세요 말해줘\n끝\n';
+  editor.dispatchEvent(new Event('input', { bubbles: true }));
+});
+await page.waitForTimeout(500);
+await page.click('#tidy');
+await page.waitForTimeout(400);
+const blocked = await page.evaluate(() => ({
+  note: document.querySelector('#tidy-note').textContent.trim(),
+  bandHidden: document.querySelector('#problem').hidden,
+  nme: document.querySelector('#editor').value,
+}));
+if (blocked.bandHidden) errors.push('정리할 수 없는데 오류 띠가 나오지 않음');
+if (!/실행/.test(blocked.note)) errors.push('왜 정리할 수 없는지 말해 주지 않음: ' + blocked.note);
+if (blocked.nme !== '안녕하세요 말해줘\n끝\n') errors.push('정리할 수 없는데 글자를 건드림');
+console.log(errors.length ? 'FAIL 정리하기' : '정리하기 — 표기만 바뀌고 파이썬은 그대로, 되돌리기도 됨');
 
 console.log(errors.length ? 'FAIL 콘솔 오류: ' + errors.join(' | ') : '콘솔 오류 없음');
 await browser.close();

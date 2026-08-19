@@ -209,6 +209,21 @@ Welcome</pre>
       </div>
     </div>
 
+    <div class="tidy-bar">
+      <button class="btn btn-ghost" id="tidy" type="button">Tidy up</button>
+      <span class="seg" role="group" aria-label="Which language to write it in">
+        <button type="button" data-tidy-lang="en" aria-pressed="true">English</button>
+        <button type="button" data-tidy-lang="ko" aria-pressed="false">한국어</button>
+      </span>
+      <span class="seg" role="group" aria-label="Which way of writing">
+        <button type="button" data-tidy-level="sentence" aria-pressed="true">Sentence</button>
+        <button type="button" data-tidy-level="beginner" aria-pressed="false">Beginner</button>
+        <button type="button" data-tidy-level="advanced" aria-pressed="false">Python</button>
+      </span>
+      <button class="btn btn-ghost" id="tidy-undo" type="button" hidden>Undo</button>
+      <span class="tidy-note" id="tidy-note" aria-live="polite">Write it any way you like. This rewrites it in one way of writing, and the program stays the same.</span>
+    </div>
+
     <div class="problem" id="problem" hidden>
       <p class="problem-head">
         <button class="problem-line" id="problem-line" type="button">line</button>

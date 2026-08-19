@@ -2349,6 +2349,11 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   border-radius: var(--r-md);
   background: var(--bad-soft);
 }
+/* `display: grid` above beats the browser's own rule for the `hidden`
+ * attribute, so without this the band stood there empty on every page load —
+ * a red-tinted 110px stripe under the editor of a program with nothing wrong
+ * with it. Measured on 2026-08-19 at 390 and 1280. */
+.problem[hidden] { display: none; }
 .problem p { margin: 0; }
 .problem-head {
   display: flex;
@@ -2410,4 +2415,85 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   .site-head[data-deep="true"] .head-nav { display: none; }
   /* 320px에서 마지막 메뉴가 5px 잘려 「AI에게 묻기」가 다 보이는 것처럼 읽혔습니다. */
   .head-nav a { padding-inline: 0.38rem; }
+}
+
+/* ---------------------------------------------------------------- 정리 막대
+ * 아무렇게나 쓴 프로그램을 한 표기로 다시 쓰는 자리. 실행 막대 바로 위에 두어
+ * 「쓴다 → 정리한다 → 실행한다」가 위에서 아래로 읽히게 했다. 무채색만 쓰고,
+ * 고른 것은 채도가 아니라 밝기와 굵기로 표시한다. */
+.tidy-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--glass-sunk);
+}
+.seg button {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.7rem;
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.seg button:hover { color: var(--ink); background: var(--glass); }
+.seg button[aria-pressed="true"] {
+  color: var(--ink);
+  background: var(--glass-2);
+  font-weight: 580;
+  box-shadow: var(--shadow-1);
+}
+.tidy-note {
+  flex: 1 1 14rem;
+  min-width: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+.tidy-bar[data-busy="true"] #tidy { opacity: 0.5; }
+/* 코딩 화면에서는 편집 칸을 최대한 넓게 주므로 설명 문장을 접는다. */
+:root[data-focus="true"] .tidy-note { display: none; }
+@media (max-width: 559px) {
+  .tidy-note { flex-basis: 100%; }
+  .seg button { padding-inline: 0.55rem; }
+}
+@media (pointer: coarse) {
+  .seg button { min-height: 40px; }
+}
+
+/* 코딩 화면에서는 정리 막대가 한 줄을 넘지 않아야 한다. 390px 폭에서 그냥 두면
+ * 두세 줄로 접혀 편집 칸이 133px까지 줄었다 — 이 화면이 있는 이유가 편집 칸이다.
+ * 접히는 대신 옆으로 밀리게 하고 글자를 한 단계 줄인다. */
+:root[data-focus="true"] .tidy-bar {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+:root[data-focus="true"] .tidy-bar::-webkit-scrollbar { display: none; }
+:root[data-focus="true"] .tidy-bar .btn {
+  flex: none;
+  padding-inline: 0.6rem;
+  min-height: 34px;
+  font-size: 0.8rem;
+}
+:root[data-focus="true"] .seg { flex: none; }
+:root[data-focus="true"] .seg button {
+  font-size: 0.78rem;
+  padding-inline: 0.5rem;
+  min-height: 32px;
 }

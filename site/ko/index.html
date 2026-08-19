@@ -208,6 +208,21 @@
       </div>
     </div>
 
+    <div class="tidy-bar">
+      <button class="btn btn-ghost" id="tidy" type="button">정리하기</button>
+      <span class="seg" role="group" aria-label="어느 말로 쓸지">
+        <button type="button" data-tidy-lang="ko" aria-pressed="true">한국어</button>
+        <button type="button" data-tidy-lang="en" aria-pressed="false">English</button>
+      </span>
+      <span class="seg" role="group" aria-label="어느 표기로 쓸지">
+        <button type="button" data-tidy-level="sentence" aria-pressed="true">문장</button>
+        <button type="button" data-tidy-level="beginner" aria-pressed="false">초급</button>
+        <button type="button" data-tidy-level="advanced" aria-pressed="false">파이썬</button>
+      </span>
+      <button class="btn btn-ghost" id="tidy-undo" type="button" hidden>되돌리기</button>
+      <span class="tidy-note" id="tidy-note" aria-live="polite">아무렇게나 쓰셔도 됩니다. 한 가지 표기로 다시 써 드리고, 프로그램이 하는 일은 그대로입니다.</span>
+    </div>
+
     <div class="problem" id="problem" hidden>
       <p class="problem-head">
         <button class="problem-line" id="problem-line" type="button">줄</button>
