@@ -567,6 +567,302 @@ say word
 
 print(word)`,
     },
+    {
+      id: 'rpg',
+      label: 'Turn-based RPG',
+      answers: ['Wanderer', 'knight', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee'],
+      expect: 'The Forgotten Tower',
+      source: `# ────────────────────────────────────────────────────────────────
+# The Forgotten Tower — a turn-based role-playing game
+#
+# Written in NME sentence syntax only. Not one line of Python.
+# One sentence is one line, and that line becomes one line of Python.
+#
+# Apache-2.0
+# ────────────────────────────────────────────────────────────────
+
+clear the screen
+draw a line
+say in the middle The Forgotten Tower
+say in the middle a turn-based role-playing game
+draw a line
+
+story:
+
+  For a hundred years the door of the tower stayed shut.
+  Many climbers went up. Nobody ever came back down.
+  This morning the door swung open by itself, and here you are.
+
+end
+
+ask heroName What shall we call you?
+if heroName is missing
+  set heroName to Wanderer
+end
+
+draw a line
+show A knight is sturdy, a mage hits hard, a thief is quick.
+ask heroClass Knight, mage or thief — which will you be?
+
+if heroClass equals mage
+  set heroKind to mage
+  set heroMax to 26
+  set heroHit to 4
+  set heroGuard to 1
+  set heroSpark to 12
+else if heroClass equals thief
+  set heroKind to thief
+  set heroMax to 30
+  set heroHit to 6
+  set heroGuard to 2
+  set heroSpark to 6
+else
+  set heroKind to knight
+  set heroMax to 36
+  set heroHit to 6
+  set heroGuard to 4
+  set heroSpark to 3
+end
+
+set heroLife to heroMax
+set heroFlask to 3
+set purse to 10
+set wisdom to 0
+set rank to 1
+set nextRank to 12
+set floorNumber to 1
+set ending to climbing
+
+to sheet:
+  draw a line
+  show heroName · heroKind · step rank
+  show arm heroHit · shield heroGuard · spark heroSpark
+  show life heroLife / heroMax · flasks heroFlask · coins purse
+  draw a line
+end
+
+do sheet
+wait 1 second
+
+repeat forever
+
+  clear the screen
+  draw a line
+  say in the middle floor floorNumber
+  draw a line
+
+  if floorNumber is greater than 3
+    set foeName to the keeper of the tower
+    set foeMax to 46
+    set foeHit to 11
+    set prizeGold to 40
+    set prizeWisdom to 30
+  else if floorNumber equals 3
+    set foeName to pick from stone golem or black knight
+    set foeMax to 30
+    set foeHit to 8
+    set prizeGold to 16
+    set prizeWisdom to 14
+  else if floorNumber equals 2
+    set foeName to pick from wolf or wisp or spider
+    set foeMax to 22
+    set foeHit to 6
+    set prizeGold to 10
+    set prizeWisdom to 9
+  else
+    set foeName to pick from slime or bat or rat
+    set foeMax to 14
+    set foeHit to 4
+    set prizeGold to 6
+    set prizeWisdom to 6
+  end
+
+  set foeLife to foeMax
+  show foeName steps into the way.
+  wait 1 second
+
+  repeat forever
+
+    draw a line
+    show against foeName · left foeLife / foeMax
+    show yours heroLife / heroMax · spark heroSpark · flasks heroFlask
+    ask choice strike · spell · flask · flee — what will you do?
+
+    if choice equals spell
+
+      if heroSpark is less than 3
+        show The spark is too thin and the words scatter.
+      else
+        subtract 3 from heroSpark
+        set dealt to random number from 6 to 13
+        add rank to dealt
+        subtract dealt from foeLife
+        show Blue fire bites for dealt.
+      end
+
+    else if choice equals flask
+
+      if heroFlask is greater than 0
+        subtract 1 from heroFlask
+        add 12 to heroLife
+        if heroLife is greater than heroMax
+          set heroLife to heroMax
+        end
+        show You drain the bottle and warmth spreads.
+      else
+        show Not one bottle is left.
+      end
+
+    else if choice equals flee
+
+      if floorNumber is greater than 3
+        show The door is gone. There is no back from here.
+      else
+        set gotAway to false
+        45% chance
+          set gotAway to true
+        end
+        if gotAway exists
+          show You tumble two steps down and land outside.
+          set ending to away
+          break
+        else
+          show You turn your back and are caught at once.
+        end
+      end
+
+    else
+
+      set dealt to random number from 3 to 9
+      add heroHit to dealt
+      20% chance
+        multiply dealt by 2
+        show Straight through the opening.
+      end
+      subtract dealt from foeLife
+      show Your blow lands for dealt.
+
+    end
+
+    if foeLife is less than 1
+      draw a line
+      show foeName goes down.
+      break
+    end
+
+    set taken to random number from 2 to 7
+    add foeHit to taken
+    subtract heroGuard from taken
+    if taken is less than 1
+      set taken to 1
+    end
+    subtract taken from heroLife
+    show The answer from foeName costs you taken.
+
+    if heroLife is less than 1
+      draw a line
+      set ending to fallen
+      break
+    end
+
+    wait 1 second
+
+  end
+
+  if ending is not equal to climbing
+    break
+  end
+
+  add prizeGold to purse
+  add prizeWisdom to wisdom
+  show won prizeGold coins · lesson prizeWisdom
+
+  if wisdom is greater than nextRank
+    subtract nextRank from wisdom
+    add 1 to rank
+    add 6 to heroMax
+    add 2 to heroHit
+    add 1 to heroGuard
+    add 3 to heroSpark
+    set heroLife to heroMax
+    add 8 to nextRank
+    draw a line
+    say in a box you are step rank now
+    draw a line
+  end
+
+  if floorNumber is greater than 3
+    set ending to crowned
+    break
+  end
+
+  draw a line
+  show A quiet landing. A trader leans against the wall.
+  show One bottle costs 8 coins.
+  show purse coins in hand.
+  ask shopChoice Buy a bottle? yes · no
+
+  if shopChoice equals yes
+    if purse is greater than 7
+      subtract 8 from purse
+      add 1 to heroFlask
+      show One bottle goes into your pack.
+    else
+      show Not enough for that.
+    end
+  else
+    show The trader nods and looks away.
+  end
+
+  add 4 to heroLife
+  if heroLife is greater than heroMax
+    set heroLife to heroMax
+  end
+
+  add 1 to floorNumber
+  wait 1 second
+
+end
+
+clear the screen
+draw a line
+
+if ending equals crowned
+  say in the middle the top of the tower
+  draw a line
+  story:
+
+    Wind touches your face.
+    In a hundred years nobody has stood here.
+    Looking down, the way up seems very short.
+
+  end
+else if ending equals away
+  say in the middle outside the door
+  draw a line
+  story:
+
+    The door closes behind you.
+    Being alive is enough for today.
+    The tower will still be there tomorrow.
+
+  end
+else
+  say in the middle this far
+  draw a line
+  story:
+
+    The light goes out of the room.
+    The tower has swallowed one more story.
+    Someone after you may get further.
+
+  end
+end
+
+draw a line
+show heroName · heroKind · step rank · up to floor floorNumber
+draw a line`,
+    },
   ],
 
   ko: [
@@ -1102,6 +1398,302 @@ while True
 말해 낱말
 
 print(낱말)`,
+    },
+    {
+      id: 'rpg',
+      label: '턴제 RPG',
+      answers: ['나그네', '전사', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망'],
+      expect: '잊혀진 탑',
+      source: `# ────────────────────────────────────────────────────────────────
+# 잊혀진 탑 — 턴제 롤플레잉 게임
+#
+# NME 문장문법만으로 썼습니다. 파이썬 문법은 한 줄도 없습니다.
+# 한 줄이 한 문장이고, 그 한 줄이 파이썬 한 줄이 됩니다.
+#
+# Apache-2.0
+# ────────────────────────────────────────────────────────────────
+
+화면 지워
+줄 그어
+가운데 말해줘 잊혀진 탑
+가운데 말해줘 턴제 롤플레잉 게임
+줄 그어
+
+이야기:
+
+  탑은 백 년째 문이 닫혀 있었습니다.
+  올라간 사람은 여럿 있었지만, 내려온 사람은 없었습니다.
+  오늘 아침 문이 저절로 열렸고, 지금 당신이 그 앞에 서 있습니다.
+
+끝
+
+용사이름을 물어봐 당신의 이름은 무엇입니까?
+만약에 용사이름이 없으면
+  용사이름은 나그네
+끝
+
+줄 그어
+전사는 튼튼하고, 마법사는 강하고, 도적은 빠릅니다. 말해줘
+직업선택을 물어봐 전사, 마법사, 도적 중에 무엇이 되시겠습니까?
+
+만약에 직업선택이 마법사와 같으면
+  직업이름은 마법사
+  용사최대체력은 26
+  용사공격은 4
+  용사방어는 1
+  용사마나는 12
+아니면 만약에 직업선택이 도적과 같으면
+  직업이름은 도적
+  용사최대체력은 30
+  용사공격은 6
+  용사방어는 2
+  용사마나는 6
+아니면
+  직업이름은 전사
+  용사최대체력은 36
+  용사공격은 6
+  용사방어는 4
+  용사마나는 3
+끝
+
+용사체력은 용사최대체력
+용사약병은 3
+금화는 10
+경험치는 0
+레벨은 1
+다음레벨은 12
+층수는 1
+결말은 진행중
+
+상태보기라는 일:
+  줄 그어
+  용사이름 · 직업이름 · 레벨 단계 말해줘
+  힘 용사공격 · 방패 용사방어 · 기운 용사마나 말해줘
+  생명 용사체력 / 용사최대체력 · 약병 용사약병 개 · 주머니 금화 냥 말해줘
+  줄 그어
+끝
+
+상태보기 해줘
+1초 기다려
+
+계속 반복해
+
+  화면 지워
+  줄 그어
+  가운데 말해줘 층수 층
+  줄 그어
+
+  만약에 층수가 4보다 크거나 같으면
+    적이름은 탑의 주인
+    적최대체력은 46
+    적공격은 11
+    보상금화는 40
+    보상경험치는 30
+  아니면 만약에 층수가 3과 같으면
+    적이름은 돌골렘 또는 검은기사 중에서 랜덤선택
+    적최대체력은 30
+    적공격은 8
+    보상금화는 16
+    보상경험치는 14
+  아니면 만약에 층수가 2와 같으면
+    적이름은 늑대 또는 도깨비불 또는 거미 중에서 랜덤선택
+    적최대체력은 22
+    적공격은 6
+    보상금화는 10
+    보상경험치는 9
+  아니면
+    적이름은 슬라임 또는 박쥐 또는 들쥐 중에서 랜덤선택
+    적최대체력은 14
+    적공격은 4
+    보상금화는 6
+    보상경험치는 6
+  끝
+
+  적체력은 적최대체력
+  앞을 막아선 것 — 적이름 말해줘
+  1초 기다려
+
+  계속 반복해
+
+    줄 그어
+    상대 적이름 · 남은 힘 적체력 / 적최대체력 말해줘
+    아군 용사체력 / 용사최대체력 · 기운 용사마나 · 약병 용사약병 개 말해줘
+    선택을 물어봐 공격 · 마법 · 물약 · 도망 중에 무엇을 하시겠습니까?
+
+    만약에 선택이 마법과 같으면
+
+      만약에 용사마나가 3보다 작으면
+        기운이 모자라 주문이 흩어졌습니다. 말해줘
+      아니면
+        용사마나에서 3 빼줘
+        준피해는 6부터 13까지 랜덤정수
+        준피해에 레벨 더해
+        적체력에서 준피해 빼줘
+        푸른 불꽃이 준피해 만큼 파고들었습니다. 말해줘
+      끝
+
+    아니면 만약에 선택이 물약과 같으면
+
+      만약에 용사약병이 0보다 크면
+        용사약병에서 1 빼줘
+        용사체력에 12 더해
+        만약에 용사체력이 용사최대체력보다 크면
+          용사체력은 용사최대체력
+        끝
+        약병을 비웠습니다. 몸이 따뜻해집니다. 말해줘
+      아니면
+        약병이 하나도 남지 않았습니다. 말해줘
+      끝
+
+    아니면 만약에 선택이 도망과 같으면
+
+      만약에 층수가 4보다 크거나 같으면
+        문이 사라졌습니다. 여기서는 물러설 수 없습니다. 말해줘
+      아니면
+        도망성공은 거짓
+        45% 확률로
+          도망성공은 참
+        끝
+        만약에 도망성공이 있으면
+          계단을 두 칸 굴러 내려왔습니다. 말해줘
+          결말은 도망
+          멈춰
+        아니면
+          등을 보이자마자 붙잡혔습니다. 말해줘
+        끝
+      끝
+
+    아니면
+
+      준피해는 3부터 9까지 랜덤정수
+      준피해에 용사공격 더해
+      20% 확률로
+        준피해에 2 곱해
+        빈틈을 정확히 찔렀습니다. 말해줘
+      끝
+      적체력에서 준피해 빼줘
+      준피해 만큼 베었습니다. 말해줘
+
+    끝
+
+    만약에 적체력이 0보다 작거나 같으면
+      줄 그어
+      쓰러진 것 — 적이름 말해줘
+      멈춰
+    끝
+
+    받은피해는 2부터 7까지 랜덤정수
+    받은피해에 적공격 더해
+    받은피해에서 용사방어 빼줘
+    만약에 받은피해가 1보다 작으면
+      받은피해는 1
+    끝
+    용사체력에서 받은피해 빼줘
+    적이름의 반격이 받은피해 만큼 들어왔습니다. 말해줘
+
+    만약에 용사체력이 0보다 작거나 같으면
+      줄 그어
+      결말은 패배
+      멈춰
+    끝
+
+    1초 기다려
+
+  끝
+
+  만약에 결말이 진행중과 같지 않으면
+    멈춰
+  끝
+
+  금화에 보상금화 더해
+  경험치에 보상경험치 더해
+  노획 보상금화 냥 · 경험 보상경험치 말해줘
+
+  만약에 경험치가 다음레벨보다 크거나 같으면
+    경험치에서 다음레벨 빼줘
+    레벨에 1 더해
+    용사최대체력에 6 더해
+    용사공격에 2 더해
+    용사방어에 1 더해
+    용사마나에 3 더해
+    용사체력은 용사최대체력
+    다음레벨에 8 더해
+    줄 그어
+    상자로 말해줘 이제 레벨 단계입니다
+    줄 그어
+  끝
+
+  만약에 층수가 4보다 크거나 같으면
+    결말은 승리
+    멈춰
+  끝
+
+  줄 그어
+  쉬어 가는 층입니다. 벽에 상인이 기대어 있습니다. 말해줘
+  약병 하나에 8냥입니다. 말해줘
+  주머니에 금화 냥 있습니다. 말해줘
+  상점선택을 물어봐 약병을 살까요? 예 · 아니오
+
+  만약에 상점선택이 예와 같으면
+    만약에 금화가 8보다 크거나 같으면
+      금화에서 8 빼줘
+      용사약병에 1 더해
+      약병을 하나 챙겼습니다. 말해줘
+    아니면
+      돈이 모자랍니다. 말해줘
+    끝
+  아니면
+    상인이 고개를 끄덕였습니다. 말해줘
+  끝
+
+  용사체력에 4 더해
+  만약에 용사체력이 용사최대체력보다 크면
+    용사체력은 용사최대체력
+  끝
+
+  층수에 1 더해
+  1초 기다려
+
+끝
+
+화면 지워
+줄 그어
+
+만약에 결말이 승리와 같으면
+  가운데 말해줘 탑의 꼭대기
+  줄 그어
+  이야기:
+
+    바람이 얼굴에 닿습니다.
+    백 년 만에 이 자리에 사람이 섰습니다.
+    아래를 내려다보니, 올라온 길이 아주 짧아 보입니다.
+
+  끝
+아니면 만약에 결말이 도망과 같으면
+  가운데 말해줘 문 밖
+  줄 그어
+  이야기:
+
+    문이 등 뒤에서 닫혔습니다.
+    살아 있다는 것만으로도 오늘은 충분합니다.
+    탑은 내일도 그 자리에 있을 것입니다.
+
+  끝
+아니면
+  가운데 말해줘 여기까지
+  줄 그어
+  이야기:
+
+    눈앞이 어두워집니다.
+    탑은 또 한 사람의 이야기를 삼켰습니다.
+    다음 사람은 조금 더 멀리 갈지도 모릅니다.
+
+  끝
+끝
+
+줄 그어
+용사이름 · 직업이름 · 레벨 단계 · 층수 층까지 말해줘
+줄 그어`,
     },
   ],
 };
