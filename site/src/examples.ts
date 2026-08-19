@@ -134,6 +134,24 @@ if items contains milk
 end`,
     },
     {
+      id: 'textwork',
+      label: 'Cutting text apart',
+      answers: [],
+      expect: 'apples, berries, grapes',
+      source: `# One line of text becomes a list, and a list becomes one line.
+set row to apples,grapes,berries
+set fruits to row split by comma
+show how many fruits
+sort fruits
+show fruits joined by comma
+set star to *
+for each fruit in fruits with place
+    set bar to star repeated place times
+    show fruit
+    show bar
+end`,
+    },
+    {
       id: 'conditions',
       label: 'Two conditions',
       answers: [],
@@ -600,6 +618,24 @@ print(word)`,
 장바구니에서 빵 빼
 만약에 장바구니에 우유가 있으면
     우유는 아직 있어요 말해줘
+끝`,
+    },
+    {
+      id: 'textwork',
+      label: '글 나누고 잇기',
+      answers: [],
+      expect: '딸기, 사과, 포도',
+      source: `# 한 줄이 목록이 되고, 목록이 다시 한 줄이 됩니다.
+줄은 사과,포도,딸기
+과일들은 줄을 쉼표로 나눈 것
+과일들 개수 말해줘
+과일들 정렬해
+과일들을 쉼표로 이어 말해줘
+별표는 ★
+과일들의 과일마다 순서와 함께 반복해
+    막대는 별표를 순서 개 붙인 것
+    과일 말해줘
+    막대 말해줘
 끝`,
     },
     {
