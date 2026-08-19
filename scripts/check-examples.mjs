@@ -14,10 +14,9 @@
  *   fails    true when the program is meant NOT to compile (the error demo),
  *            in which case `expect` is matched against the diagnostic
  *
- * There is no per-example timeout: the engine runs on this thread, so a
- * runaway example would hang the process rather than fail it. That is what the
- * job timeout in CI is for, and it is why no example may contain an unbounded
- * loop.
+ * The engine runs on this thread, so nothing can interrupt an example that
+ * never stops. Two caps below turn that into a named failure instead of a hung
+ * process; no example may contain an unbounded loop either way.
  */
 
 import { readFileSync } from 'node:fs';
@@ -30,12 +29,30 @@ let output = '';
 let answers = [];
 let asked = 0;
 
+/* An example that never stops used to take this process down with it.
+ *
+ * On 2026-08-19 a compiler change turned one line of `ko/password` from a
+ * question into ordinary text, so the loop waiting for an answer never got one.
+ * The engine runs on this thread, so there is nothing to interrupt it: output
+ * piled up until V8 died of it, the deploy aborted with a core dump and no
+ * word about which example was at fault. These two caps turn that into a
+ * failure that names itself in under a second.
+ */
+const OUTPUT_CAP = 200_000;
+const ASK_CAP = 200;
+
+class Runaway extends Error {}
+
 globalThis.nmeHost = {
-  write(text) { output += text; },
+  write(text) {
+    output += text;
+    if (output.length > OUTPUT_CAP) throw new Runaway(`printed more than ${OUTPUT_CAP} characters`);
+  },
   sleep() { /* the site's worker really waits; the checker must not */ },
   readLine(prompt) {
     if (prompt) output += prompt;
     asked += 1;
+    if (asked > ASK_CAP) throw new Runaway(`asked more than ${ASK_CAP} times`);
     const answer = answers.shift() ?? '';
     output += answer + '\n';
     return answer;
@@ -110,7 +127,16 @@ for (const [language, list] of Object.entries(EXAMPLES)) {
       }
     }
 
-    const outcome = JSON.parse(engine.run(compiled.python));
+    let outcome;
+    try {
+      outcome = JSON.parse(engine.run(compiled.python));
+    } catch (problem) {
+      if (problem instanceof Runaway) {
+        fail(`${language}/${example.id}`, `never stops — ${problem.message}`, output.slice(0, 300));
+        continue;
+      }
+      throw problem;
+    }
     if (!outcome.ok) {
       fail(`${language}/${example.id}`, 'ran with an error', outcome.error);
       continue;
