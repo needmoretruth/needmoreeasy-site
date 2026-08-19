@@ -957,6 +957,42 @@ pre code {
 .term-echo { color: var(--ink-faint); }
 .term-meta { color: var(--warn); }
 
+/* A program's own colours.
+ *
+ * The site's surfaces are achromatic and keep red, yellow and green for saying
+ * what state the machine is in. This is not one of the site's surfaces: it is
+ * what the visitor's program printed, and a program may paint it however it
+ * likes. The owner settled that on 2026-08-19.
+ *
+ * The eight are chosen to stay legible on both grounds rather than to match a
+ * particular terminal, so they are defined once here for the light ground and
+ * again below for the dark one. `color-mix` is not used: these have to be
+ * readable, not tinted. */
+.sgr-bold { font-weight: 700; }
+.sgr-dim { opacity: 0.65; }
+.sgr-italic { font-style: italic; }
+.sgr-underline { text-decoration: underline; }
+
+.sgr-fg-black { color: #14161a; }
+.sgr-fg-red { color: #b3261e; }
+.sgr-fg-green { color: #1b6b3a; }
+.sgr-fg-yellow { color: #8a6100; }
+.sgr-fg-blue { color: #1c4fa1; }
+.sgr-fg-magenta { color: #8a2b7a; }
+.sgr-fg-cyan { color: #10646e; }
+.sgr-fg-white { color: #555a5f; }
+.sgr-fg-grey { color: #6b7280; }
+
+.sgr-bg-black { background: #14161a; color: #f5f6f7; }
+.sgr-bg-red { background: #b3261e; color: #fff; }
+.sgr-bg-green { background: #1b6b3a; color: #fff; }
+.sgr-bg-yellow { background: #8a6100; color: #fff; }
+.sgr-bg-blue { background: #1c4fa1; color: #fff; }
+.sgr-bg-magenta { background: #8a2b7a; color: #fff; }
+.sgr-bg-cyan { background: #10646e; color: #fff; }
+.sgr-bg-white { background: #e9eaec; color: #14161a; }
+.sgr-bg-grey { background: #6b7280; color: #fff; }
+
 .term-input-row { display: flex; gap: 0.55rem; }
 .term-input-row[hidden] { display: none; }
 
@@ -1489,6 +1525,49 @@ table.syntax tr:last-child td { border-bottom: 0; }
   :root:not([data-theme="light"]) ::selection { background: rgba(255, 255, 255, 0.24); }
 }
 :root[data-theme="dark"] ::selection { background: rgba(255, 255, 255, 0.24); }
+
+/* The same eight on the dark ground. Same hues, lifted so they read against
+ * near-black; the three-block pattern the rest of this file uses, so the
+ * toggle wins in both directions and the system default is covered. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .sgr-fg-black { color: #7b8087; }
+  :root:not([data-theme="light"]) .sgr-fg-red { color: #ff8a80; }
+  :root:not([data-theme="light"]) .sgr-fg-green { color: #7ddc9b; }
+  :root:not([data-theme="light"]) .sgr-fg-yellow { color: #f2ce6a; }
+  :root:not([data-theme="light"]) .sgr-fg-blue { color: #8ab4ff; }
+  :root:not([data-theme="light"]) .sgr-fg-magenta { color: #eda1e0; }
+  :root:not([data-theme="light"]) .sgr-fg-cyan { color: #79d7e3; }
+  :root:not([data-theme="light"]) .sgr-fg-white { color: #eceff2; }
+  :root:not([data-theme="light"]) .sgr-fg-grey { color: #9aa1a9; }
+  :root:not([data-theme="light"]) .sgr-bg-black { background: #000; color: #eceff2; }
+  :root:not([data-theme="light"]) .sgr-bg-red { background: #ff8a80; color: #14161a; }
+  :root:not([data-theme="light"]) .sgr-bg-green { background: #7ddc9b; color: #14161a; }
+  :root:not([data-theme="light"]) .sgr-bg-yellow { background: #f2ce6a; color: #14161a; }
+  :root:not([data-theme="light"]) .sgr-bg-blue { background: #8ab4ff; color: #14161a; }
+  :root:not([data-theme="light"]) .sgr-bg-magenta { background: #eda1e0; color: #14161a; }
+  :root:not([data-theme="light"]) .sgr-bg-cyan { background: #79d7e3; color: #14161a; }
+  :root:not([data-theme="light"]) .sgr-bg-white { background: #eceff2; color: #14161a; }
+  :root:not([data-theme="light"]) .sgr-bg-grey { background: #9aa1a9; color: #14161a; }
+}
+:root[data-theme="dark"] .sgr-fg-black { color: #7b8087; }
+:root[data-theme="dark"] .sgr-fg-red { color: #ff8a80; }
+:root[data-theme="dark"] .sgr-fg-green { color: #7ddc9b; }
+:root[data-theme="dark"] .sgr-fg-yellow { color: #f2ce6a; }
+:root[data-theme="dark"] .sgr-fg-blue { color: #8ab4ff; }
+:root[data-theme="dark"] .sgr-fg-magenta { color: #eda1e0; }
+:root[data-theme="dark"] .sgr-fg-cyan { color: #79d7e3; }
+:root[data-theme="dark"] .sgr-fg-white { color: #eceff2; }
+:root[data-theme="dark"] .sgr-fg-grey { color: #9aa1a9; }
+:root[data-theme="dark"] .sgr-bg-black { background: #000; color: #eceff2; }
+:root[data-theme="dark"] .sgr-bg-red { background: #ff8a80; color: #14161a; }
+:root[data-theme="dark"] .sgr-bg-green { background: #7ddc9b; color: #14161a; }
+:root[data-theme="dark"] .sgr-bg-yellow { background: #f2ce6a; color: #14161a; }
+:root[data-theme="dark"] .sgr-bg-blue { background: #8ab4ff; color: #14161a; }
+:root[data-theme="dark"] .sgr-bg-magenta { background: #eda1e0; color: #14161a; }
+:root[data-theme="dark"] .sgr-bg-cyan { background: #79d7e3; color: #14161a; }
+:root[data-theme="dark"] .sgr-bg-white { background: #eceff2; color: #14161a; }
+:root[data-theme="dark"] .sgr-bg-grey { background: #9aa1a9; color: #14161a; }
+
 
 /* --- the AI band, at the very top ---------------------------------------- */
 

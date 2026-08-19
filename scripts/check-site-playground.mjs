@@ -88,6 +88,33 @@ if (!/ZeroDivisionError/.test(divide) || !/line 2/.test(divide)) {
   errors.push('보통 오류의 역추적이 사라짐: ' + divide.slice(0, 80));
 }
 
+// A program may paint its own output. The site's surfaces stay achromatic and
+// keep red, yellow and green for machine state; this is not one of them, it is
+// what the visitor's program printed. What must never happen is the letters of
+// the control code appearing as text, which is what used to happen.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = 'print("\\033[31mred\\033[0m plain")\nprint("\\033[1;42mbold on green\\033[0m")';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(500);
+await page.click('#run');
+await page.waitForFunction(
+  () => document.querySelector('#terminal').textContent.includes('bold on green'),
+  null, { timeout: 20000 }).catch(() => {});
+const painted = await page.textContent('#terminal');
+const html = await page.innerHTML('#terminal');
+if (/\[[0-9;]*m/.test(painted) || painted.includes('033')) {
+  errors.push('색 코드의 글자가 화면에 그대로 보임: ' + painted.trim().slice(0, 60));
+}
+for (const wanted of ['sgr-fg-red', 'sgr-bold', 'sgr-bg-green']) {
+  if (!html.includes(wanted)) errors.push(`프로그램이 요청한 색이 그려지지 않음: ${wanted}`);
+}
+if (!/red plain/.test(painted)) errors.push('색 뒤의 평범한 글자가 사라짐');
+console.log(errors.length
+  ? 'FAIL 색: ' + errors.join(' | ')
+  : '프로그램이 칠한 색이 그려지고, 코드 글자는 새어 나오지 않음');
+
 console.log(errors.length ? 'FAIL 콘솔 오류: ' + errors.join(' | ') : '콘솔 오류 없음');
 await browser.close();
 process.exit(errors.length ? 1 : 0);

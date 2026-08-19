@@ -680,6 +680,44 @@ const KEY_STEPS: Readonly<Record<string, number | 'first' | 'last' | undefined>>
   End: 'last',
 };
 
+/* What a program's own colours mean.
+ *
+ * The site's own surfaces stay achromatic and keep red, yellow and green for
+ * saying what state the machine is in. A program's output is not the site's
+ * surface — it is what the person wrote — so the colours it asks for are drawn.
+ * The owner settled this on 2026-08-19: *내가 말한 저 디자인은 사이트 디자인이고
+ * 프로그램은 NME라서 별도잖아. 당연히 NME는 유저 자율성을 높여야지.*
+ *
+ * Only SGR (`ESC [ … m`) is honoured. Every other control sequence is still
+ * dropped rather than printed, and the clear-screen pair still clears. */
+const SGR_CLASS: Readonly<Record<number, string>> = {
+  1: 'sgr-bold', 2: 'sgr-dim', 3: 'sgr-italic', 4: 'sgr-underline',
+  30: 'sgr-fg-black', 31: 'sgr-fg-red', 32: 'sgr-fg-green', 33: 'sgr-fg-yellow',
+  34: 'sgr-fg-blue', 35: 'sgr-fg-magenta', 36: 'sgr-fg-cyan', 37: 'sgr-fg-white',
+  90: 'sgr-fg-grey', 91: 'sgr-fg-red', 92: 'sgr-fg-green', 93: 'sgr-fg-yellow',
+  94: 'sgr-fg-blue', 95: 'sgr-fg-magenta', 96: 'sgr-fg-cyan', 97: 'sgr-fg-white',
+  40: 'sgr-bg-black', 41: 'sgr-bg-red', 42: 'sgr-bg-green', 43: 'sgr-bg-yellow',
+  44: 'sgr-bg-blue', 45: 'sgr-bg-magenta', 46: 'sgr-bg-cyan', 47: 'sgr-bg-white',
+  100: 'sgr-bg-grey', 101: 'sgr-bg-red', 102: 'sgr-bg-green', 103: 'sgr-bg-yellow',
+  104: 'sgr-bg-blue', 105: 'sgr-bg-magenta', 106: 'sgr-bg-cyan', 107: 'sgr-bg-white',
+};
+
+/* Codes that turn something off rather than on: the whole lot, the weight, the
+ * slant, the underline, the ink, the paper. */
+const SGR_OFF: Readonly<Record<number, readonly string[] | 'all'>> = {
+  0: 'all',
+  22: ['sgr-bold', 'sgr-dim'],
+  23: ['sgr-italic'],
+  24: ['sgr-underline'],
+  39: ['sgr-fg-black', 'sgr-fg-red', 'sgr-fg-green', 'sgr-fg-yellow', 'sgr-fg-blue',
+       'sgr-fg-magenta', 'sgr-fg-cyan', 'sgr-fg-white', 'sgr-fg-grey'],
+  49: ['sgr-bg-black', 'sgr-bg-red', 'sgr-bg-green', 'sgr-bg-yellow', 'sgr-bg-blue',
+       'sgr-bg-magenta', 'sgr-bg-cyan', 'sgr-bg-white', 'sgr-bg-grey'],
+};
+
+const SGR = /\u001b\[([0-9;]*)m/;
+const CONTROL = /\u001b\[[0-9;?]*[A-Za-z]/g;
+
 const FILE_IDS = ['example', '1', '2', '3'] as const;
 type FileId = (typeof FILE_IDS)[number];
 type FileShelf = Record<FileId, string>;
@@ -793,6 +831,9 @@ class Playground {
   readonly pythonState: HTMLElement;
   readonly pythonNote: HTMLElement | null;
   readonly terminal: HTMLElement;
+  /* Which SGR classes are switched on right now. A program sets a colour once
+   * and everything after it is in that colour, so this outlives one `print`. */
+  private readonly ink = new Set<string>();
   readonly runButton: HTMLButtonElement;
   readonly stopButton: HTMLButtonElement;
   readonly chips: HTMLElement;
@@ -1749,26 +1790,83 @@ class Playground {
   }
 
   /* A terminal control sequence is the only way one line of Python can clear a
-   * screen, so `clear the screen` emits one. Here the "screen" is a <pre>:
-   * honour the clear, and drop the rest rather than printing their letters. */
+   * screen or change a colour, so `clear the screen` emits one and so does any
+   * program asking for colour. Here the "screen" is a <pre>: honour the clear,
+   * draw the colours, and drop every other sequence rather than printing its
+   * letters.
+   *
+   * The colour state lives between calls because a program may set a colour in
+   * one `print` and write the text in the next. */
   print(text: string, className?: string): void {
-    if (text.includes('\u001b')) {
-      if (/\u001b\[[23]J/.test(text)) this.terminal.textContent = '';
-      text = text.replace(/\u001b\[[0-9;?]*[A-Za-z]/g, '');
-      if (!text) return;
+    if (!text.includes('\u001b')) {
+      this.write(text, className);
+      this.terminal.scrollTop = this.terminal.scrollHeight;
+      return;
     }
-    // One `if` on `className` rather than two: the old shape built the node
-    // first and asked again afterwards, which no longer proves to the compiler
-    // that a node means there is a class name to put on it.
-    if (className) {
-      const node = document.createElement('span');
-      node.className = className;
-      node.textContent = text;
-      this.terminal.append(node);
-    } else {
-      this.terminal.append(document.createTextNode(text));
+    if (/\u001b\[[23]J/.test(text)) {
+      this.terminal.textContent = '';
+      this.ink.clear();
     }
+    let rest = text;
+    for (let found = SGR.exec(rest); found !== null; found = SGR.exec(rest)) {
+      const before = rest.slice(0, found.index).replace(CONTROL, '');
+      if (before) this.write(before, className);
+      this.applySgr(found[1] ?? '');
+      rest = rest.slice(found.index + found[0].length);
+    }
+    const tail = rest.replace(CONTROL, '');
+    if (tail) this.write(tail, className);
     this.terminal.scrollTop = this.terminal.scrollHeight;
+  }
+
+  /* One `if` on the class list rather than two: the old shape built the node
+   * first and asked again afterwards, which no longer proves to the compiler
+   * that a node means there is a class name to put on it. */
+  private write(text: string, className?: string): void {
+    const classes = className ? [className, ...this.ink] : [...this.ink];
+    if (classes.length === 0) {
+      this.terminal.append(document.createTextNode(text));
+      return;
+    }
+    const node = document.createElement('span');
+    node.className = classes.join(' ');
+    node.textContent = text;
+    this.terminal.append(node);
+  }
+
+  /* `ESC [ 1 ; 31 m` is two instructions, so each number is read in turn. An
+   * unknown number is ignored rather than refused: a terminal that does not
+   * know a code simply does not do it, and a program should not break here for
+   * having asked. */
+  private applySgr(parameters: string): void {
+    for (const piece of (parameters === '' ? '0' : parameters).split(';')) {
+      const code = Number(piece);
+      if (!Number.isInteger(code)) continue;
+      const off = SGR_OFF[code];
+      if (off === 'all') {
+        this.ink.clear();
+        continue;
+      }
+      if (off !== undefined) {
+        for (const name of off) this.ink.delete(name);
+        continue;
+      }
+      const on = SGR_CLASS[code];
+      if (on === undefined) continue;
+      // One ink and one paper at a time, so a second colour replaces the first
+      // instead of leaving two class names fighting over the same property.
+      const family = on.startsWith('sgr-fg-')
+        ? 'sgr-fg-'
+        : on.startsWith('sgr-bg-')
+          ? 'sgr-bg-'
+          : null;
+      if (family !== null) {
+        for (const name of [...this.ink]) {
+          if (name.startsWith(family)) this.ink.delete(name);
+        }
+      }
+      this.ink.add(on);
+    }
   }
 
   run(): void {
