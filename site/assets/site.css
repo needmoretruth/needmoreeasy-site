@@ -824,6 +824,16 @@ pre code {
 .editor:focus-visible { outline-offset: -3px; }
 
 .readout { white-space: pre; }
+
+/* One NME statement is exactly one Python line, so the two panes line up
+ * exactly. Putting the caret on a line marks the line it became — the clearest
+ * thing this page can say about what the compiler does. Achromatic: it says
+ * "this one", not "something is wrong". */
+.pyline { display: inline-block; width: 100%; }
+.pyline[data-at="true"] {
+  background: var(--glass-2);
+  box-shadow: inset 2px 0 0 var(--ink-faint);
+}
 .readout[data-state="error"] {
   color: var(--bad);
   white-space: pre-wrap;

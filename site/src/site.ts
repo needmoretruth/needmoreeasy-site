@@ -522,6 +522,36 @@ function highlightPython(source: string): string {
   return result + escapeHtml(source.slice(last));
 }
 
+/* One NME statement becomes exactly one physical Python line — `transpile.rs`
+ * fails the build if an edit ever changes the newline count — so line 4 of what
+ * you wrote is line 4 of the Python beside it, blank lines and comments
+ * included. Nothing on this page used that, and it is the clearest thing the
+ * two panes can say: put the caret on a line and see what that line became.
+ *
+ * Highlighting runs over the whole text first so a triple-quoted string spanning
+ * several lines is still tokenised as one string; the result is then cut on the
+ * newlines that are outside a tag. */
+function byLine(html: string): string {
+  let depth = 0;
+  let line = '';
+  const lines: string[] = [];
+  for (let at = 0; at < html.length; at += 1) {
+    const ch = html[at];
+    if (ch === '<') depth += 1;
+    else if (ch === '>') depth -= 1;
+    else if (ch === '\n' && depth === 0) {
+      lines.push(line);
+      line = '';
+      continue;
+    }
+    line += ch;
+  }
+  lines.push(line);
+  return lines
+    .map((text, at) => `<span class="pyline" data-line="${at}">${text}</span>`)
+    .join('\n');
+}
+
 /* --- documentation pages -------------------------------------------------- */
 
 /* The index rail is a <details> so that it collapses on a phone. On a wide
@@ -1048,6 +1078,12 @@ class Playground {
   }
 
   wire(): void {
+    // Moving the caret shows which Python line the current line became. It is
+    // free — the compile is debounced, this is not part of it.
+    for (const kind of ['keyup', 'click', 'focus', 'blur'] as const) {
+      this.editor.addEventListener(kind, () => this.markLine());
+    }
+
     this.editor.addEventListener('input', () => {
       clearTimeout(this.debounce);
       this.debounce = setTimeout(() => {
@@ -1711,7 +1747,8 @@ class Playground {
     if (outcome.ok) {
       this.compiled = outcome.python;
       this.python.dataset.state = 'ok';
-      this.python.innerHTML = highlightPython(outcome.python);
+      this.python.innerHTML = byLine(highlightPython(outcome.python));
+      this.markLine();
       this.pythonState.textContent = TEXT.compiled;
       if (this.pythonNote) this.pythonNote.textContent = TEXT.compiledNote;
       this.runButton.disabled = this.running;
@@ -1817,6 +1854,22 @@ class Playground {
     const tail = rest.replace(CONTROL, '');
     if (tail) this.write(tail, className);
     this.terminal.scrollTop = this.terminal.scrollHeight;
+  }
+
+  /* Which line of the Python is the one the caret is on. Called on every
+   * keystroke and every click, so it does no work beyond counting newlines. */
+  markLine(): void {
+    if (this.python.dataset.state !== 'ok') return;
+    const upto = this.editor.value.slice(0, this.editor.selectionStart);
+    let at = 0;
+    for (let i = 0; i < upto.length; i += 1) if (upto[i] === '\n') at += 1;
+    const focused = document.activeElement === this.editor;
+    for (const node of this.python.children) {
+      if (!(node instanceof HTMLElement)) continue;
+      const here = focused && node.dataset.line === String(at);
+      if (here) node.dataset.at = 'true';
+      else node.removeAttribute('data-at');
+    }
   }
 
   /* One `if` on the class list rather than two: the old shape built the node

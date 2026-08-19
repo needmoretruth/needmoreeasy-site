@@ -88,6 +88,34 @@ if (!/ZeroDivisionError/.test(divide) || !/line 2/.test(divide)) {
   errors.push('보통 오류의 역추적이 사라짐: ' + divide.slice(0, 80));
 }
 
+// One NME statement is exactly one Python line, so the caret's line marks the
+// line it became. If the two ever stop lining up this is what says so.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '# note\nshow hello\n\nset friends to an empty list\nappend Mina to friends\nshow how many friends';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(700);
+const lineCount = await page.evaluate(() => document.querySelectorAll('#python .pyline').length);
+if (lineCount !== 6) errors.push(`파이썬 칸의 줄 수가 원본과 다름: ${lineCount}`);
+const paired = await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  const upto = editor.value.split('\n').slice(0, 6).join('\n').length;
+  editor.focus();
+  editor.setSelectionRange(upto, upto);
+  editor.dispatchEvent(new Event('keyup'));
+  const at = document.querySelector('#python .pyline[data-at="true"]');
+  return at ? { line: at.dataset.line, text: at.textContent } : null;
+});
+if (!paired || paired.line !== '5' || !paired.text.includes('len(')) {
+  errors.push('편집기 줄과 파이썬 줄이 짝지어지지 않음: ' + JSON.stringify(paired));
+}
+await page.evaluate(() => document.querySelector('#editor').blur());
+await page.waitForTimeout(150);
+const afterBlur = await page.evaluate(() => document.querySelectorAll('#python .pyline[data-at="true"]').length);
+if (afterBlur !== 0) errors.push('편집기에서 손을 뗐는데 줄 표시가 남음');
+console.log(errors.length ? 'FAIL 줄 짝짓기' : '편집기 줄과 파이썬 줄이 짝지어짐');
+
 // A program may paint its own output. The site's surfaces stay achromatic and
 // keep red, yellow and green for machine state; this is not one of them, it is
 // what the visitor's program printed. What must never happen is the letters of
