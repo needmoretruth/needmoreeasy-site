@@ -34,10 +34,10 @@ rm -f site/assets/wasm/package.json site/assets/wasm-run/package.json \
 echo "== 내려받기 진행률용 크기 기록 =="
 node scripts/stamp-assets.mjs
 
-echo "== 가이드 안의 프로그램 전수 시험 =="
-# The guides are written in the language repository and published from here, so
-# this is the last place their code can be checked before it reaches a reader.
-# Nothing else in this deploy compiles a guide's ```nme blocks.
+echo "== 문서 안의 프로그램 전수 시험 =="
+# The guides and prompts are written in the language repository and published
+# from here, so this is the last place their code can be checked before it
+# reaches a reader. Nothing else in this deploy compiles their ```nme blocks.
 NME_REPO="${NME_REPO:-$HOME/nmt/needmoreeasy}"
 if [ -d "$NME_REPO/scripts" ]; then
   ( cd "$NME_REPO" \
