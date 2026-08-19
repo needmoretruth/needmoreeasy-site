@@ -768,6 +768,7 @@ class Playground {
   readonly fileNote: HTMLElement | null;
   readonly fileNoteText: HTMLElement | null;
   readonly editorTitle: HTMLElement | null;
+  readonly root: HTMLElement;
   readonly progress: HTMLElement;
   readonly progressFill: HTMLElement;
   readonly alert: HTMLElement;
@@ -799,6 +800,9 @@ class Playground {
   flashTimer: number | undefined = undefined;
 
   constructor(root: ParentNode) {
+    // `root` is the playground element itself, so it has to be looked up from
+    // the document rather than searched inside.
+    this.root = queryOne(document, '#playground', HTMLElement);
     this.editor = queryOne(root, '#editor', HTMLTextAreaElement);
     this.python = queryOne(root, '#python', HTMLElement);
     this.pythonState = queryOne(root, '#python-state', HTMLElement);
@@ -1050,6 +1054,11 @@ class Playground {
       this.editor.style.height = 'auto';
       this.editor.style.height =
         `${Math.min(this.editor.scrollHeight + 4, Math.round(window.innerHeight * 0.55))}px`;
+      // The Run bar only rides the bottom of the screen when the program is
+      // long enough that it would otherwise be scrolled away. On a short
+      // program a floating bar has nothing to solve and covers the code.
+      this.root.dataset.tall =
+        String(this.editor.scrollHeight > Math.round(window.innerHeight * 0.5));
     };
     this.grow = grow;
     this.editor.addEventListener('input', grow);

@@ -1746,10 +1746,12 @@ table.syntax tr:last-child td { border-bottom: 0; }
    * a program — and the caret, with the keyboard up — were behind it. The
    * editor keeps a bar's worth of empty space at its foot so they can rise
    * above it. */
-  .pane-nme .editor { padding-bottom: 5.6rem; }
+  #playground[data-tall="true"] .pane-nme .editor { padding-bottom: 5.6rem; }
   /* Run has to stay reachable while you are scrolling through your own
-   * program, so on a narrow screen the bar rides the bottom of the section. */
-  .run-bar {
+   * program, so on a narrow screen the bar rides the bottom of the section —
+   * but only when the program is long enough for that to be a problem.
+   * `data-tall` is set by the same code that grows the editor. */
+  #playground[data-tall="true"] .run-bar {
     position: sticky;
     bottom: 0.6rem;
     z-index: 5;
