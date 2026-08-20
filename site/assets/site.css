@@ -774,6 +774,77 @@ pre code {
   gap: 0.45rem;
 }
 
+/* --- the six groups of examples, and the six versions of one -------------
+ *
+ * The strip of examples used to be every example there is. The names above it
+ * cut it into six, and the row under it shows whichever one is open written
+ * another way. Both rows are the same pill shapes the page already uses, so
+ * nothing new has to be learnt to read them. */
+.example-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+/* The group names and the examples under them are two different questions —
+ * which shelf, then which book — and two rows of identical pills read as one
+ * long list. The names are plain text until one is chosen, so the row above
+ * looks like tabs and the row below like the things they hold. */
+.group-chip {
+  font-size: 0.82rem;
+  background: transparent;
+  border-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.group-chip:hover { background: var(--glass); }
+.group-chip[aria-pressed="true"] {
+  background: var(--glass-2);
+  border-color: var(--edge-top);
+}
+
+.version-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.6rem;
+  margin-top: 0.7rem;
+}
+.version-label {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.version-note {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+/* The coding screen gives the window to the editor, so the label goes and the
+ * two pickers stay. */
+:root[data-focus="true"] .version-label,
+:root[data-focus="true"] .version-note { display: none; }
+
+/* The line under the editor that explains a `#` line. It borrows the colour
+ * the Python pane already gives comments, so the two say the same thing in the
+ * same voice. */
+.hash-note {
+  margin: 0;
+  padding: 0.55rem 1.05rem 0.7rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ink-faint);
+  border-top: 1px solid var(--hairline);
+}
+.hash-note b {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-weight: 700;
+  color: var(--tok-dim);
+}
+.hash-note strong { color: var(--ink-soft); font-weight: 600; }
+
 .panes {
   display: grid;
   gap: 1rem;
@@ -1949,19 +2020,35 @@ table.syntax tr:last-child td { border-bottom: 0; }
     padding-inline: clamp(1rem, 4vw, 2.5rem);
   }
   .examples::-webkit-scrollbar { display: none; }
+  /* Six group names do not fit 380px either, and stacked three deep they push
+   * the examples themselves off the screen. One row, swiped, like the rest. */
+  .example-groups {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    margin-inline: calc(-1 * clamp(1rem, 4vw, 2.5rem));
+    padding-inline: clamp(1rem, 4vw, 2.5rem);
+  }
+  .example-groups::-webkit-scrollbar { display: none; }
+  .example-groups .chip { flex: none; }
+  .version-label { flex-basis: 100%; }
   .examples .chip { flex: none; scroll-snap-align: start; }
   /* Fade whichever end still has examples beyond it. */
   .examples[data-more="true"][data-at-end="false"],
+  .example-groups[data-more="true"][data-at-end="false"],
   .head-nav[data-more="true"][data-at-end="false"] {
     -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
     mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
   }
   .examples[data-more="true"][data-at-start="false"][data-at-end="false"],
+  .example-groups[data-more="true"][data-at-start="false"][data-at-end="false"],
   .head-nav[data-more="true"][data-at-start="false"][data-at-end="false"] {
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
     mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
   }
   .examples[data-more="true"][data-at-start="false"][data-at-end="true"],
+  .example-groups[data-more="true"][data-at-start="false"][data-at-end="true"],
   .head-nav[data-more="true"][data-at-start="false"][data-at-end="true"] {
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px);
     mask-image: linear-gradient(90deg, transparent, #000 40px);
@@ -2597,7 +2684,7 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   summary { min-height: var(--tap); display: flex; align-items: center; }
   .ai-list summary { display: grid; align-items: start; }
   /* 세 개가 한 줄을 나눠 쓰는 자리는 글자를 줄이는 대신 줄을 바꾼다. */
-  .file-note-actions { grid-template-columns: 1fr 1fr; }
+  .file-note-actions { grid-template-columns: repeat(auto-fit, minmax(6.2rem, 1fr)); }
   /* 보관함 안의 단추들은 저희 규칙보다 앞선 자리에 크기가 적혀 있어서 따로
    * 되돌린다. */
   .slot-bar .btn,

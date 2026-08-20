@@ -56,7 +56,8 @@ const small = await page.evaluate(() => {
 check(small.length === 0, '손가락으로 누르는 것이 모두 44px 이상', small.join(', '));
 
 // 3. A real tap on an example chip, at its own coordinates.
-const chip = page.locator('.chip', { hasText: '짧은 이야기' }).first();
+await page.locator('#example-groups .chip', { hasText: '게임' }).first().click();
+const chip = page.locator('#examples .chip', { hasText: '짧은 이야기' }).first();
 await chip.tap();
 await page.waitForTimeout(400);
 const loaded = await page.inputValue('#editor');
@@ -134,7 +135,7 @@ await page.evaluate(() => {
 await page.waitForTimeout(300);
 await page.locator('.file-tabs button[data-file="example"]').tap();
 await page.waitForTimeout(200);
-const otherChip = page.locator('.chip').nth(2);
+const otherChip = page.locator('#examples .chip').nth(2);
 await otherChip.tap();
 await page.waitForTimeout(400);
 await page.locator('.file-tabs button[data-file="1"]').tap();

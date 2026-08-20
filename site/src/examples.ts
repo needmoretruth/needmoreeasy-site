@@ -18,33 +18,71 @@
  * every program at least one line that always says the same thing.
  */
 
-/* The shape every entry has. `fails` is present only on the two examples that
- * are meant not to compile, which is why it is optional. */
+/* Thirty-seven examples in one strip is a wall, and the owner said so: "there
+ * are so many examples on the site that I cannot tell what is what." So every
+ * entry belongs to one of six groups, and the page shows one group at a time.
+ * The order here is the order they are offered in. */
+export type ExampleGroup = 'start' | 'choose' | 'data' | 'game' | 'levels' | 'big';
+
+export const GROUPS: readonly ExampleGroup[] = ['start', 'choose', 'data', 'game', 'levels', 'big'];
+
+/* The shape every entry has.
+ *
+ *   fails   the program is meant NOT to compile — the error demonstration
+ *   fixed   the way this one is written IS the lesson (six spellings in one
+ *           file, three levels side by side, the two languages mixed), so the
+ *           spelling chooser leaves it alone rather than flattening it
+ */
 export interface Example {
   readonly id: string;
   readonly label: string;
+  readonly group: ExampleGroup;
   readonly answers: readonly string[];
   readonly expect: string;
   readonly source: string;
   readonly fails?: true;
+  readonly fixed?: true;
 }
 
 export type ExampleLanguage = 'en' | 'ko';
+
+/* What each group is called, in the language of the page. Kept beside the data
+ * rather than in the page script because it is part of what an example is. */
+export const GROUP_LABELS: Readonly<Record<ExampleLanguage, Readonly<Record<ExampleGroup, string>>>> = {
+  en: {
+    start: 'Start here',
+    choose: 'Choosing and repeating',
+    data: 'Lists and tables',
+    game: 'Games',
+    levels: 'Three levels, two languages',
+    big: 'Bigger programs',
+  },
+  ko: {
+    start: '처음 해 보기',
+    choose: '골라 하고 되풀이하기',
+    data: '목록과 표',
+    game: '게임',
+    levels: '세 가지 문법, 두 나라 말',
+    big: '큰 프로그램',
+  },
+};
 
 export const EXAMPLES: Readonly<Record<ExampleLanguage, readonly Example[]>> = {
   en: [
     {
       id: 'hello',
       label: 'Hello',
+      group: 'start',
       answers: [],
       expect: 'Hello, world!',
-      source: `# Sentence syntax: write what you mean.
+      source: `# This line does nothing at all. A # at the front makes it a note for people.
 show Hello, world!
 repeat 3 times and show NME is easy`,
     },
     {
       id: 'storyblock',
       label: 'A story in one block',
+      group: 'start',
       answers: [],
       expect: 'no title',
       source: `# Inside a story block every line is text. No 'show' needed.
@@ -60,6 +98,7 @@ end`,
     {
       id: 'slow',
       label: 'A story, letter by letter',
+      group: 'start',
       answers: [],
       expect: 'That is the end',
       source: `# Letters arrive one at a time, the way a story does.
@@ -71,6 +110,7 @@ show That is the end`,
     {
       id: 'ask',
       label: 'Ask a name',
+      group: 'start',
       answers: ['Mina'],
       expect: 'Hello Mina!',
       source: `# A question is just a question. The answer becomes a name.
@@ -81,6 +121,7 @@ show Hello name!
     {
       id: 'maths',
       label: 'Change a value',
+      group: 'start',
       answers: [],
       expect: '20',
       source: `# Add, subtract, multiply and divide without + - * / or =.
@@ -93,6 +134,7 @@ show score`,
     {
       id: 'list',
       label: 'A list, one by one',
+      group: 'data',
       answers: [],
       expect: 'Hello Grace!',
       source: `# Make a list, then walk through it.
@@ -104,6 +146,7 @@ end`,
     {
       id: 'collect',
       label: 'Build a list',
+      group: 'data',
       answers: ['apple', 'pear', 'plum'],
       expect: 'plum',
       source: `# Start with an empty list, ask three times, keep every answer.
@@ -117,6 +160,7 @@ show fruits`,
     {
       id: 'listwork',
       label: 'A list, made and used',
+      group: 'data',
       answers: [],
       expect: 'the milk is still there',
       source: `# A whole list program with no brackets and no punctuation.
@@ -136,6 +180,7 @@ end`,
     {
       id: 'textwork',
       label: 'Cutting text apart',
+      group: 'data',
       answers: [],
       expect: 'apples, berries, grapes',
       source: `# One line of text becomes a list, and a list becomes one line.
@@ -154,6 +199,7 @@ end`,
     {
       id: 'record',
       label: 'A value under each name',
+      group: 'data',
       answers: [],
       expect: 'Seoul',
       source: `# A record: found by name rather than by place.
@@ -173,6 +219,7 @@ end`,
     {
       id: 'dates',
       label: 'Today, in the program',
+      group: 'data',
       answers: [],
       expect: 'a week from today',
       source: `# The computer already knows the date. The clock is UTC.
@@ -187,6 +234,7 @@ say days_after(7)`,
     {
       id: 'job',
       label: 'A job with a name',
+      group: 'data',
       answers: [],
       expect: 'Nice to meet you',
       source: `# Give several lines a name, then run them by that name.
@@ -204,6 +252,7 @@ do praise with Mina`,
     {
       id: 'conditions',
       label: 'Two conditions',
+      group: 'choose',
       answers: [],
       expect: 'Good evening',
       source: `# and, or, exists, and the comparison words.
@@ -218,6 +267,7 @@ if hour is not equal to 12 then show It is not noon`,
     {
       id: 'while',
       label: 'Repeat while',
+      group: 'choose',
       answers: [],
       expect: 'finished',
       source: `# The block closes with end, so indentation is optional.
@@ -231,6 +281,7 @@ show finished`,
     {
       id: 'skip',
       label: 'Skip a round',
+      group: 'choose',
       answers: [],
       expect: '7',
       source: `# skip jumps to the next round; break leaves the loop.
@@ -244,6 +295,7 @@ end`,
     {
       id: 'countdown',
       label: 'Leave a loop early',
+      group: 'choose',
       answers: [],
       expect: 'Stopped early',
       source: `# Count down, and leave the loop before it finishes.
@@ -258,6 +310,7 @@ show Stopped early`,
     {
       id: 'wait',
       label: 'Wait a moment',
+      group: 'choose',
       answers: [],
       expect: 'Done',
       source: `# Waiting is a sentence too.
@@ -271,6 +324,7 @@ show Done`,
     {
       id: 'guess',
       label: 'Guessing game',
+      group: 'game',
       answers: ['5'],
       expect: 'Thanks for playing',
       source: `# No quotes, commas, equals signs or colons anywhere.
@@ -289,6 +343,7 @@ show Thanks for playing`,
     {
       id: 'chance',
       label: 'Chance',
+      group: 'game',
       answers: [],
       expect: 'always shows',
       source: `# A percentage decides how often something happens.
@@ -308,6 +363,7 @@ end`,
     {
       id: 'screen',
       label: 'Arrange the screen',
+      group: 'start',
       answers: [],
       expect: 'Coffee, tea, water',
       source: `# Four sentences that tidy the screen.
@@ -320,6 +376,7 @@ say in a box Coffee, tea, water`,
     {
       id: 'clock',
       label: 'Stopwatch and cooldown',
+      group: 'game',
       answers: [],
       expect: 'The door opened',
       source: `# A stopwatch and a named cooldown, both as sentences.
@@ -337,6 +394,7 @@ show elapsed`,
     {
       id: 'rps',
       label: 'Rock, paper, scissors',
+      group: 'game',
       answers: ['rock'],
       expect: 'Thanks for playing',
       source: `# A whole game: a random choice, a question and three answers.
@@ -355,6 +413,7 @@ show Thanks for playing`,
     {
       id: 'reaction',
       label: 'How fast are you?',
+      group: 'game',
       answers: [''],
       expect: 'Your time',
       source: `# The stopwatch, used for the thing stopwatches are for.
@@ -369,6 +428,7 @@ show elapsed`,
     {
       id: 'story',
       label: 'A short story',
+      group: 'game',
       answers: ['left'],
       expect: 'That is the end.',
       source: `# A story that asks which way you go.
@@ -385,6 +445,7 @@ show That is the end.`,
     {
       id: 'menu',
       label: 'A tiny menu',
+      group: 'choose',
       answers: ['2'],
       expect: 'One tea',
       source: `# A menu is a question and three answers.
@@ -402,6 +463,7 @@ end`,
     {
       id: 'table',
       label: 'Five times table',
+      group: 'choose',
       answers: [],
       expect: '25',
       source: `# The five times table, built by adding.
@@ -414,6 +476,7 @@ end`,
     {
       id: 'sum',
       label: 'Add three numbers',
+      group: 'data',
       answers: ['2', '3', '4'],
       expect: 'Altogether that is 9',
       source: `# Three answers, one total.
@@ -429,6 +492,7 @@ show Altogether that is total`,
     {
       id: 'password',
       label: 'Until it is right',
+      group: 'choose',
       answers: ['please', 'open'],
       expect: 'The door swings open.',
       source: `# Keep asking until the answer is the right one.
@@ -441,6 +505,8 @@ show The door swings open.`,
     {
       id: 'six',
       label: 'All six at once',
+      group: 'levels',
+      fixed: true,
       answers: [],
       expect: 'advanced English',
       source: `# Sentence, beginner and Python, each in English and in Korean.
@@ -457,6 +523,8 @@ print(인사)`,
     {
       id: 'levels',
       label: 'Three levels at once',
+      group: 'levels',
+      fixed: true,
       answers: [],
       expect: 'sentence syntax',
       source: `# Advanced Python, beginner NME and sentence NME in one file.
@@ -475,6 +543,8 @@ for person in people:                     # advanced again
     {
       id: 'mix',
       label: 'English + Korean',
+      group: 'levels',
+      fixed: true,
       answers: [],
       expect: 'friend',
       source: `# Both languages, on the same line if you like.
@@ -485,6 +555,8 @@ set animal to pick from cat or dog
     {
       id: 'typo',
       label: 'It reads your mistakes',
+      group: 'start',
+      fixed: true,
       answers: [],
       expect: 'and once more',
       source: `# Every line below is misspelt, mis-ordered or over-polite.
@@ -501,6 +573,8 @@ show score
     {
       id: 'error',
       label: 'What an error looks like',
+      group: 'start',
+      fixed: true,
       answers: [],
       fails: true,
       expect: 'E0101',
@@ -515,6 +589,7 @@ end`,
     {
       id: 'coin',
       label: 'A tiny blockchain',
+      group: 'big',
       answers: [],
       expect: 'Block mined',
       source: `# Real hashing, real proof of work, no punctuation to learn.
@@ -537,6 +612,7 @@ show digest`,
     {
       id: 'zk',
       label: 'Proof without the secret',
+      group: 'big',
       answers: [],
       expect: 'The proof was accepted',
       source: `# Prove you know a secret without ever showing it.
@@ -557,6 +633,8 @@ end`,
     {
       id: 'grow',
       label: 'Growing into Python',
+      group: 'levels',
+      fixed: true,
       answers: [],
       expect: 'three',
       source: `# The same idea written three ways, in one file.
@@ -570,6 +648,7 @@ print(word)`,
     {
       id: 'rpg',
       label: 'Turn-based RPG',
+      group: 'game',
       answers: ['Wanderer', 'knight', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee', 'flee'],
       expect: 'The Forgotten Tower',
       source: `# ────────────────────────────────────────────────────────────────
@@ -869,15 +948,17 @@ draw a line`,
     {
       id: 'hello',
       label: '인사',
+      group: 'start',
       answers: [],
       expect: '안녕하세요!',
-      source: `# 문장형: 하고 싶은 말을 그대로 씁니다.
+      source: `# 이 줄은 아무 일도 하지 않습니다. 앞에 #을 붙이면 사람이 읽는 쪽지가 됩니다.
 안녕하세요! 말해줘
 3번 반복해서 NME는 쉽습니다 말해줘`,
     },
     {
       id: 'storyblock',
       label: '이야기 묶음',
+      group: 'start',
       answers: [],
       expect: '제목이 없었습니다',
       source: `# 이야기 묶음 안은 전부 글입니다. 줄마다 말해줘를 쓰지 않아도 됩니다.
@@ -893,6 +974,7 @@ draw a line`,
     {
       id: 'slow',
       label: '글자 하나씩 나오는 이야기',
+      group: 'start',
       answers: [],
       expect: '여기까지입니다',
       source: `# 소설처럼 글자가 하나씩 나옵니다.
@@ -904,6 +986,7 @@ draw a line`,
     {
       id: 'ask',
       label: '이름 묻기',
+      group: 'start',
       answers: ['민수'],
       expect: '안녕하세요 민수!',
       source: `# 질문은 그냥 질문입니다. 대답이 이름이 됩니다.
@@ -914,6 +997,7 @@ draw a line`,
     {
       id: 'maths',
       label: '값 바꾸기',
+      group: 'start',
       answers: [],
       expect: '20',
       source: `# + - * / 와 = 없이 더하고 빼고 곱하고 나눕니다.
@@ -926,6 +1010,7 @@ draw a line`,
     {
       id: 'list',
       label: '목록 하나씩',
+      group: 'data',
       answers: [],
       expect: '안녕하세요 서준!',
       source: `# 목록을 만들고 하나씩 지나갑니다.
@@ -937,6 +1022,7 @@ draw a line`,
     {
       id: 'collect',
       label: '목록 만들기',
+      group: 'data',
       answers: ['사과', '배', '자두'],
       expect: '자두',
       source: `# 빈 목록으로 시작해, 세 번 물어보고 대답을 모두 담습니다.
@@ -950,6 +1036,7 @@ draw a line`,
     {
       id: 'listwork',
       label: '목록 다루기',
+      group: 'data',
       answers: [],
       expect: '우유는 아직 있어요',
       source: `# 괄호도 기호도 없이 목록 프로그램 하나를 통째로.
@@ -969,6 +1056,7 @@ draw a line`,
     {
       id: 'textwork',
       label: '글 나누고 잇기',
+      group: 'data',
       answers: [],
       expect: '딸기, 사과, 포도',
       source: `# 한 줄이 목록이 되고, 목록이 다시 한 줄이 됩니다.
@@ -987,6 +1075,7 @@ draw a line`,
     {
       id: 'record',
       label: '이름마다 값 하나',
+      group: 'data',
       answers: [],
       expect: '서울',
       source: `# 표: 순서가 아니라 이름으로 찾습니다.
@@ -1006,6 +1095,7 @@ draw a line`,
     {
       id: 'dates',
       label: '오늘 날짜 쓰기',
+      group: 'data',
       answers: [],
       expect: '일주일 뒤',
       source: `# 날짜는 컴퓨터가 이미 압니다. 시계는 세계 표준시입니다.
@@ -1020,6 +1110,7 @@ draw a line`,
     {
       id: 'job',
       label: '이름 붙인 일',
+      group: 'data',
       answers: [],
       expect: '반가워요',
       source: `# 여러 줄에 이름을 붙여 두고 그 이름으로 실행합니다.
@@ -1037,6 +1128,7 @@ draw a line`,
     {
       id: 'conditions',
       label: '두 조건',
+      group: 'choose',
       answers: [],
       expect: '안녕히 주무세요',
       source: `# 그리고, 또는, 있으면, 그리고 비교하는 말들.
@@ -1051,6 +1143,7 @@ draw a line`,
     {
       id: 'while',
       label: '조건 반복',
+      group: 'choose',
       answers: [],
       expect: '끝났어요',
       source: `# 블록은 끝으로 닫으므로 들여쓰기는 선택입니다.
@@ -1064,6 +1157,7 @@ draw a line`,
     {
       id: 'skip',
       label: '건너뛰기',
+      group: 'choose',
       answers: [],
       expect: '7',
       source: `# 건너뛰어는 다음 바퀴로, 멈춰는 반복 밖으로 나갑니다.
@@ -1077,6 +1171,7 @@ draw a line`,
     {
       id: 'countdown',
       label: '반복 중간에 빠져나오기',
+      group: 'choose',
       answers: [],
       expect: '여기서 멈췄습니다',
       source: `# 거꾸로 세다가 끝나기 전에 빠져나옵니다.
@@ -1091,6 +1186,7 @@ draw a line`,
     {
       id: 'wait',
       label: '기다리기',
+      group: 'choose',
       answers: [],
       expect: '끝났습니다',
       source: `# 기다리는 것도 문장입니다.
@@ -1104,6 +1200,7 @@ draw a line`,
     {
       id: 'guess',
       label: '숫자 맞히기',
+      group: 'game',
       answers: ['5'],
       expect: '놀아 주셔서 고맙습니다',
       source: `# 따옴표도 쉼표도 등호도 콜론도 없습니다.
@@ -1122,6 +1219,7 @@ draw a line`,
     {
       id: 'chance',
       label: '확률',
+      group: 'game',
       answers: [],
       expect: '언제나 나옵니다',
       source: `# 백 번에 몇 번 일어날지를 직접 정합니다.
@@ -1141,6 +1239,7 @@ draw a line`,
     {
       id: 'screen',
       label: '화면 꾸미기',
+      group: 'start',
       answers: [],
       expect: '커피, 차, 물',
       source: `# 화면을 정리하는 문장 넷.
@@ -1153,6 +1252,7 @@ draw a line`,
     {
       id: 'clock',
       label: '시간 재기와 쿨타임',
+      group: 'game',
       answers: [],
       expect: '문이 열렸습니다',
       source: `# 시간 재기와 쿨타임, 둘 다 문장입니다.
@@ -1170,6 +1270,7 @@ draw a line`,
     {
       id: 'rps',
       label: '가위바위보',
+      group: 'game',
       answers: ['바위'],
       expect: '재미있었습니다',
       source: `# 게임 하나가 통째로: 무작위 하나, 질문 하나, 대답 셋.
@@ -1188,6 +1289,7 @@ draw a line`,
     {
       id: 'reaction',
       label: '반응 속도 재기',
+      group: 'game',
       answers: [''],
       expect: '걸린 시간',
       source: `# 시간 재기를 원래 쓰라고 만든 곳에 씁니다.
@@ -1202,6 +1304,7 @@ draw a line`,
     {
       id: 'story',
       label: '짧은 이야기',
+      group: 'game',
       answers: ['왼쪽'],
       expect: '여기까지입니다',
       source: `# 어느 쪽으로 갈지 물어보는 이야기.
@@ -1218,6 +1321,7 @@ draw a line`,
     {
       id: 'menu',
       label: '작은 차림표',
+      group: 'choose',
       answers: ['2'],
       expect: '차 한 잔',
       source: `# 차림표는 질문 하나와 대답 셋입니다.
@@ -1235,6 +1339,7 @@ draw a line`,
     {
       id: 'table',
       label: '5단 만들기',
+      group: 'choose',
       answers: [],
       expect: '25',
       source: `# 5단을 더하기만으로 만듭니다.
@@ -1247,6 +1352,7 @@ draw a line`,
     {
       id: 'sum',
       label: '숫자 세 개 더하기',
+      group: 'data',
       answers: ['2', '3', '4'],
       expect: '9',
       source: `# 대답 셋을 받아 하나로 더합니다.
@@ -1262,6 +1368,7 @@ draw a line`,
     {
       id: 'password',
       label: '맞을 때까지',
+      group: 'choose',
       answers: ['수리수리', '열려라'],
       expect: '문이 열렸습니다',
       source: `# 맞는 대답이 나올 때까지 계속 물어봅니다.
@@ -1274,6 +1381,8 @@ draw a line`,
     {
       id: 'six',
       label: '여섯 가지 한 파일에',
+      group: 'levels',
+      fixed: true,
       answers: [],
       expect: '고급 한국어',
       source: `# 문장형·초급·고급을 각각 한국어와 영어로.
@@ -1290,6 +1399,8 @@ print(greeting)`,
     {
       id: 'levels',
       label: '세 문법 한 번에',
+      group: 'levels',
+      fixed: true,
       answers: [],
       expect: '문장형 문법',
       source: `# 고급 Python, 초급 NME, 문장형 NME가 한 파일에 있습니다.
@@ -1308,6 +1419,8 @@ for 사람 in 사람들:                        # 다시 고급
     {
       id: 'mix',
       label: '한국어 + 영어',
+      group: 'levels',
+      fixed: true,
       answers: [],
       expect: '친구',
       source: `# 두 언어를 한 줄에 섞어도 됩니다.
@@ -1318,6 +1431,8 @@ for 사람 in 사람들:                        # 다시 고급
     {
       id: 'typo',
       label: '실수를 알아서 읽습니다',
+      group: 'start',
+      fixed: true,
       answers: [],
       expect: '또',
       source: `# 아래는 전부 오타이거나, 순서가 다르거나, 말이 길어진 줄입니다.
@@ -1333,6 +1448,8 @@ for 사람 in 사람들:                        # 다시 고급
     {
       id: 'error',
       label: '오류는 이렇게 보입니다',
+      group: 'start',
+      fixed: true,
       answers: [],
       fails: true,
       expect: 'E0101',
@@ -1347,6 +1464,7 @@ for 사람 in 사람들:                        # 다시 고급
     {
       id: 'coin',
       label: '아주 작은 블록체인',
+      group: 'big',
       answers: [],
       expect: '블록을 캤습니다',
       source: `# 진짜 해시와 진짜 작업 증명인데, 배울 문장부호가 없습니다.
@@ -1369,6 +1487,7 @@ while True
     {
       id: 'zk',
       label: '비밀 없이 증명하기',
+      group: 'big',
       answers: [],
       expect: '증명을 받아들였습니다',
       source: `# 비밀을 밝히지 않고, 비밀을 안다는 것만 증명합니다.
@@ -1389,6 +1508,8 @@ while True
     {
       id: 'grow',
       label: '한 줄씩 Python으로',
+      group: 'levels',
+      fixed: true,
       answers: [],
       expect: '셋',
       source: `# 같은 뜻을 세 가지로 적어, 한 파일에 나란히 둡니다.
@@ -1402,6 +1523,7 @@ print(낱말)`,
     {
       id: 'rpg',
       label: '턴제 RPG',
+      group: 'game',
       answers: ['나그네', '전사', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망'],
       expect: '잊혀진 탑',
       source: `# ────────────────────────────────────────────────────────────────

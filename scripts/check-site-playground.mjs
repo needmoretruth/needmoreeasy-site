@@ -14,9 +14,12 @@ await page.goto(BASE + '/ko/index.html', { waitUntil: 'domcontentloaded' });
 await page.waitForFunction(() => document.querySelector('#engine-dot')?.dataset.state === 'ready', null, { timeout: 60000 });
 console.log('실행기 준비됨');
 
-// the story example asks one question
+// the story example asks one question. The examples are shown one group at a
+// time now, so the group has to be chosen before its chips exist.
 await page.evaluate(() => {
-  const chip = [...document.querySelectorAll('.chip')].find((c) => c.textContent.includes('짧은 이야기'));
+  const group = [...document.querySelectorAll('#example-groups .chip')].find((c) => c.textContent.includes('게임'));
+  group.click();
+  const chip = [...document.querySelectorAll('#examples .chip')].find((c) => c.textContent.includes('짧은 이야기'));
   chip.click();
 });
 await page.waitForTimeout(400);

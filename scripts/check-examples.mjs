@@ -65,7 +65,7 @@ await compiler.default({ module_or_path: readFileSync(join(SITE, 'assets/wasm/nm
 const engine = await import(join(SITE, 'assets/wasm-run/nmerun.js'));
 await engine.default({ module_or_path: readFileSync(join(SITE, 'assets/wasm-run/nmerun_bg.wasm')) });
 
-const { EXAMPLES } = await import(join(SITE, 'assets/examples.js'));
+const { EXAMPLES, GROUPS } = await import(join(SITE, 'assets/examples.js'));
 
 let failures = 0;
 
@@ -92,8 +92,11 @@ for (const [language, list] of Object.entries(EXAMPLES)) {
     asked = 0;
     answers = (example.answers ?? []).slice();
 
-    for (const field of ['id', 'label', 'source', 'expect']) {
+    for (const field of ['id', 'label', 'source', 'expect', 'group']) {
       if (!example[field]) fail(`${language}/${example.id ?? '?'}`, `missing \`${field}\``);
+    }
+    if (example.group && !GROUPS.includes(example.group)) {
+      fail(`${language}/${example.id}`, `is in the group ${example.group}, which is not one of the six`);
     }
 
     const compiled = JSON.parse(compiler.compile(example.source));
@@ -138,6 +141,41 @@ for (const [language, list] of Object.entries(EXAMPLES)) {
         compiled.python,
       );
       continue;
+    }
+
+    /* One example, six versions. The page offers the other language as a swap
+     * between these two hand-written lists, and the other two levels as a
+     * rewrite by the tidier the site already ships. A rewrite is only worth
+     * offering if it is the same program, so that is what is checked here:
+     * not that it looks right, but that it compiles to the very Python the
+     * sentence version compiles to.
+     *
+     * The ones marked `fixed` are left out on purpose — how they are written
+     * IS what they teach, and flattening them to one level would delete the
+     * lesson. */
+    if (!example.fixed) {
+      for (const level of ['beginner', 'advanced']) {
+        const rewritten = JSON.parse(compiler.tidy(example.source, level, language));
+        if (!rewritten.ok) {
+          fail(`${language}/${example.id}`, `cannot be rewritten as ${level}`, rewritten.diagnostic);
+          continue;
+        }
+        const again = JSON.parse(compiler.compile(rewritten.nme));
+        if (!again.ok) {
+          fail(`${language}/${example.id}`, `the ${level} rewrite does not compile`, again.diagnostic);
+          continue;
+        }
+        if (again.python !== compiled.python) {
+          const wrote = compiled.python.split('\n');
+          const now = again.python.split('\n');
+          const at = wrote.findIndex((line, index) => line !== now[index]);
+          fail(
+            `${language}/${example.id}`,
+            `the ${level} rewrite is a different program`,
+            `line ${at + 1}\n  was: ${wrote[at] ?? '(nothing)'}\n  now: ${now[at] ?? '(nothing)'}`,
+          );
+        }
+      }
     }
 
     let outcome;

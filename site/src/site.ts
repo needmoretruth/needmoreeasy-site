@@ -14,9 +14,9 @@
  */
 
 import init, { compile, tidy } from './wasm/nme.js';
-import { EXAMPLES } from './examples.js';
+import { EXAMPLES, GROUPS, GROUP_LABELS } from './examples.js';
 import { COMPILER_BYTES } from './engine-meta.js';
-import type { Example, ExampleLanguage } from './examples.js';
+import type { Example, ExampleGroup, ExampleLanguage } from './examples.js';
 
 const LANG: ExampleLanguage = document.documentElement.lang === 'ko' ? 'ko' : 'en';
 const STORE_KEY = 'nme-lang';
@@ -90,6 +90,8 @@ const TEXT = {
         : `Rewrote ${lines} lines. The program does the same thing.`,
     tidyUndone: 'Put back the way you wrote it.',
     tidyWait: 'The compiler has not arrived yet.',
+    versionFixed: 'This one is about the way it is written, so it stays as written.',
+    versionSame: 'The sentence version is the one shown — the rewrite did not hold.',
   },
   ko: {
     compiled: 'Python',
@@ -157,6 +159,8 @@ const TEXT = {
     tidyDone: (lines: number): string => `${lines}줄을 다시 썼습니다. 프로그램이 하는 일은 그대로입니다.`,
     tidyUndone: '쓰셨던 그대로 되돌렸습니다.',
     tidyWait: '컴파일러가 아직 도착하지 않았습니다.',
+    versionFixed: '이 예제는 「어떻게 쓰는가」 자체가 내용이라 쓰인 그대로 둡니다.',
+    versionSame: '다시 쓰기가 확인을 통과하지 못해 문장 표기 그대로 보여 드립니다.',
   },
 }[LANG];
 
@@ -651,7 +655,7 @@ function byLine(html: string, echoed: Set<number>): string {
  * ends, and on a phone both the menu in the header and the strip of examples
  * are wider than the screen. Each end is marked, and only the end that really
  * has more beyond it, so the fade is a promise rather than decoration. */
-function wireStrip(strip: HTMLElement): void {
+function wireStrip(strip: HTMLElement): () => void {
   const mark = (): void => {
     const more = strip.scrollWidth - strip.clientWidth;
     strip.dataset.more = more > 4 ? 'true' : 'false';
@@ -665,6 +669,7 @@ function wireStrip(strip: HTMLElement): void {
   strip.addEventListener('scroll', mark, { passive: true });
   addEventListener('resize', mark);
   mark();
+  return mark;
 }
 
 function wireDocRail(): void {
@@ -1057,6 +1062,11 @@ class Playground {
   readonly pythonState: HTMLElement;
   readonly pythonNote: HTMLElement | null;
   readonly echoNote: HTMLElement | null;
+  /* The line under the editor that says a `#` line does nothing. A beginner
+   * reads the comments in an example as part of the program — the owner said
+   * so — and there is nowhere in a plain text box to mark them, so the page
+   * says it in words, and only while the program actually has one. */
+  readonly hashNote: HTMLElement | null;
   readonly terminal: HTMLElement;
   /* Where the program's own names are listed once it stops. Optional: the
    * documentation pages run this same file and have no playground. */
@@ -1112,6 +1122,12 @@ class Playground {
   readonly tidyUndoButton: HTMLButtonElement | null;
   readonly tidyNote: HTMLElement | null;
   readonly tidyBar: HTMLElement | null;
+  /* The row of six group names above the examples, and the row under them that
+   * shows the open example in another syntax or the other language. Optional
+   * for the same reason as the rest. */
+  readonly groupBar: HTMLElement | null;
+  readonly versionBar: HTMLElement | null;
+  readonly versionNote: HTMLElement | null;
 
   worker: Worker | null;
   compiled: string;
@@ -1139,6 +1155,14 @@ class Playground {
    * Empty means there is nothing to undo. */
   beforeTidy: string | null = null;
   flashTimer: number | undefined = undefined;
+  /* Which example is on screen, which group is being shown, and which of the
+   * six ways of writing it the visitor asked for. `openExample` is null once
+   * they have opened one of their own files instead. */
+  openExample: Example | null = null;
+  exampleGroup: ExampleGroup = GROUPS[0] ?? 'start';
+  exampleLevel = 'sentence';
+  exampleLang: ExampleLanguage = LANG;
+  markChips: (() => void) | null = null;
 
   constructor(root: ParentNode) {
     // `root` is the playground element itself, so it has to be looked up from
@@ -1149,6 +1173,7 @@ class Playground {
     this.pythonState = queryOne(root, '#python-state', HTMLElement);
     this.pythonNote = queryMaybe(root, '#python-note', HTMLElement);
     this.echoNote = queryMaybe(root, '#echo-note', HTMLElement);
+    this.hashNote = queryMaybe(root, '#hash-note', HTMLElement);
     this.terminal = queryOne(root, '#terminal', HTMLElement);
     this.runButton = queryOne(root, '#run', HTMLButtonElement);
     this.stopButton = queryOne(root, '#stop', HTMLButtonElement);
@@ -1190,6 +1215,9 @@ class Playground {
     this.tidyUndoButton = queryMaybe(root, '#tidy-undo', HTMLButtonElement);
     this.tidyNote = queryMaybe(root, '#tidy-note', HTMLElement);
     this.tidyBar = queryMaybe(root, '.tidy-bar', HTMLElement);
+    this.groupBar = queryMaybe(root, '#example-groups', HTMLElement);
+    this.versionBar = queryMaybe(root, '#version-bar', HTMLElement);
+    this.versionNote = queryMaybe(root, '#version-note', HTMLElement);
 
     this.worker = null;
     this.compiled = '';
@@ -1204,7 +1232,8 @@ class Playground {
     this.files = emptyShelf();
     this.activeFile = 'example';
 
-    this.buildChips();
+    this.buildGroups();
+    this.drawChips();
     this.wire();
     this.drawSlots();
     this.runButton.disabled = true;
@@ -1247,6 +1276,15 @@ class Playground {
     } catch {
       return false;
     }
+  }
+
+  /* A `#` line is the one thing on this page that looks like a program and is
+   * not one. The note appears only while there is such a line to explain, so
+   * it is an answer to what is on screen rather than a permanent caption. */
+  markHashNote(): void {
+    if (!this.hashNote) return;
+    const has = this.editor.value.split('\n').some((line) => line.trimStart().startsWith('#'));
+    this.hashNote.hidden = !has;
   }
 
   /* One dot, three states, and they are the only colours the page spends:
@@ -1308,16 +1346,131 @@ class Playground {
     };
   }
 
-  buildChips(): void {
+  /* --- the examples ------------------------------------------------------
+   *
+   * Thirty-seven chips in one strip told a first-time visitor nothing about
+   * what any of them were, which is what the owner said out loud: there are so
+   * many examples that you cannot tell what is what. So the strip shows one
+   * group at a time and the six group names sit above it.
+   *
+   * Under the strip is the other half of what was asked for: one example, six
+   * versions. The language is a swap — both sets are written by hand, so the
+   * Korean example has Korean text inside it and not just Korean keywords. The
+   * level is a rewrite, by the same tidier the page already ships, so the
+   * beginner and Python versions are the real thing rather than a copy that
+   * can drift away from the sentence one. */
+  buildGroups(): void {
+    if (!this.groupBar) return;
+    for (const group of GROUPS) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'chip group-chip';
+      button.textContent = GROUP_LABELS[LANG][group];
+      button.setAttribute('aria-pressed', String(group === this.exampleGroup));
+      button.dataset.group = group;
+      button.addEventListener('click', () => this.showGroup(group));
+      this.groupBar.append(button);
+    }
+    wireStrip(this.groupBar);
+  }
+
+  showGroup(group: ExampleGroup): void {
+    this.exampleGroup = group;
+    this.groupBar?.querySelectorAll('.group-chip').forEach((chip) => {
+      chip.setAttribute('aria-pressed', String(chip instanceof HTMLElement && chip.dataset.group === group));
+    });
+    this.drawChips();
+  }
+
+  drawChips(): void {
+    this.chips.textContent = '';
     for (const example of EXAMPLES[LANG]) {
+      if (example.group !== this.exampleGroup) continue;
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'chip';
       button.textContent = example.label;
-      button.setAttribute('aria-pressed', 'false');
+      button.dataset.example = example.id;
+      button.setAttribute('aria-pressed', String(example.id === this.openExample?.id));
       button.addEventListener('click', () => this.load(example));
       this.chips.append(button);
     }
+    this.chips.scrollLeft = 0;
+    if (this.markChips) this.markChips();
+  }
+
+  /* The label under the chips is only true while an example is what is on
+   * screen; one of the visitor's own three files is not an example and has no
+   * other five versions. */
+  drawVersions(): void {
+    if (!this.versionBar) return;
+    const example = this.openExample;
+    this.versionBar.hidden = this.activeFile !== 'example' || example === null;
+    for (const button of queryAll(this.versionBar, '[data-example-level]', HTMLButtonElement)) {
+      button.setAttribute('aria-pressed', String(button.dataset.exampleLevel === this.exampleLevel));
+      // An example whose whole lesson is how it is written is left as written.
+      button.disabled = example?.fixed === true || example?.fails === true;
+    }
+    for (const button of queryAll(this.versionBar, '[data-example-lang]', HTMLButtonElement)) {
+      button.setAttribute('aria-pressed', String(button.dataset.exampleLang === this.exampleLang));
+    }
+    if (this.versionNote) {
+      this.versionNote.textContent =
+        example === null ? '' : example.fixed === true || example.fails === true ? TEXT.versionFixed : '';
+    }
+  }
+
+  /* The source to put in the editor for the example that is open: the entry
+   * from the language that was asked for, rewritten into the level that was
+   * asked for. A rewrite that the compiler will not stand behind is not shown
+   * at all — the sentence version is, and the note says why. */
+  exampleSource(example: Example): string {
+    const set = EXAMPLES[this.exampleLang];
+    const base = set.find((other) => other.id === example.id) ?? example;
+    if (base.fixed === true || base.fails === true || this.exampleLevel === 'sentence') return base.source;
+    if (!this.compilerReady) {
+      if (this.versionNote) this.versionNote.textContent = TEXT.tidyWait;
+      return base.source;
+    }
+    const outcome = readTidyOutcome(tidy(base.source, this.exampleLevel, this.exampleLang));
+    if (!outcome.ok || outcome.nme.trim() === '') {
+      if (this.versionNote) this.versionNote.textContent = TEXT.versionSame;
+      return base.source;
+    }
+    return outcome.nme;
+  }
+
+  wireVersions(): void {
+    if (!this.versionBar) return;
+    for (const button of queryAll(this.versionBar, '[data-example-level]', HTMLButtonElement)) {
+      button.addEventListener('click', () => {
+        this.exampleLevel = button.dataset.exampleLevel ?? 'sentence';
+        this.reopenExample();
+      });
+    }
+    for (const button of queryAll(this.versionBar, '[data-example-lang]', HTMLButtonElement)) {
+      button.addEventListener('click', () => {
+        const asked = button.dataset.exampleLang;
+        this.exampleLang = asked === 'ko' || asked === 'en' ? asked : LANG;
+        this.reopenExample();
+      });
+    }
+  }
+
+  /* The same example again, in whichever of the six ways is chosen now. */
+  reopenExample(): void {
+    const example = this.openExample;
+    if (!example) {
+      this.drawVersions();
+      return;
+    }
+    if (this.versionNote) this.versionNote.textContent = '';
+    this.editor.value = this.exampleSource(example);
+    this.terminal.textContent = '';
+    this.drawVersions();
+    this.compileNow();
+    this.writeFiles();
+    if (this.grow) this.grow();
   }
 
   wire(): void {
@@ -1378,6 +1531,7 @@ class Playground {
     });
     this.wireEditorHeight();
     this.wireChipStrip();
+    this.wireVersions();
     this.wireFocus();
     this.wireTidy();
     this.runButton.addEventListener('click', () => this.run());
@@ -1411,9 +1565,11 @@ class Playground {
     });
   }
 
-  /* Thirty examples do not fit a phone, so they become one strip you swipe. */
+  /* The examples in a group do not fit a phone, so they are one strip you
+   * swipe. The marks have to be redone every time the group changes, which is
+   * why the function that sets them is kept. */
   wireChipStrip(): void {
-    wireStrip(this.chips);
+    this.markChips = wireStrip(this.chips);
   }
 
   /* --- the coding screen ------------------------------------------------
@@ -1789,6 +1945,7 @@ class Playground {
     }
     if (this.fileNote) this.fileNote.dataset.state = this.storageWorks ? 'ok' : 'warn';
     if (this.fileNote) this.fileNote.hidden = false;
+    this.drawVersions();
     for (const button of queryAll(document, '[data-copy-to]', HTMLElement)) {
       button.hidden = button.dataset.copyTo === this.activeFile;
     }
@@ -1800,6 +1957,7 @@ class Playground {
     this.disarmOverwrites();
     this.writeFiles();
     this.activeFile = id;
+    if (id !== 'example') this.openExample = null;
     this.editor.value = this.files[id];
     this.terminal.textContent = '';
     this.slots.current = null;
@@ -2031,6 +2189,7 @@ class Playground {
     }
     this.slots.current = id;
     this.files.example = slot.source;
+    this.openExample = null;
     this.editor.value = slot.source;
     this.terminal.textContent = '';
     this.chips.querySelectorAll('.chip').forEach((chip) => chip.setAttribute('aria-pressed', 'false'));
@@ -2090,10 +2249,17 @@ class Playground {
       this.activeFile = 'example';
     }
     this.slots.current = null;
-    this.editor.value = example.source;
-    this.chips.querySelectorAll('.chip').forEach((chip) => {
-      chip.setAttribute('aria-pressed', String(chip.textContent === example.label));
-    });
+    this.openExample = example;
+    if (this.versionNote) this.versionNote.textContent = '';
+    this.editor.value = this.exampleSource(example);
+    // A link may open an example from a group that is not the one on show.
+    if (example.group !== this.exampleGroup) {
+      this.showGroup(example.group);
+    } else {
+      this.chips.querySelectorAll('.chip').forEach((chip) => {
+        chip.setAttribute('aria-pressed', String(chip instanceof HTMLElement && chip.dataset.example === example.id));
+      });
+    }
     this.terminal.textContent = '';
     this.drawSlots();
     this.drawFiles();
@@ -2103,6 +2269,7 @@ class Playground {
   }
 
   compileNow(): void {
+    this.markHashNote();
     if (!this.compilerReady) {
       this.pythonState.textContent = TEXT.bootCompiler;
       return;

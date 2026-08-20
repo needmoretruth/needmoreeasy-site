@@ -161,7 +161,7 @@ Welcome</pre>
     <div class="play-head">
       <div>
         <p class="eyebrow">Your writing box</p>
-        <h2>Write on the left, press Run, read the answer below.</h2>
+        <h2>Write here, press Run, read the answer below.</h2>
         <p class="lede">
           Nothing you write leaves this tab. There are three files that stay
           here for you — open an example, look at it, and your own work is
@@ -180,7 +180,23 @@ Welcome</pre>
       <button type="button" role="tab" data-file="3" aria-selected="false">File 3</button>
     </div>
 
+    <div class="example-groups" id="example-groups" role="group" aria-label="Kinds of example"></div>
+
     <div class="examples" id="examples" role="group" aria-label="Example programs"></div>
+
+    <div class="version-bar" id="version-bar">
+      <span class="version-label">See this example another way</span>
+      <span class="seg" role="group" aria-label="Which syntax to show">
+        <button type="button" data-example-level="sentence" aria-pressed="true">Sentence</button>
+        <button type="button" data-example-level="beginner" aria-pressed="false">Beginner</button>
+        <button type="button" data-example-level="advanced" aria-pressed="false">Python</button>
+      </span>
+      <span class="seg" role="group" aria-label="Which language to show">
+        <button type="button" data-example-lang="en" aria-pressed="true">English</button>
+        <button type="button" data-example-lang="ko" aria-pressed="false">한국어</button>
+      </span>
+      <span class="version-note" id="version-note" aria-live="polite"></span>
+    </div>
 
     <div class="file-note" id="file-note" hidden>
       <p id="file-note-text"></p>
@@ -201,6 +217,7 @@ Welcome</pre>
         <div class="pane-head"><strong id="editor-title">Examples</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>copy</button><button class="copy-btn" type="button" data-copy-link>share link</button><button class="copy-btn" type="button" data-download-editor>download</button></span></div>
         <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
                   autocorrect="off" aria-label="Your program"></textarea>
+        <p class="hash-note" id="hash-note" hidden>A line starting with <b>#</b> <strong>does nothing at all</strong>. It is a note left for a person to read — delete it and the program runs exactly the same.</p>
       </div>
       <div class="pane pane-python">
         <div class="pane-head"><strong id="python-state">Python</strong><span id="python-note">the same program, written the hard way</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-python>copy</button><button class="copy-btn" type="button" data-download-python>download</button></span></div>
