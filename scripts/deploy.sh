@@ -31,6 +31,9 @@ echo "== 2/3  파이썬 실행기 wasm 빌드 =="
 rm -f site/assets/wasm/package.json site/assets/wasm-run/package.json \
       site/assets/wasm/*.d.ts site/assets/wasm-run/*.d.ts
 
+echo "== 바닥글 판번호 =="
+node scripts/check-site-version.mjs
+
 echo "== 내려받기 진행률용 크기 기록 =="
 node scripts/stamp-assets.mjs
 
