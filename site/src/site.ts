@@ -647,6 +647,26 @@ function byLine(html: string, echoed: Set<number>): string {
 /* The index rail is a <details> so that it collapses on a phone. On a wide
  * screen it is a permanent column, and a reader with JavaScript off still gets
  * a working disclosure rather than an empty box. */
+/* A row that scrolls sideways with no edge fade looks like a row that simply
+ * ends, and on a phone both the menu in the header and the strip of examples
+ * are wider than the screen. Each end is marked, and only the end that really
+ * has more beyond it, so the fade is a promise rather than decoration. */
+function wireStrip(strip: HTMLElement): void {
+  const mark = (): void => {
+    const more = strip.scrollWidth - strip.clientWidth;
+    strip.dataset.more = more > 4 ? 'true' : 'false';
+    // The strip may carry the page's side padding inside itself, and scroll
+    // snapping parks the first item after it — so "at the start" is that
+    // padding, not zero.
+    const inset = parseFloat(getComputedStyle(strip).paddingLeft) || 0;
+    strip.dataset.atStart = String(strip.scrollLeft <= inset + 2);
+    strip.dataset.atEnd = String(strip.scrollLeft >= more - 2);
+  };
+  strip.addEventListener('scroll', mark, { passive: true });
+  addEventListener('resize', mark);
+  mark();
+}
+
 function wireDocRail(): void {
   const rail = queryMaybe(document, '.doc-rail', HTMLDetailsElement);
   if (!rail) return;
@@ -1391,24 +1411,9 @@ class Playground {
     });
   }
 
-  /* Thirty examples do not fit a phone, so they become one strip you swipe.
-   * A strip with no edge fade looks like a list that simply ends, so the ends
-   * are marked — and only the ends that actually have more beyond them. */
+  /* Thirty examples do not fit a phone, so they become one strip you swipe. */
   wireChipStrip(): void {
-    const strip = this.chips;
-    const mark = (): void => {
-      const more = strip.scrollWidth - strip.clientWidth;
-      strip.dataset.more = more > 4 ? 'true' : 'false';
-      // The strip carries the page's side padding inside itself, and scroll
-      // snapping parks the first chip after it — so "at the start" is that
-      // padding, not zero.
-      const inset = parseFloat(getComputedStyle(strip).paddingLeft) || 0;
-      strip.dataset.atStart = String(strip.scrollLeft <= inset + 2);
-      strip.dataset.atEnd = String(strip.scrollLeft >= more - 2);
-    };
-    strip.addEventListener('scroll', mark, { passive: true });
-    addEventListener('resize', mark);
-    mark();
+    wireStrip(this.chips);
   }
 
   /* --- the coding screen ------------------------------------------------
@@ -2618,6 +2623,9 @@ wireFileCopyButtons();
 wireAiPrompts();
 wireDocRail();
 wireGuideFilter();
+
+const headerNav = queryMaybe(document, '.head-nav', HTMLElement);
+if (headerNav) wireStrip(headerNav);
 
 const playgroundRoot = queryMaybe(document, '#playground', HTMLElement);
 if (playgroundRoot) {

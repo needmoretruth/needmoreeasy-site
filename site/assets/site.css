@@ -1886,7 +1886,9 @@ table.syntax tr:last-child td { border-bottom: 0; }
   .pane-head { padding: 0.6rem 0.85rem; flex-wrap: wrap; }
   .pane-head .pane-tools { width: 100%; margin-left: 0; }
   .pane-tools .copy-btn { flex: 1; justify-content: center; font-size: 0.78rem; }
-  .nav-hide-sm { display: none; }
+  /* Written as two classes so that raising every menu entry to a finger
+   * height on touch screens cannot switch this one back on. */
+  .head-nav a.nav-hide-sm { display: none; }
   .head-nav { gap: 0; }
   .head-nav a { padding: 0.5rem 0.45rem; font-size: 0.88rem; }
   h1 { font-size: clamp(2rem, 8.5vw, 2.6rem); }
@@ -1949,15 +1951,18 @@ table.syntax tr:last-child td { border-bottom: 0; }
   .examples::-webkit-scrollbar { display: none; }
   .examples .chip { flex: none; scroll-snap-align: start; }
   /* Fade whichever end still has examples beyond it. */
-  .examples[data-more="true"][data-at-end="false"] {
+  .examples[data-more="true"][data-at-end="false"],
+  .head-nav[data-more="true"][data-at-end="false"] {
     -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
     mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
   }
-  .examples[data-more="true"][data-at-start="false"][data-at-end="false"] {
+  .examples[data-more="true"][data-at-start="false"][data-at-end="false"],
+  .head-nav[data-more="true"][data-at-start="false"][data-at-end="false"] {
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
     mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
   }
-  .examples[data-more="true"][data-at-start="false"][data-at-end="true"] {
+  .examples[data-more="true"][data-at-start="false"][data-at-end="true"],
+  .head-nav[data-more="true"][data-at-start="false"][data-at-end="true"] {
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px);
     mask-image: linear-gradient(90deg, transparent, #000 40px);
   }
@@ -1966,13 +1971,30 @@ table.syntax tr:last-child td { border-bottom: 0; }
   .lang-toggle a, .theme-toggle button { font-size: 0.72rem; padding: 0.34rem 0.5rem; min-height: 30px; }
   .theme-toggle button { min-width: 30px; }
   .brand { font-size: 0.95rem; }
-  /* On a phone the "details" pill drops under the description rather than
-   * squeezing the two lines of text into half the width. */
-  .ai-list summary { grid-template-columns: auto 1fr; padding: 0.75rem 0.85rem; }
-  .ai-open { grid-row: 3; grid-column: 2; justify-self: start; align-self: start; margin-top: 0.4rem; }
+  /* The "details" pill had a row of its own under the description. Once every
+   * tap target grew to 44px that row cost 50px a card, and moving the pill
+   * back beside the text cost more still — the description wrapped two lines
+   * further and the band grew to 736px of a 839px screen. So on a phone the
+   * pill goes away and the row keeps a chevron instead: the whole summary is
+   * already the thing you tap, and a chevron takes 9px, not 56. */
+  .ai-list summary { grid-template-columns: auto 1fr auto; padding: 0.75rem 0.85rem; }
+  .ai-open { display: none; }
+  .ai-list summary::after {
+    content: "";
+    grid-row: 1 / span 2;
+    grid-column: 3;
+    align-self: center;
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid var(--ink-faint);
+    border-bottom: 2px solid var(--ink-faint);
+    transform: rotate(-45deg);
+    transition: transform 0.2s var(--ease);
+  }
+  .ai-list details[open] summary::after { transform: rotate(45deg); }
   .ai-band-head p { font-size: 0.88rem; }
   .ai-band-head h2 { font-size: 1.02rem; }
-  .ai-list summary { padding: 0.65rem 0.8rem; gap: 0.1rem 0.55rem; }
+  .ai-list summary { padding: 0.65rem 0.8rem; gap: 0.1rem 0.5rem; }
   .ai-why { font-size: 0.82rem; }
   .ai-list { gap: 0.45rem; }
   .ai-text { max-height: 16rem; font-size: 0.74rem; }
@@ -2516,4 +2538,107 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   font-size: 0.78rem;
   padding-inline: 0.5rem;
   min-height: 32px;
+}
+
+/* ── 손가락 하나의 크기로 통일 ─────────────────────────────────────────────
+ * 오너가 휴대폰으로 써 보고 「어떤 건 너무 크고 어떤 건 너무 작아서 전혀 안
+ * 어울린다」고 했다. 실제로 그랬다. 같은 `.btn`이 높이 36·40·45·48px으로
+ * 네 가지였고 글자도 12.2·12.5·13.6·16.4px으로 네 가지였으며, 조작할 수 있는
+ * 것 마흔아홉 개가 손끝이 필요로 하는 44px에 못 미쳤다.
+ *
+ * 그래서 휴대폰에는 크기를 하나만 둔다. 누르는 것은 전부 44px 이상이고 글자는
+ * 전부 같으며, 한 줄에 안 들어가면 글자를 줄이는 대신 줄을 바꾼다. 앞의 규칙들
+ * 중 이것과 다투는 것은 여기서 되돌린다.
+ *
+ * 예외는 「코딩 화면」 하나다. 그 화면은 편집 칸을 최대한 넓히려고 일부러
+ * 빽빽하게 만든 곳이고, 사용자가 직접 켠 것이다. 거기서도 40px 아래로는
+ * 내려가지 않는다. */
+@media (pointer: coarse) {
+  :root {
+    --tap: 44px;
+    --tap-text: 0.875rem;
+  }
+  .btn,
+  .chip,
+  .copy-btn,
+  .file-tabs button,
+  .play-tabs button,
+  .seg button,
+  .lang-toggle a,
+  .theme-toggle button,
+  .head-nav a,
+  .ai-open,
+  .slot-drop,
+  .slot-edit,
+  .slot button,
+  .file-note .btn,
+  .pane-tools .copy-btn,
+  .ai-actions .btn,
+  .doc-crumbs a,
+  .site-foot a,
+  .fineprint a {
+    min-height: var(--tap);
+    font-size: var(--tap-text);
+  }
+  /* 아이콘만 있는 단추도 폭이 손끝만 해야 한다. */
+  .theme-toggle button { min-width: var(--tap); }
+  .lang-toggle a { min-width: 3rem; }
+  /* 글자만 있는 줄은 높이를 안쪽 여백으로 채운다. */
+  .head-nav a,
+  .doc-crumbs a,
+  .site-foot a,
+  .fineprint a {
+    display: inline-flex;
+    align-items: center;
+  }
+  .head-nav a { padding-inline: 0.6rem; }
+  .site-foot a, .fineprint a, .doc-crumbs a { padding-inline: 0.15rem; }
+  /* 접었다 펴는 줄도 누르는 것이다. */
+  summary { min-height: var(--tap); display: flex; align-items: center; }
+  .ai-list summary { display: grid; align-items: start; }
+  /* 세 개가 한 줄을 나눠 쓰는 자리는 글자를 줄이는 대신 줄을 바꾼다. */
+  .file-note-actions { grid-template-columns: 1fr 1fr; }
+  /* 보관함 안의 단추들은 저희 규칙보다 앞선 자리에 크기가 적혀 있어서 따로
+   * 되돌린다. */
+  .slot-bar .btn,
+  .slot-list .btn,
+  .slot-list a,
+  .step .btn {
+    min-height: var(--tap);
+    font-size: var(--tap-text);
+  }
+  .brand { min-height: var(--tap); display: inline-flex; align-items: center; }
+  .pane-head .pane-tools { flex-wrap: wrap; }
+  .pane-tools .copy-btn { flex: 1 1 6rem; }
+  :root[data-focus="true"] .btn,
+  :root[data-focus="true"] .seg button,
+  :root[data-focus="true"] .tidy-bar .btn {
+    min-height: 40px;
+    font-size: 0.82rem;
+  }
+}
+
+/* 머리가 320~412px에서 세 줄로 접혀 169px — 화면 높이의 5분의 1이었다.
+ * (누르는 것을 전부 44px로 올린 뒤 그렇게 됐다. 30px로 되돌리는 것은 답이
+ * 아니다.) 줄을 둘로 못 박는다 — 첫 줄은 이름과 언어, 둘째 줄은 차림표와
+ * 밝기다. 차림표는 남는 폭을 전부 쓰고 넘치면 옆으로 밀린다. 빈 조각 하나가
+ * 두 줄 사이를 갈라 놓는다. 어느 폭에서도 세 줄이 되지 않는다. */
+@media (max-width: 700px) {
+  .site-head .wrap { row-gap: 0.15rem; }
+  .brand { order: 1; margin-right: auto; }
+  .lang-toggle { order: 2; }
+  .site-head .wrap::before { content: ""; order: 3; flex-basis: 100%; height: 0; }
+  .head-nav { order: 4; width: auto; flex: 1 1 0; min-width: 0; margin-left: 0; }
+  .theme-toggle { order: 5; flex: none; margin-left: 0; }
+  /* Deep in the page the menu row is hidden, and the brightness pill was left
+   * alone at the left of an otherwise empty row. It moves under the language
+   * pill instead, so the two line up on the right. */
+  .site-head[data-deep="true"] .theme-toggle { margin-left: auto; }
+}
+
+/* 설명 문장은 한 크기다. 두 가지가 섞여 있어 같은 뜻의 두 문단이 다른 크기로
+ * 보였다. */
+@media (max-width: 819px) {
+  .lede { font-size: 1.02rem; }
+  h3 { font-size: 1.02rem; }
 }
