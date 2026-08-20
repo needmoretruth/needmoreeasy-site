@@ -934,8 +934,8 @@ dependencies = [
 
 [[package]]
 name = "nme-core"
-version = "0.4.0"
-source = "git+https://github.com/needmoretruth/needmoreeasy?rev=0b3a449d9dc8a0a7b45b31f612c2f3657412c07a#0b3a449d9dc8a0a7b45b31f612c2f3657412c07a"
+version = "0.5.0"
+source = "git+https://github.com/needmoretruth/needmoreeasy?rev=3fe262ff9d94de8377d11ccf7d66c2fb2f6800a2#3fe262ff9d94de8377d11ccf7d66c2fb2f6800a2"
 dependencies = [
  "rustpython-parser",
  "unicode-width 0.2.2",
@@ -943,7 +943,7 @@ dependencies = [
 
 [[package]]
 name = "nme-run"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "getrandom 0.2.17",
  "getrandom 0.3.4",
@@ -957,7 +957,7 @@ dependencies = [
 
 [[package]]
 name = "nme-web"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "nme-core",
  "serde",
