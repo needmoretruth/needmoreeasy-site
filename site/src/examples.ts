@@ -942,6 +942,706 @@ draw a line
 show heroName · heroKind · step rank · up to floor floorNumber
 draw a line`,
     },
+    {
+      id: 'rpg-deep',
+      label: 'The ultimate turn-based RPG',
+      group: 'game',
+      answers: ['Ada', 'knight', 'normal', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run', 'run'],
+      expect: 'The Sunken Keep',
+      source: `# ════════════════════════════════════════════════════════════════════
+# The Sunken Keep — a turn-based role-playing game
+#
+# ── READ THIS FIRST ─────────────────────────────────────────────────
+# Every line that starts with a # does NOTHING AT ALL. The computer
+# skips it. These lines are notes left for a person to read. Delete
+# every one of them and the game runs exactly the same.
+#
+# The whole game is sentence syntax. Not one line of Python. One
+# sentence is one line, and each line becomes one line of Python —
+# open the Python tab and you can read the two side by side.
+#
+# ── HOW TO MAKE IT YOURS ────────────────────────────────────────────
+# Everything worth changing first is under THE DIALS, just below.
+# Change a number, press Run, see what happened. Nothing here can
+# break anything.
+#
+# After that: rename the rooms, write your own story, add a fifth kind
+# of hero, put a sixth floor in. This is a starting point, not a
+# finished thing.
+#
+# Apache-2.0
+# ════════════════════════════════════════════════════════════════════
+
+
+# ── THE DIALS ───────────────────────────────────────────────────────
+# Every one of these is safe to change. Try it.
+
+set floorsToClear to 4          # floors before the Keeper is waiting
+set flaskHeal to 14             # life one flask gives back
+set etherGain to 8              # spark one ether gives back
+set bombHit to 16               # how hard a bomb hits
+set flaskPrice to 9             # what the merchant charges for one
+set etherPrice to 11
+set bombPrice to 13
+set forgePrice to 18            # what sharpening a blade costs
+set critChance to 12            # in a hundred, how often a blow doubles
+set fleeChance to 60            # in a hundred, how often running works
+set venomBite to 2              # life the venom takes each turn
+set markFull to █               # the character a life bar is drawn with
+set markEmpty to ░              # and the character for what is gone
+set lifePerMark to 4            # life one mark on the bar is worth
+set barMax to 20                # how long a full bar is. The job below
+                                # reads this, and a job can only read a
+                                # name that already exists above it.
+
+
+# ── THE THREE JOBS ──────────────────────────────────────────────────
+# A named job is a piece of program you can run again by name. A job
+# can READ the names outside it, but it cannot change them — so all
+# three of these only draw. That is why the bar width is put in
+# barMax on the line before the job is run.
+
+to header someone:
+  clear the screen
+  draw a line
+  say in the middle someone
+  draw a line
+end
+
+to sign someone:
+  draw a line
+  say in the middle someone
+  draw a line
+end
+
+to lifebar amount:
+  set barLeft to amount
+  set barText to markFull repeated 0 times
+  while barLeft is greater than 0
+    add markFull to barText
+    subtract lifePerMark from barLeft
+  end
+  set barLeft to barMax
+  subtract amount from barLeft
+  while barLeft is greater than 0
+    add markEmpty to barText
+    subtract lifePerMark from barLeft
+  end
+  show barText
+end
+
+
+# ── THE OPENING ─────────────────────────────────────────────────────
+
+clear the screen
+draw a line
+say in the middle The Sunken Keep
+say in the middle a turn-based role-playing game
+draw a line
+
+story:
+
+  The sea took the keep in one night and never gave it back.
+  Everything below the first floor belongs to the water now.
+  You have a lamp, a bag, and no very good reason to be here.
+
+end
+
+ask heroName What shall we call you?
+if heroName is missing
+  set heroName to Wanderer
+end
+
+draw a line
+show A knight takes a hit and keeps standing.
+show A mage hits hardest and has the least life to spare.
+show A thief is hard to catch and strikes twice.
+show A ranger leaves a wound that keeps working.
+ask heroClass knight, mage, thief or ranger — which will you be?
+
+# Four kinds of hero, and one block that sets all of them up. Copy any
+# one of these branches to invent a fifth.
+if heroClass equals mage
+  set heroKind to mage
+  set heroMax to 32
+  set heroHit to 5
+  set heroGuard to 2
+  set heroSparkMax to 18
+  set heroSpeed to 14
+  set skillName to blue fire
+  set skillCost to 3
+else if heroClass equals thief
+  set heroKind to thief
+  set heroMax to 30
+  set heroHit to 5
+  set heroGuard to 2
+  set heroSparkMax to 8
+  set heroSpeed to 30
+  set skillName to twin blades
+  set skillCost to 3
+else if heroClass equals ranger
+  set heroKind to ranger
+  set heroMax to 32
+  set heroHit to 5
+  set heroGuard to 2
+  set heroSparkMax to 10
+  set heroSpeed to 20
+  set skillName to the long shot
+  set skillCost to 3
+else
+  set heroKind to knight
+  set heroMax to 34
+  set heroHit to 6
+  set heroGuard to 4
+  set heroSparkMax to 6
+  set heroSpeed to 8
+  set skillName to the shield wall
+  set skillCost to 2
+end
+
+draw a line
+show On easy every enemy has less life. On hard they have more.
+ask hardness easy, normal or hard?
+
+if hardness equals easy
+  set foeExtra to 0
+  set foeBite to 0
+else if hardness equals hard
+  set foeExtra to 6
+  set foeBite to 2
+else
+  set foeExtra to 3
+  set foeBite to 0
+end
+
+set heroLife to heroMax
+set heroSpark to heroSparkMax
+set heroLevel to 1
+set heroXp to 0
+set heroNext to 14
+set heroFlask to 3
+set heroEther to 2
+set heroBomb to 1
+set heroPurse to 12
+set heroWeapon to a plain blade
+set heroArmour to a leather coat
+set heroVenom to 0
+set floorNumber to 1
+set deepestFloor to 1
+set roundCount to 0
+set endingKind to walking
+set logBook to an empty record
+
+draw a line
+show heroName · heroKind · going down.
+show Your skill is skillName · it costs skillCost spark.
+wait 1 second
+
+
+# ── THE KEEP ────────────────────────────────────────────────────────
+# One turn round this loop is one floor. It ends when endingKind stops
+# being walking.
+
+repeat forever
+
+  set banner to the sunken keep
+  do header with banner
+
+  # What is on this floor. Every branch sets the same eight names, so
+  # a new floor is a copy of one of these with different numbers.
+  if floorNumber is greater than floorsToClear
+    set foeName to the Keeper of the Keep
+    set foeMax to 48
+    set foeHit to 11
+    set foeSpeed to 16
+    set foeGold to 60
+    set foeXp to 40
+    set foeStings to true
+  else if floorNumber equals 4
+    set roomFoes to list of a drowned knight, a black eel, a stone warden
+    set pickOne to random number from 1 to 3
+    set foeName to item pickOne of roomFoes
+    set foeMax to 30
+    set foeHit to 8
+    set foeSpeed to 14
+    set foeGold to 20
+    set foeXp to 18
+    set foeStings to false
+  else if floorNumber equals 3
+    set roomFoes to list of a pale crab, a reef spider, a lantern wisp
+    set pickOne to random number from 1 to 3
+    set foeName to item pickOne of roomFoes
+    set foeMax to 25
+    set foeHit to 7
+    set foeSpeed to 18
+    set foeGold to 15
+    set foeXp to 13
+    set foeStings to true
+  else if floorNumber equals 2
+    set roomFoes to list of a salt hound, a torn sail, a drowned rat
+    set pickOne to random number from 1 to 3
+    set foeName to item pickOne of roomFoes
+    set foeMax to 20
+    set foeHit to 6
+    set foeSpeed to 12
+    set foeGold to 11
+    set foeXp to 9
+    set foeStings to false
+  else
+    set roomFoes to list of a green slime, a cave bat, a small crab
+    set pickOne to random number from 1 to 3
+    set foeName to item pickOne of roomFoes
+    set foeMax to 15
+    set foeHit to 4
+    set foeSpeed to 9
+    set foeGold to 7
+    set foeXp to 6
+    set foeStings to false
+  end
+
+  add foeExtra to foeMax
+  add foeBite to foeHit
+  set foeLife to foeMax
+  set foeVenom to 0
+
+  show Floor floorNumber
+  show foeName is in the way.
+
+  # Twenty times in a hundred, what is in front of you is worse than it
+  # should be. Change the 20 and the whole keep changes with it.
+  set foeIsElder to false
+  20% chance
+    set foeIsElder to true
+  end
+  if foeIsElder exists
+    add 8 to foeMax
+    add 2 to foeHit
+    add 9 to foeGold
+    add 6 to foeXp
+    set foeLife to foeMax
+    show It is bigger than the others were.
+  end
+
+  wait 1 second
+
+
+  # ── ONE FIGHT ─────────────────────────────────────────────────────
+  # One turn round this loop is one exchange of blows.
+
+  repeat forever
+
+    add 1 to roundCount
+
+    draw a line
+    show foeName foeLife / foeMax
+    set barMax to foeMax
+    do lifebar with foeLife
+    show heroName heroLife / heroMax · spark heroSpark / heroSparkMax
+    set barMax to heroMax
+    do lifebar with heroLife
+    show flasks heroFlask · ethers heroEther · bombs heroBomb · coins heroPurse
+    show Your skill is skillName.
+    ask move strike · skill · flask · ether · bomb · guard · run
+
+    set guarding to false
+
+    if move equals skill
+
+      if heroSpark is less than skillCost
+        show There is not enough spark left for that.
+      else
+        subtract skillCost from heroSpark
+        if heroKind equals mage
+          set dealt to random number from 10 to 16
+          add heroLevel to dealt
+          add heroHit to dealt
+          subtract dealt from foeLife
+          show Blue fire takes dealt off it.
+        else if heroKind equals thief
+          set dealt to random number from 3 to 6
+          add heroHit to dealt
+          subtract dealt from foeLife
+          show The first blade lands for dealt.
+          set dealt to random number from 3 to 6
+          add heroHit to dealt
+          subtract dealt from foeLife
+          show The second one lands for dealt.
+        else if heroKind equals ranger
+          set dealt to random number from 5 to 9
+          add heroHit to dealt
+          subtract dealt from foeLife
+          set foeVenom to 3
+          show The arrow goes deep for dealt and stays in.
+        else
+          set dealt to random number from 3 to 7
+          add heroGuard to dealt
+          subtract dealt from foeLife
+          add 6 to heroLife
+          if heroLife is greater than heroMax
+            set heroLife to heroMax
+          end
+          show The shield takes dealt and you steady yourself.
+        end
+      end
+
+    else if move equals flask
+
+      if heroFlask is greater than 0
+        subtract 1 from heroFlask
+        add flaskHeal to heroLife
+        if heroLife is greater than heroMax
+          set heroLife to heroMax
+        end
+        set heroVenom to 0
+        show You drink one down and the cold goes out of you.
+      else
+        show There is not one bottle left.
+      end
+
+    else if move equals ether
+
+      if heroEther is greater than 0
+        subtract 1 from heroEther
+        add etherGain to heroSpark
+        if heroSpark is greater than heroSparkMax
+          set heroSpark to heroSparkMax
+        end
+        show The spark comes back.
+      else
+        show No ether left.
+      end
+
+    else if move equals bomb
+
+      if heroBomb is greater than 0
+        subtract 1 from heroBomb
+        set dealt to bombHit
+        subtract dealt from foeLife
+        show The bomb goes off for dealt.
+      else
+        show No bombs left.
+      end
+
+    else if move equals guard
+
+      set guarding to true
+      add 2 to heroSpark
+      if heroSpark is greater than heroSparkMax
+        set heroSpark to heroSparkMax
+      end
+      show You set your feet and wait for it.
+
+    else if move equals run
+
+      if floorNumber is greater than floorsToClear
+        show The way behind you is water now. There is no running.
+      else
+        set roll to random number from 1 to 100
+        set gotAway to false
+        if roll is less than fleeChance
+          set gotAway to true
+        end
+        if gotAway exists
+          show You go back up the stairs two at a time.
+          set endingKind to away
+          break
+        else
+          show It is between you and the stairs before you have moved.
+        end
+      end
+
+    else
+
+      # Anything that is not one of the words above is a plain strike.
+      set dealt to random number from 3 to 8
+      add heroHit to dealt
+      set roll to random number from 1 to 100
+      if roll is less than critChance
+        multiply dealt by 2
+        show Straight through the gap.
+      end
+      subtract dealt from foeLife
+      show Your blow lands for dealt.
+
+    end
+
+    # A wound the ranger left keeps working on its own.
+    if foeVenom is greater than 0
+      subtract 1 from foeVenom
+      subtract 3 from foeLife
+      show It is still bleeding — 3 more.
+    end
+
+    if foeLife is less than 1
+      draw a line
+      show foeName is finished.
+      break
+    end
+
+
+    # ── the enemy answers ───────────────────────────────────────────
+
+    set taken to random number from 2 to 6
+    add foeHit to taken
+    subtract heroGuard from taken
+    if guarding exists
+      subtract heroGuard from taken
+      subtract 2 from taken
+    end
+
+    # Being quick is being somewhere else when it arrives.
+    set roll to random number from 1 to 100
+    set dodged to false
+    if roll is less than heroSpeed
+      set dodged to true
+    end
+
+    if dodged exists
+      show It comes for you and finds nobody there.
+    else
+      if taken is less than 1
+        set taken to 1
+      end
+      subtract taken from heroLife
+      show foeName answers for taken.
+      if foeStings exists
+        35% chance
+          set heroVenom to 3
+          show Something in that is going to keep hurting.
+        end
+      end
+    end
+
+    if heroVenom is greater than 0
+      subtract 1 from heroVenom
+      subtract venomBite from heroLife
+      show The venom takes venomBite more.
+    end
+
+    if heroLife is less than 1
+      draw a line
+      set endingKind to fallen
+      break
+    end
+
+  end
+
+  if endingKind is not equal to walking
+    break
+  end
+
+
+  # ── AFTER THE FIGHT ───────────────────────────────────────────────
+
+  add foeGold to heroPurse
+  add foeXp to heroXp
+  show You take foeGold coins and learn foeXp from it.
+
+  # A record keeps one value under each name. This one counts what you
+  # have put down, and the ending reads it back out.
+  if logBook contains foeName
+    set seenBefore to foeName in logBook
+    add 1 to seenBefore
+    put foeName at seenBefore in logBook
+  else
+    put foeName at 1 in logBook
+  end
+
+  while heroXp is greater than heroNext
+    subtract heroNext from heroXp
+    add 1 to heroLevel
+    add 4 to heroNext
+    add 1 to heroGuard
+    draw a line
+    show heroName is level heroLevel now.
+    ask raised Raise which — life, attack or spark?
+    if raised equals attack
+      add 3 to heroHit
+      show Your arm is heavier than it was.
+    else if raised equals spark
+      add 4 to heroSparkMax
+      set heroSpark to heroSparkMax
+      show The spark runs deeper.
+    else
+      add 8 to heroMax
+      show You can take more than you could.
+    end
+    set heroLife to heroMax
+    draw a line
+  end
+
+  if floorNumber is greater than floorsToClear
+    set endingKind to crowned
+    break
+  end
+
+  # A floor cleared is worth a little of your life back.
+  add 5 to heroLife
+  add 2 to heroSpark
+  if heroLife is greater than heroMax
+    set heroLife to heroMax
+  end
+  if heroSpark is greater than heroSparkMax
+    set heroSpark to heroSparkMax
+  end
+
+  add 1 to floorNumber
+  set deepestFloor to floorNumber
+
+
+  # ── BETWEEN FLOORS ────────────────────────────────────────────────
+  # One of four things is waiting on the stairs. Add a fifth by making
+  # this a number from 1 to 5 and writing one more branch.
+
+  set banner to the stairs down
+  do sign with banner
+
+  set roll to random number from 1 to 4
+
+  if roll equals 1
+
+    show A merchant has set up on the landing. Nobody asks why.
+    show flask flaskPrice · ether etherPrice · bomb bombPrice · sharpen forgePrice
+    show You have heroPurse coins.
+    ask bought flask, ether, bomb, sharpen or nothing?
+
+    if bought equals flask
+      if heroPurse is greater than flaskPrice
+        subtract flaskPrice from heroPurse
+        add 1 to heroFlask
+        show One bottle into the bag.
+      else
+        show Not enough for that.
+      end
+    else if bought equals ether
+      if heroPurse is greater than etherPrice
+        subtract etherPrice from heroPurse
+        add 1 to heroEther
+        show One ether into the bag.
+      else
+        show Not enough for that.
+      end
+    else if bought equals bomb
+      if heroPurse is greater than bombPrice
+        subtract bombPrice from heroPurse
+        add 1 to heroBomb
+        show One bomb into the bag. Carefully.
+      else
+        show Not enough for that.
+      end
+    else if bought equals sharpen
+      if heroPurse is greater than forgePrice
+        subtract forgePrice from heroPurse
+        add 2 to heroHit
+        set heroWeapon to a sharpened blade
+        show The merchant works on it a while and hands it back.
+      else
+        show Not enough for that.
+      end
+    else
+      show The merchant goes back to counting something.
+    end
+
+  else if roll equals 2
+
+    show There is a dry shrine down here, and there should not be.
+    ask prayed Rest a while — yes or no?
+    if prayed equals yes
+      add 12 to heroLife
+      add 4 to heroSpark
+      if heroLife is greater than heroMax
+        set heroLife to heroMax
+      end
+      if heroSpark is greater than heroSparkMax
+        set heroSpark to heroSparkMax
+      end
+      set heroVenom to 0
+      show You sit down for a while. It helps more than it should.
+    else
+      show You leave it alone.
+    end
+
+  else if roll equals 3
+
+    set found to random number from 8 to 22
+    add found to heroPurse
+    show Something is caught under the step — found coins.
+    30% chance
+      add 1 to heroFlask
+      show And one bottle, still sealed.
+    end
+
+  else
+
+    show The step gives way under you.
+    set taken to random number from 3 to 8
+    subtract heroGuard from taken
+    if taken is less than 1
+      set taken to 1
+    end
+    subtract taken from heroLife
+    show That costs taken.
+    if heroLife is less than 1
+      set endingKind to fallen
+      break
+    end
+
+  end
+
+  wait 1 second
+
+end
+
+
+# ── THE ENDING ──────────────────────────────────────────────────────
+
+clear the screen
+draw a line
+
+if endingKind equals crowned
+  say in the middle the floor of the keep
+  draw a line
+  story:
+
+    The water stops at your knees and goes no deeper.
+    Whatever the Keeper was keeping is yours now.
+    Nobody above is going to believe a word of it.
+
+  end
+else if endingKind equals away
+  say in the middle the way out
+  draw a line
+  story:
+
+    The stairs come out into ordinary evening air.
+    You are wet through and still counting your fingers.
+    The keep will be down there tomorrow as well.
+
+  end
+else
+  say in the middle this far and no further
+  draw a line
+  story:
+
+    The lamp goes out first, and then everything else does.
+    The keep keeps what it takes.
+    Somebody after you may get one floor further.
+
+  end
+end
+
+draw a line
+show heroName · heroKind · level heroLevel
+show weapon heroWeapon · armour heroArmour
+show deepest floor deepestFloor · rounds fought roundCount · coins heroPurse
+draw a line
+show Put down on the way
+for each beast in logBook
+  set howOften to beast in logBook
+  show beast howOften
+end
+draw a line`,
+    },
   ],
 
   ko: [
@@ -1815,6 +2515,706 @@ print(낱말)`,
 
 줄 그어
 용사이름 · 직업이름 · 레벨 단계 · 층수 층까지 말해줘
+줄 그어`,
+    },
+    {
+      id: 'rpg-deep',
+      label: '궁극의 턴제 RPG',
+      group: 'game',
+      answers: ['아다', '전사', '보통', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망', '도망'],
+      expect: '가라앉은 성',
+      source: `# ════════════════════════════════════════════════════════════════════
+# 가라앉은 성 — 턴제 롤플레잉 게임
+#
+# ── 먼저 읽어 주세요 ────────────────────────────────────────────────
+# 앞에 #이 붙은 줄은 아무 일도 하지 않습니다. 컴퓨터가 그냥 지나갑니다.
+# 사람이 읽으라고 적어 둔 쪽지입니다. 이런 줄을 전부 지워도 게임은
+# 똑같이 돌아갑니다.
+#
+# 이 게임은 전부 문장문법입니다. 파이썬 문법은 한 줄도 없습니다.
+# 한 문장이 한 줄이고, 그 한 줄이 파이썬 한 줄이 됩니다 — 파이썬 칸을
+# 열면 왼쪽과 오른쪽을 나란히 놓고 읽을 수 있습니다.
+#
+# ── 내 것으로 바꾸는 법 ─────────────────────────────────────────────
+# 먼저 바꿔 볼 것은 바로 아래 「손잡이」에 다 모아 두었습니다.
+# 숫자 하나를 바꾸고 실행을 눌러 보세요. 여기서 무엇을 해도 망가지는
+# 것은 없습니다.
+#
+# 그다음에는 방 이름을 바꾸고, 이야기를 새로 쓰고, 다섯 번째 직업을
+# 만들고, 여섯 번째 층을 넣어 보세요. 이 파일은 완성품이 아니라
+# 출발점입니다.
+#
+# Apache-2.0
+# ════════════════════════════════════════════════════════════════════
+
+
+# ── 손잡이 ──────────────────────────────────────────────────────────
+# 전부 마음대로 바꿔도 됩니다. 바꿔 보세요.
+
+마지막층은 4              # 성주를 만나기 전까지 내려가는 층수
+약병회복은 14             # 약병 하나가 되돌려 주는 생명
+기운회복은 8              # 기운병 하나가 되돌려 주는 기운
+폭탄위력은 16             # 폭탄이 주는 피해
+약병값은 9                # 상인이 부르는 값
+기운병값은 11
+폭탄값은 13
+벼림값은 18               # 무기를 벼리는 값
+치명확률은 12             # 백 번에 몇 번, 한 대가 두 배가 되는지
+도망확률은 60             # 백 번에 몇 번, 도망이 되는지
+독피해는 2                # 독이 한 판마다 깎는 생명
+찬칸은 █                  # 생명 막대를 그리는 글자
+빈칸은 ░                  # 깎여 나간 자리를 그리는 글자
+칸당생명은 4              # 막대 한 칸이 나타내는 생명
+막대폭은 20               # 막대 하나의 길이. 아래 일이 이 이름을 읽는데,
+                          # 일은 자기보다 위에 이미 있는 이름만 읽을 수
+                          # 있습니다.
+
+
+# ── 세 가지 일 ──────────────────────────────────────────────────────
+# 「일」은 이름을 붙여 두고 다시 부를 수 있는 프로그램 조각입니다.
+# 일은 바깥의 이름을 읽을 수는 있어도 바꿀 수는 없습니다 — 그래서 이
+# 셋은 그리기만 합니다. 막대 길이를 부르기 바로 앞줄에서 막대폭에
+# 넣어 두는 것도 그 때문입니다.
+
+글귀에게 머리그리기라는 일:
+  화면 지워
+  줄 그어
+  가운데 말해줘 글귀
+  줄 그어
+끝
+
+글귀에게 표지그리기라는 일:
+  줄 그어
+  가운데 말해줘 글귀
+  줄 그어
+끝
+
+채울양에게 생명막대라는 일:
+  남은칸은 채울양
+  막대글은 찬칸 0개 붙인 것
+  남은칸이 0보다 큰 동안
+    막대글에 찬칸 더해
+    남은칸에서 칸당생명 빼줘
+  끝
+  남은칸은 막대폭
+  남은칸에서 채울양 빼줘
+  남은칸이 0보다 큰 동안
+    막대글에 빈칸 더해
+    남은칸에서 칸당생명 빼줘
+  끝
+  막대글 말해줘
+끝
+
+
+# ── 시작 ────────────────────────────────────────────────────────────
+
+화면 지워
+줄 그어
+가운데 말해줘 가라앉은 성
+가운데 말해줘 턴제 롤플레잉 게임
+줄 그어
+
+이야기:
+
+  바다가 하룻밤 사이에 성을 삼켰고, 물은 그 뒤로 빠지지 않았습니다.
+  일 층 아래는 이제 사람의 자리가 아닙니다.
+  당신에게는 등불 하나와 가방 하나, 그리고 딱히 좋다고 할 수 없는 이유가 있습니다.
+
+끝
+
+용사이름을 물어봐 당신을 무엇이라 부를까요?
+만약에 용사이름이 없으면
+  용사이름은 나그네
+끝
+
+줄 그어
+전사는 한 대 맞고도 서 있습니다. 말해줘
+마법사는 가장 세게 치고, 버틸 생명은 가장 적습니다. 말해줘
+도적은 잡히지 않고, 한 판에 두 번 칩니다. 말해줘
+궁수는 아물지 않는 상처를 남깁니다. 말해줘
+직업선택을 물어봐 전사, 마법사, 도적, 궁수 — 무엇이 되시겠습니까?
+
+# 네 가지 직업을 한 덩어리에서 다 정합니다. 다섯 번째를 만들고 싶으면
+# 이 가지 중 하나를 그대로 복사해서 숫자만 바꾸면 됩니다.
+만약에 직업선택이 마법사와 같으면
+  직업이름은 마법사
+  최대생명은 32
+  용사공격은 5
+  용사방어는 2
+  최대기운은 18
+  용사속도는 14
+  기술이름은 푸른 불
+  기술비용은 3
+아니면 만약에 직업선택이 도적과 같으면
+  직업이름은 도적
+  최대생명은 30
+  용사공격은 5
+  용사방어는 2
+  최대기운은 8
+  용사속도는 30
+  기술이름은 쌍칼
+  기술비용은 3
+아니면 만약에 직업선택이 궁수와 같으면
+  직업이름은 궁수
+  최대생명은 32
+  용사공격은 5
+  용사방어는 2
+  최대기운은 10
+  용사속도는 20
+  기술이름은 먼 화살
+  기술비용은 3
+아니면
+  직업이름은 전사
+  최대생명은 34
+  용사공격은 6
+  용사방어는 4
+  최대기운은 6
+  용사속도는 8
+  기술이름은 방패벽
+  기술비용은 2
+끝
+
+줄 그어
+쉬움에서는 적의 생명이 적고, 어려움에서는 많습니다. 말해줘
+난도를 물어봐 쉬움, 보통, 어려움 중에 무엇으로 할까요?
+
+만약에 난도가 쉬움과 같으면
+  적생명보정은 0
+  적공격보정은 0
+아니면 만약에 난도가 어려움과 같으면
+  적생명보정은 6
+  적공격보정은 2
+아니면
+  적생명보정은 3
+  적공격보정은 0
+끝
+
+용사생명은 최대생명
+용사기운은 최대기운
+용사레벨은 1
+용사경험은 0
+다음레벨은 14
+약병수는 3
+기운병수는 2
+폭탄수는 1
+주머니는 12
+무기이름은 무딘 칼
+갑옷이름은 가죽 옷
+용사독은 0
+층수는 1
+최고층은 1
+판수는 0
+결말은 진행중
+잡은것은 빈 표
+
+줄 그어
+용사이름 · 직업이름 · 내려갑니다 말해줘
+당신의 기술은 기술이름 · 드는 기운은 기술비용 말해줘
+1초 기다려
+
+
+# ── 성 ──────────────────────────────────────────────────────────────
+# 이 반복을 한 바퀴 도는 것이 한 층입니다. 결말이 진행중이 아니게 되면
+# 반복이 끝납니다.
+
+계속 반복해
+
+  글귀판은 가라앉은 성
+  글귀판에게 머리그리기 해줘
+
+  # 이 층에 있는 것. 어느 가지든 같은 여덟 개의 이름을 정하므로,
+  # 새 층을 만드는 일은 이 중 하나를 복사해 숫자를 바꾸는 것입니다.
+  만약에 층수가 마지막층보다 크면
+    적이름은 성을 지키는 자
+    적최대생명은 48
+    적공격은 11
+    적속도는 16
+    적금화는 60
+    적경험은 40
+    적독성은 참
+  아니면 만약에 층수가 4와 같으면
+    층의적은 목록 물에 잠긴 기사, 검은 뱀장어, 돌 문지기
+    뽑은수는 1부터 3까지 무작위 숫자
+    적이름은 층의적 뽑은수 번째
+    적최대생명은 30
+    적공격은 8
+    적속도는 14
+    적금화는 20
+    적경험은 18
+    적독성은 거짓
+  아니면 만약에 층수가 3과 같으면
+    층의적은 목록 흰 게, 여울 거미, 등불 도깨비
+    뽑은수는 1부터 3까지 무작위 숫자
+    적이름은 층의적 뽑은수 번째
+    적최대생명은 25
+    적공격은 7
+    적속도는 18
+    적금화는 15
+    적경험은 13
+    적독성은 참
+  아니면 만약에 층수가 2와 같으면
+    층의적은 목록 소금 사냥개, 찢어진 돛, 물에 젖은 쥐
+    뽑은수는 1부터 3까지 무작위 숫자
+    적이름은 층의적 뽑은수 번째
+    적최대생명은 20
+    적공격은 6
+    적속도는 12
+    적금화는 11
+    적경험은 9
+    적독성은 거짓
+  아니면
+    층의적은 목록 초록 덩어리, 굴 박쥐, 작은 게
+    뽑은수는 1부터 3까지 무작위 숫자
+    적이름은 층의적 뽑은수 번째
+    적최대생명은 15
+    적공격은 4
+    적속도는 9
+    적금화는 7
+    적경험은 6
+    적독성은 거짓
+  끝
+
+  적최대생명에 적생명보정 더해
+  적공격에 적공격보정 더해
+  적생명은 적최대생명
+  적출혈은 0
+
+  층수 층 말해줘
+  적이름 앞을 막고 섭니다 말해줘
+
+  # 백 번에 스무 번, 앞에 있는 것이 원래보다 큽니다. 20을 바꾸면
+  # 성 전체가 같이 바뀝니다.
+  큰녀석은 거짓
+  20% 확률로
+    큰녀석은 참
+  끝
+  만약에 큰녀석이 있으면
+    적최대생명에 8 더해
+    적공격에 2 더해
+    적금화에 9 더해
+    적경험에 6 더해
+    적생명은 적최대생명
+    다른 것들보다 덩치가 큽니다. 말해줘
+  끝
+
+  1초 기다려
+
+
+  # ── 한 판의 싸움 ──────────────────────────────────────────────────
+  # 이 반복을 한 바퀴 도는 것이 한 번 주고받는 것입니다.
+
+  계속 반복해
+
+    판수에 1 더해
+
+    줄 그어
+    적이름 적생명 / 적최대생명 말해줘
+    막대폭은 적최대생명
+    적생명에게 생명막대 해줘
+    용사이름 용사생명 / 최대생명 · 기운 용사기운 / 최대기운 말해줘
+    막대폭은 최대생명
+    용사생명에게 생명막대 해줘
+    약병 약병수 · 기운병 기운병수 · 폭탄 폭탄수 · 돈 주머니 말해줘
+    당신의 기술은 기술이름 말해줘
+    고른것을 물어봐 공격 · 기술 · 약병 · 기운병 · 폭탄 · 방어 · 도망
+
+    막는중은 거짓
+
+    만약에 고른것이 기술과 같으면
+
+      만약에 용사기운이 기술비용보다 작으면
+        기운이 모자라 아무 일도 일어나지 않습니다. 말해줘
+      아니면
+        용사기운에서 기술비용 빼줘
+        만약에 직업이름이 마법사와 같으면
+          준피해는 10부터 16까지 무작위 숫자
+          준피해에 용사레벨 더해
+          준피해에 용사공격 더해
+          적생명에서 준피해 빼줘
+          푸른 불이 준피해 만큼 태웁니다. 말해줘
+        아니면 만약에 직업이름이 도적과 같으면
+          준피해는 3부터 6까지 무작위 숫자
+          준피해에 용사공격 더해
+          적생명에서 준피해 빼줘
+          첫 칼이 준피해 만큼 듭니다. 말해줘
+          준피해는 3부터 6까지 무작위 숫자
+          준피해에 용사공격 더해
+          적생명에서 준피해 빼줘
+          두 번째 칼이 준피해 만큼 듭니다. 말해줘
+        아니면 만약에 직업이름이 궁수와 같으면
+          준피해는 5부터 9까지 무작위 숫자
+          준피해에 용사공격 더해
+          적생명에서 준피해 빼줘
+          적출혈은 3
+          화살이 준피해 만큼 깊이 박혀 그대로 남습니다. 말해줘
+        아니면
+          준피해는 3부터 7까지 무작위 숫자
+          준피해에 용사방어 더해
+          적생명에서 준피해 빼줘
+          용사생명에 6 더해
+          만약에 용사생명이 최대생명보다 크면
+            용사생명은 최대생명
+          끝
+          방패가 준피해 만큼 밀어내고 자세를 다잡습니다. 말해줘
+        끝
+      끝
+
+    아니면 만약에 고른것이 약병과 같으면
+
+      만약에 약병수가 0보다 크면
+        약병수에서 1 빼줘
+        용사생명에 약병회복 더해
+        만약에 용사생명이 최대생명보다 크면
+          용사생명은 최대생명
+        끝
+        용사독은 0
+        한 병을 비우자 몸에서 찬 기운이 빠집니다. 말해줘
+      아니면
+        남은 병이 하나도 없습니다. 말해줘
+      끝
+
+    아니면 만약에 고른것이 기운병과 같으면
+
+      만약에 기운병수가 0보다 크면
+        기운병수에서 1 빼줘
+        용사기운에 기운회복 더해
+        만약에 용사기운이 최대기운보다 크면
+          용사기운은 최대기운
+        끝
+        기운이 돌아옵니다. 말해줘
+      아니면
+        기운병이 없습니다. 말해줘
+      끝
+
+    아니면 만약에 고른것이 폭탄과 같으면
+
+      만약에 폭탄수가 0보다 크면
+        폭탄수에서 1 빼줘
+        준피해는 폭탄위력
+        적생명에서 준피해 빼줘
+        폭탄이 준피해 만큼 터집니다. 말해줘
+      아니면
+        폭탄이 없습니다. 말해줘
+      끝
+
+    아니면 만약에 고른것이 방어와 같으면
+
+      막는중은 참
+      용사기운에 2 더해
+      만약에 용사기운이 최대기운보다 크면
+        용사기운은 최대기운
+      끝
+      발을 붙이고 오는 것을 기다립니다. 말해줘
+
+    아니면 만약에 고른것이 도망과 같으면
+
+      만약에 층수가 마지막층보다 크면
+        등 뒤는 이미 물입니다. 이제 갈 곳이 없습니다. 말해줘
+      아니면
+        주사위는 1부터 100까지 무작위 숫자
+        빠져나감은 거짓
+        만약에 주사위가 도망확률보다 작으면
+          빠져나감은 참
+        끝
+        만약에 빠져나감이 있으면
+          계단을 두 칸씩 밟고 올라갑니다. 말해줘
+          결말은 탈출
+          멈춰
+        아니면
+          움직이기도 전에 계단 앞을 막아섭니다. 말해줘
+        끝
+      끝
+
+    아니면
+
+      # 위의 낱말이 아닌 것을 적으면 전부 그냥 한 대 치는 것이 됩니다.
+      준피해는 3부터 8까지 무작위 숫자
+      준피해에 용사공격 더해
+      주사위는 1부터 100까지 무작위 숫자
+      만약에 주사위가 치명확률보다 작으면
+        준피해에 2 곱해
+        빈틈으로 그대로 들어갑니다. 말해줘
+      끝
+      적생명에서 준피해 빼줘
+      친 것이 준피해 만큼 듭니다. 말해줘
+
+    끝
+
+    # 궁수가 남긴 상처는 혼자서도 계속 벌어집니다.
+    만약에 적출혈이 0보다 크면
+      적출혈에서 1 빼줘
+      적생명에서 3 빼줘
+      상처가 아직 벌어져 3 더 깎입니다. 말해줘
+    끝
+
+    만약에 적생명이 1보다 작으면
+      줄 그어
+      적이름 쓰러졌습니다 말해줘
+      멈춰
+    끝
+
+
+    # ── 적이 되받습니다 ─────────────────────────────────────────────
+
+    받은피해는 2부터 6까지 무작위 숫자
+    받은피해에 적공격 더해
+    받은피해에서 용사방어 빼줘
+    만약에 막는중이 있으면
+      받은피해에서 용사방어 빼줘
+      받은피해에서 2 빼줘
+    끝
+
+    # 빠르다는 것은 그것이 닿는 자리에 없다는 뜻입니다.
+    주사위는 1부터 100까지 무작위 숫자
+    피함은 거짓
+    만약에 주사위가 용사속도보다 작으면
+      피함은 참
+    끝
+
+    만약에 피함이 있으면
+      덤벼들었지만 그 자리에 아무도 없습니다. 말해줘
+    아니면
+      만약에 받은피해가 1보다 작으면
+        받은피해는 1
+      끝
+      용사생명에서 받은피해 빼줘
+      적이름 되받아 받은피해 만큼 깎습니다 말해줘
+      만약에 적독성이 있으면
+        35% 확률로
+          용사독은 3
+          몸 안에 남은 것이 계속 아플 것 같습니다. 말해줘
+        끝
+      끝
+    끝
+
+    만약에 용사독이 0보다 크면
+      용사독에서 1 빼줘
+      용사생명에서 독피해 빼줘
+      독이 독피해 만큼 더 깎습니다. 말해줘
+    끝
+
+    만약에 용사생명이 1보다 작으면
+      줄 그어
+      결말은 쓰러짐
+      멈춰
+    끝
+
+  끝
+
+  만약에 결말이 진행중과 같지 않으면
+    멈춰
+  끝
+
+
+  # ── 싸움이 끝나고 ─────────────────────────────────────────────────
+
+  주머니에 적금화 더해
+  용사경험에 적경험 더해
+  적금화 냥과 적경험 만큼의 배움을 얻었습니다 말해줘
+
+  # 「표」는 이름 하나마다 값 하나를 두는 것입니다. 여기서는 무엇을 몇
+  # 번 눕혔는지 세고, 마지막에 다시 꺼내 읽습니다.
+  만약에 잡은것에 적이름이 있으면
+    전에본수는 잡은것의 적이름
+    전에본수에 1 더해
+    잡은것에 적이름을 전에본수로 넣어
+  아니면
+    잡은것에 적이름을 1로 넣어
+  끝
+
+  용사경험이 다음레벨보다 큰 동안
+    용사경험에서 다음레벨 빼줘
+    용사레벨에 1 더해
+    다음레벨에 4 더해
+    용사방어에 1 더해
+    줄 그어
+    용사이름 이제 용사레벨 단계입니다 말해줘
+    올릴것을 물어봐 무엇을 올릴까요 — 생명, 공격, 기운?
+    만약에 올릴것이 공격과 같으면
+      용사공격에 3 더해
+      팔이 전보다 무거워집니다. 말해줘
+    아니면 만약에 올릴것이 기운과 같으면
+      최대기운에 4 더해
+      용사기운은 최대기운
+      기운이 더 깊어집니다. 말해줘
+    아니면
+      최대생명에 8 더해
+      전보다 더 버틸 수 있게 됩니다. 말해줘
+    끝
+    용사생명은 최대생명
+    줄 그어
+  끝
+
+  만약에 층수가 마지막층보다 크면
+    결말은 도달
+    멈춰
+  끝
+
+  # 한 층을 끝냈으면 생명을 조금 돌려받습니다.
+  용사생명에 5 더해
+  용사기운에 2 더해
+  만약에 용사생명이 최대생명보다 크면
+    용사생명은 최대생명
+  끝
+  만약에 용사기운이 최대기운보다 크면
+    용사기운은 최대기운
+  끝
+
+  층수에 1 더해
+  최고층은 층수
+
+
+  # ── 층과 층 사이 ──────────────────────────────────────────────────
+  # 계단에서 넷 중 하나가 기다립니다. 1부터 5까지로 바꾸고 가지를 하나
+  # 더 쓰면 다섯 번째가 생깁니다.
+
+  글귀판은 내려가는 계단
+  글귀판에게 표지그리기 해줘
+
+  주사위는 1부터 4까지 무작위 숫자
+
+  만약에 주사위가 1과 같으면
+
+    계단참에 상인이 자리를 폈습니다. 아무도 이유를 묻지 않습니다. 말해줘
+    약병 약병값 · 기운병 기운병값 · 폭탄 폭탄값 · 벼림 벼림값 말해줘
+    지금 주머니 냥 있습니다 말해줘
+    산것을 물어봐 약병, 기운병, 폭탄, 벼림, 없음 중에 무엇을 살까요?
+
+    만약에 산것이 약병과 같으면
+      만약에 주머니가 약병값보다 크면
+        주머니에서 약병값 빼줘
+        약병수에 1 더해
+        병 하나를 가방에 넣습니다. 말해줘
+      아니면
+        그것을 살 만큼은 없습니다. 말해줘
+      끝
+    아니면 만약에 산것이 기운병과 같으면
+      만약에 주머니가 기운병값보다 크면
+        주머니에서 기운병값 빼줘
+        기운병수에 1 더해
+        기운병 하나를 가방에 넣습니다. 말해줘
+      아니면
+        그것을 살 만큼은 없습니다. 말해줘
+      끝
+    아니면 만약에 산것이 폭탄과 같으면
+      만약에 주머니가 폭탄값보다 크면
+        주머니에서 폭탄값 빼줘
+        폭탄수에 1 더해
+        폭탄 하나를 조심해서 가방에 넣습니다. 말해줘
+      아니면
+        그것을 살 만큼은 없습니다. 말해줘
+      끝
+    아니면 만약에 산것이 벼림과 같으면
+      만약에 주머니가 벼림값보다 크면
+        주머니에서 벼림값 빼줘
+        용사공격에 2 더해
+        무기이름은 잘 벼린 칼
+        상인이 한참 손을 보고 돌려줍니다. 말해줘
+      아니면
+        그것을 살 만큼은 없습니다. 말해줘
+      끝
+    아니면
+      상인은 다시 무언가를 세기 시작합니다. 말해줘
+    끝
+
+  아니면 만약에 주사위가 2와 같으면
+
+    이 아래에 물이 닿지 않은 사당이 있습니다. 있을 리가 없는 것입니다. 말해줘
+    쉴것을 물어봐 여기서 쉴까요 — 네, 아니오?
+    만약에 쉴것이 네와 같으면
+      용사생명에 12 더해
+      용사기운에 4 더해
+      만약에 용사생명이 최대생명보다 크면
+        용사생명은 최대생명
+      끝
+      만약에 용사기운이 최대기운보다 크면
+        용사기운은 최대기운
+      끝
+      용사독은 0
+      한참 앉아 있었습니다. 생각보다 많이 나아집니다. 말해줘
+    아니면
+      그대로 두고 지나갑니다. 말해줘
+    끝
+
+  아니면 만약에 주사위가 3과 같으면
+
+    주운돈은 8부터 22까지 무작위 숫자
+    주머니에 주운돈 더해
+    계단 밑에 무언가 걸려 있습니다 — 주운돈 냥 말해줘
+    30% 확률로
+      약병수에 1 더해
+      뚜껑도 열리지 않은 병 하나가 같이 나옵니다. 말해줘
+    끝
+
+  아니면
+
+    발밑의 계단이 내려앉습니다. 말해줘
+    받은피해는 3부터 8까지 무작위 숫자
+    받은피해에서 용사방어 빼줘
+    만약에 받은피해가 1보다 작으면
+      받은피해는 1
+    끝
+    용사생명에서 받은피해 빼줘
+    받은피해 만큼 깎였습니다 말해줘
+    만약에 용사생명이 1보다 작으면
+      결말은 쓰러짐
+      멈춰
+    끝
+
+  끝
+
+  1초 기다려
+
+끝
+
+
+# ── 마지막 ──────────────────────────────────────────────────────────
+
+화면 지워
+줄 그어
+
+만약에 결말이 도달과 같으면
+  가운데 말해줘 성의 맨 아래
+  줄 그어
+  이야기:
+
+    물이 무릎에서 멈추고 더 깊어지지 않습니다.
+    성을 지키던 자가 지키던 것은 이제 당신의 것입니다.
+    위에 있는 사람들은 한 마디도 믿지 않을 것입니다.
+
+  끝
+아니면 만약에 결말이 탈출과 같으면
+  가운데 말해줘 나가는 길
+  줄 그어
+  이야기:
+
+    계단은 아무 일도 없던 저녁 공기 속으로 이어집니다.
+    옷은 다 젖었고, 아직 손가락을 세어 보고 있습니다.
+    성은 내일도 저 아래 그대로 있을 것입니다.
+
+  끝
+아니면
+  가운데 말해줘 여기까지
+  줄 그어
+  이야기:
+
+    등불이 먼저 꺼지고, 그다음에 나머지가 꺼집니다.
+    성은 가져간 것을 돌려주지 않습니다.
+    다음 사람은 한 층쯤 더 내려갈지도 모릅니다.
+
+  끝
+끝
+
+줄 그어
+용사이름 · 직업이름 · 용사레벨 단계 말해줘
+무기 무기이름 · 갑옷 갑옷이름 말해줘
+가장 깊이 최고층 층 · 주고받은 판수 판 · 돈 주머니 냥 말해줘
+줄 그어
+오는 길에 눕힌 것 말해줘
+잡은것의 짐승마다 반복해
+  몇번은 잡은것의 짐승
+  짐승 몇번 말해줘
+끝
 줄 그어`,
     },
   ],
