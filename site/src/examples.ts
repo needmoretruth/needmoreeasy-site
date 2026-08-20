@@ -1642,6 +1642,309 @@ for each beast in logBook
 end
 draw a line`,
     },
+    {
+      id: 'baseball',
+      label: 'Number baseball',
+      group: 'game',
+      answers: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '1', '2', '3', '4', '5', '6', '7', '8', '9', '1', '2', '3', '4', '5', '6'],
+      expect: 'Number baseball',
+      source: `# Number baseball. The computer thinks of three digits and you have to
+# find them. A strike is a right digit in the right place; a ball is a
+# right digit in the wrong place.
+#
+# Lines that start with # do nothing at all — they are notes for you.
+
+set secretA to random number from 1 to 9
+set secretB to random number from 1 to 9
+set secretC to random number from 1 to 9
+set turnsLeft to 8
+
+clear the screen
+draw a line
+say in the middle Number baseball
+draw a line
+show Three digits, each from 1 to 9. They may repeat.
+show A strike is right and in place. A ball is right, out of place.
+
+repeat forever
+
+  draw a line
+  show Turns to go — turnsLeft
+  ask number guessA First digit
+  ask number guessB Second digit
+  ask number guessC Third digit
+
+  set strikes to 0
+  set balls to 0
+
+  # Each digit is checked in its own place first, then in the other two.
+  if guessA equals secretA
+    add 1 to strikes
+  else if guessA equals secretB
+    add 1 to balls
+  else if guessA equals secretC
+    add 1 to balls
+  end
+
+  if guessB equals secretB
+    add 1 to strikes
+  else if guessB equals secretA
+    add 1 to balls
+  else if guessB equals secretC
+    add 1 to balls
+  end
+
+  if guessC equals secretC
+    add 1 to strikes
+  else if guessC equals secretA
+    add 1 to balls
+  else if guessC equals secretB
+    add 1 to balls
+  end
+
+  show strikes strikes · balls balls
+
+  if strikes equals 3
+    draw a line
+    show You have all three.
+    break
+  end
+
+  subtract 1 from turnsLeft
+  if turnsLeft is less than 1
+    draw a line
+    show No turns left. It was secretA secretB secretC
+    break
+  end
+
+end`,
+    },
+    {
+      id: 'wordguess',
+      label: 'Guess the word',
+      group: 'game',
+      answers: ['piano', 'piano', 'piano'],
+      expect: 'Guess the word',
+      source: `# Guess the word. The computer picks one and gives you the hint that
+# goes with it. Three tries.
+#
+# The two lists line up: word 1 goes with hint 1, and so on. Add a
+# fifth word and a fifth hint and the game gets bigger.
+
+set words to list of piano, harbour, penguin, umbrella
+set clues to list of it has black keys, boats sleep here, a bird that swims, it opens when it rains
+
+set pickOne to random number from 1 to 4
+set secret to item pickOne of words
+set clue to item pickOne of clues
+set triesLeft to 3
+
+clear the screen
+draw a line
+say in the middle Guess the word
+draw a line
+show Here is the hint.
+show clue
+draw a line
+
+repeat forever
+
+  ask guess What is the word?
+
+  if guess equals secret
+    draw a line
+    show That is the one.
+    break
+  end
+
+  subtract 1 from triesLeft
+
+  if triesLeft is less than 1
+    draw a line
+    show It was secret
+    break
+  end
+
+  show Not that one. Tries to go — triesLeft
+
+end`,
+    },
+    {
+      id: 'memory',
+      label: 'How long a row can you hold?',
+      group: 'game',
+      answers: ['red', 'green', 'blue', 'gold'],
+      expect: 'How long a row can you hold?',
+      source: `# A memory game. The row of colours gets one longer every round. Look
+# at it, and when the screen clears, type it back with spaces between.
+#
+# It ends the moment you get one wrong, and tells you how far you got.
+
+set colours to list of red, green, blue, gold
+set shown to list of
+set turn to 0
+
+clear the screen
+draw a line
+say in the middle How long a row can you hold?
+draw a line
+show The four are red, green, blue and gold.
+wait 2 seconds
+
+repeat forever
+
+  add 1 to turn
+  set pickOne to random number from 1 to 4
+  set nextOne to item pickOne of colours
+  append nextOne to shown
+
+  clear the screen
+  draw a line
+  show Round turn
+  show shown joined by space
+  draw a line
+  wait 3 seconds
+
+  clear the screen
+  ask reply Type the row back, with spaces
+  set said to reply split by space
+
+  if said equals shown
+    show Right.
+    wait 1 second
+  else
+    draw a line
+    show Not quite. The row was:
+    show shown joined by space
+    show You held turn of them.
+    break
+  end
+
+end`,
+    },
+    {
+      id: 'shop',
+      label: 'The corner shop',
+      group: 'big',
+      answers: ['bread', 'cheese', 'done'],
+      expect: 'The corner shop',
+      source: `# A small shop. The prices live in a record — one number under each
+# name — and the basket is a list. Buy things until you say done.
+#
+# Add a line to the record and a name to the list and the shop sells
+# one more thing. Nothing else has to change.
+
+set prices to an empty record
+put bread at 3 in prices
+put cheese at 7 in prices
+put apples at 2 in prices
+put coffee at 5 in prices
+
+set goods to list of bread, cheese, apples, coffee
+set basket to list of
+set spent to 0
+set purse to 20
+
+clear the screen
+draw a line
+say in the middle The corner shop
+draw a line
+
+repeat forever
+
+  show You have purse left.
+  show On the shelf:
+  for each thing in goods with place
+    set cost to thing in prices
+    show place · thing · cost
+  end
+
+  ask wanted What are you buying? Say done to stop.
+
+  if wanted equals done
+    break
+  end
+
+  if goods contains wanted
+    set cost to wanted in prices
+    if cost is greater than purse
+      show Not enough for that.
+    else
+      subtract cost from purse
+      add cost to spent
+      append wanted to basket
+      show Into the basket — wanted · cost off the purse.
+    end
+  else
+    show We do not have that.
+  end
+
+  draw a line
+
+end
+
+draw a line
+show In the basket:
+for each thing in basket
+  show thing
+end
+draw a line
+show how many basket things · spent spent · purse left`,
+    },
+    {
+      id: 'gradebook',
+      label: 'The score sheet',
+      group: 'big',
+      answers: [],
+      expect: 'The score sheet',
+      source: `# A score sheet. Two lists that line up: name 1 goes with score 1.
+#
+# The average is worked out by taking the number of people off the
+# total again and again and counting how many times that fits. That is
+# what dividing is, underneath.
+
+set names to list of Mina, Ada, Bo, Ravi, Sunny
+set scores to list of 88, 95, 61, 74, 95
+
+clear the screen
+draw a line
+say in the middle The score sheet
+draw a line
+
+for each person in names with place
+  set mark to item place of scores
+  show place · person · mark
+end
+
+draw a line
+set howMany to how many names
+set pot to the total of scores
+set topMark to the biggest of scores
+set lowMark to the smallest of scores
+show howMany people · pot marks altogether
+show highest topMark · lowest lowMark
+
+# The average, worked out by taking the number of people off the total
+# again and again and counting how many times that fits. That is what
+# dividing is, underneath.
+set average to 0
+set left to pot
+while left is greater than howMany
+  subtract howMany from left
+  add 1 to average
+end
+show the average is average
+
+draw a line
+set ranked to list of
+for each mark in scores
+  append mark to ranked
+end
+sort ranked
+reverse ranked
+show highest first
+show ranked joined by space`,
+    },
   ],
 
   ko: [
@@ -3216,6 +3519,306 @@ print(낱말)`,
   짐승 몇번 말해줘
 끝
 줄 그어`,
+    },
+    {
+      id: 'baseball',
+      label: '숫자 야구',
+      group: 'game',
+      answers: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '1', '2', '3', '4', '5', '6', '7', '8', '9', '1', '2', '3', '4', '5', '6'],
+      expect: '숫자 야구',
+      source: `# 숫자 야구. 컴퓨터가 숫자 세 개를 정해 두고, 그것을 맞히는 놀이입니다.
+# 자리까지 맞으면 스트라이크, 숫자만 맞고 자리가 다르면 볼입니다.
+#
+# 앞에 #이 붙은 줄은 아무 일도 하지 않습니다. 사람이 읽는 쪽지입니다.
+
+숨은첫째는 1부터 9까지 무작위 숫자
+숨은둘째는 1부터 9까지 무작위 숫자
+숨은셋째는 1부터 9까지 무작위 숫자
+남은판은 8
+
+화면 지워
+줄 그어
+가운데 말해줘 숫자 야구
+줄 그어
+1부터 9까지의 숫자 셋입니다. 같은 숫자가 겹칠 수도 있습니다. 말해줘
+자리까지 맞으면 스트라이크, 숫자만 맞으면 볼입니다. 말해줘
+
+계속 반복해
+
+  줄 그어
+  남은 판 — 남은판 말해줘
+  고른첫째를 숫자로 물어봐 첫 번째 숫자
+  고른둘째를 숫자로 물어봐 두 번째 숫자
+  고른셋째를 숫자로 물어봐 세 번째 숫자
+
+  스트라이크수는 0
+  볼수는 0
+
+  # 숫자 하나마다 제자리를 먼저 보고, 아니면 나머지 두 자리를 봅니다.
+  만약에 고른첫째가 숨은첫째와 같으면
+    스트라이크수에 1 더해
+  아니면 만약에 고른첫째가 숨은둘째와 같으면
+    볼수에 1 더해
+  아니면 만약에 고른첫째가 숨은셋째와 같으면
+    볼수에 1 더해
+  끝
+
+  만약에 고른둘째가 숨은둘째와 같으면
+    스트라이크수에 1 더해
+  아니면 만약에 고른둘째가 숨은첫째와 같으면
+    볼수에 1 더해
+  아니면 만약에 고른둘째가 숨은셋째와 같으면
+    볼수에 1 더해
+  끝
+
+  만약에 고른셋째가 숨은셋째와 같으면
+    스트라이크수에 1 더해
+  아니면 만약에 고른셋째가 숨은첫째와 같으면
+    볼수에 1 더해
+  아니면 만약에 고른셋째가 숨은둘째와 같으면
+    볼수에 1 더해
+  끝
+
+  스트라이크 스트라이크수 · 볼 볼수 말해줘
+
+  만약에 스트라이크수가 3과 같으면
+    줄 그어
+    세 개 다 맞혔습니다. 말해줘
+    멈춰
+  끝
+
+  남은판에서 1 빼줘
+  만약에 남은판이 1보다 작으면
+    줄 그어
+    판이 다 끝났습니다. 답은 숨은첫째 숨은둘째 숨은셋째 말해줘
+    멈춰
+  끝
+
+끝`,
+    },
+    {
+      id: 'wordguess',
+      label: '낱말 맞히기',
+      group: 'game',
+      answers: ['피아노', '피아노', '피아노'],
+      expect: '낱말 맞히기',
+      source: `# 낱말 맞히기. 컴퓨터가 낱말 하나를 고르고 짝이 되는 힌트를 줍니다.
+# 기회는 세 번입니다.
+#
+# 두 목록은 나란히 놓여 있습니다 — 첫 번째 낱말과 첫 번째 힌트가 짝입니다.
+# 다섯 번째 낱말과 다섯 번째 힌트를 넣으면 놀이가 그만큼 커집니다.
+
+낱말들은 목록 피아노, 항구, 펭귄, 우산
+힌트들은 목록 검은 건반이 있는 것, 배가 쉬어 가는 곳, 헤엄치는 새, 비가 오면 펴는 것
+
+뽑은수는 1부터 4까지 무작위 숫자
+답낱말은 낱말들 뽑은수 번째
+그힌트는 힌트들 뽑은수 번째
+남은기회는 3
+
+화면 지워
+줄 그어
+가운데 말해줘 낱말 맞히기
+줄 그어
+힌트입니다. 말해줘
+그힌트 말해줘
+줄 그어
+
+계속 반복해
+
+  고른낱말을 물어봐 무슨 낱말일까요?
+
+  만약에 고른낱말이 답낱말과 같으면
+    줄 그어
+    바로 그것입니다. 말해줘
+    멈춰
+  끝
+
+  남은기회에서 1 빼줘
+
+  만약에 남은기회가 1보다 작으면
+    줄 그어
+    답은 답낱말 이었습니다 말해줘
+    멈춰
+  끝
+
+  그것은 아닙니다. 남은 기회 — 남은기회 말해줘
+
+끝`,
+    },
+    {
+      id: 'memory',
+      label: '어디까지 외울 수 있나',
+      group: 'game',
+      answers: ['빨강', '초록', '파랑', '노랑'],
+      expect: '어디까지 외울 수 있습니까',
+      source: `# 기억 놀이. 색이 한 판마다 하나씩 길어집니다. 잘 보아 두었다가, 화면이
+# 지워지면 빈칸을 사이에 두고 그대로 적으면 됩니다.
+#
+# 하나라도 틀리면 그 자리에서 끝나고, 어디까지 갔는지 알려 줍니다.
+
+색들은 목록 빨강, 초록, 파랑, 노랑
+나온줄은 빈 목록
+판수는 0
+
+화면 지워
+줄 그어
+가운데 말해줘 어디까지 외울 수 있습니까
+줄 그어
+빨강, 초록, 파랑, 노랑 네 가지입니다. 말해줘
+2초 기다려
+
+계속 반복해
+
+  판수에 1 더해
+  뽑은수는 1부터 4까지 무작위 숫자
+  새색은 색들 뽑은수 번째
+  나온줄에 새색 넣어
+
+  화면 지워
+  줄 그어
+  판수 판째 말해줘
+  나온줄을 빈칸으로 이어 말해줘
+  줄 그어
+  3초 기다려
+
+  화면 지워
+  답한것을 물어봐 방금 줄을 빈칸을 두고 적어 주세요
+  나눈것은 답한것을 빈칸으로 나눈 것
+
+  만약에 나눈것이 나온줄과 같으면
+    맞았습니다. 말해줘
+    1초 기다려
+  아니면
+    줄 그어
+    아쉽습니다 — 줄은 이랬습니다 말해줘
+    나온줄을 빈칸으로 이어 말해줘
+    여기까지 외웠습니다 — 판수 말해줘
+    멈춰
+  끝
+
+끝`,
+    },
+    {
+      id: 'shop',
+      label: '골목 가게',
+      group: 'big',
+      answers: ['빵', '치즈', '그만'],
+      expect: '골목 가게',
+      source: `# 작은 가게. 값은 「표」에 있습니다 — 이름 하나마다 숫자 하나입니다.
+# 장바구니는 「목록」입니다. 그만이라고 적을 때까지 살 수 있습니다.
+#
+# 표에 한 줄, 목록에 이름 하나를 더하면 파는 것이 하나 늘어납니다.
+# 나머지는 하나도 고치지 않아도 됩니다.
+
+값표는 빈 표
+값표에 빵을 3으로 넣어
+값표에 치즈를 7으로 넣어
+값표에 사과를 2로 넣어
+값표에 커피를 5로 넣어
+
+살것들은 목록 빵, 치즈, 사과, 커피
+장바구니는 빈 목록
+쓴돈은 0
+주머니는 20
+
+화면 지워
+줄 그어
+가운데 말해줘 골목 가게
+줄 그어
+
+계속 반복해
+
+  지금 주머니 남았습니다 말해줘
+  선반에 있는 것 말해줘
+  살것들의 물건마다 자리와 함께 반복해
+    물건값은 값표의 물건
+    자리 · 물건 · 물건값 말해줘
+  끝
+
+  살것을 물어봐 무엇을 사시겠습니까? 그만이라고 적으면 끝냅니다.
+
+  만약에 살것이 그만과 같으면
+    멈춰
+  끝
+
+  만약에 살것들에 살것이 있으면
+    물건값은 값표의 살것
+    만약에 물건값이 주머니보다 크면
+      그것을 살 만큼은 없습니다. 말해줘
+    아니면
+      주머니에서 물건값 빼줘
+      쓴돈에 물건값 더해
+      장바구니에 살것 넣어
+      바구니에 넣었습니다 — 살것 · 물건값 냈습니다 말해줘
+    끝
+  아니면
+    그것은 팔지 않습니다. 말해줘
+  끝
+
+  줄 그어
+
+끝
+
+줄 그어
+바구니 안에 든 것 말해줘
+장바구니의 물건마다 반복해
+  물건 말해줘
+끝
+줄 그어
+장바구니 개수 가지 · 쓴돈 냄 · 주머니 남음 말해줘`,
+    },
+    {
+      id: 'gradebook',
+      label: '점수표',
+      group: 'big',
+      answers: [],
+      expect: '점수표',
+      source: `# 점수표. 나란히 놓인 두 목록입니다 — 첫 번째 이름과 첫 번째 점수가 짝입니다.
+#
+# 평균은 합계에서 사람 수를 계속 빼면서 몇 번 빠지는지 세어 구합니다.
+# 나눗셈이란 원래 그런 것입니다.
+
+이름들은 목록 미나, 아다, 보, 라비, 서니
+점수들은 목록 88, 95, 61, 74, 95
+
+화면 지워
+줄 그어
+가운데 말해줘 점수표
+줄 그어
+
+이름들의 사람마다 자리와 함께 반복해
+  그점수는 점수들 자리 번째
+  자리 · 사람 · 그점수 말해줘
+끝
+
+줄 그어
+사람수는 이름들 개수
+합계는 점수들 합
+최고점은 점수들 중 가장 큰 것
+최저점은 점수들 중 가장 작은 것
+사람수 명 · 모두 합쳐 합계 말해줘
+가장 높은 점수 최고점 · 가장 낮은 점수 최저점 말해줘
+
+# 평균은 합계에서 사람 수를 계속 빼면서 몇 번 빠지는지 세면 나옵니다.
+# 나눗셈이 속으로 하는 일이 이것입니다.
+평균은 0
+남은수는 합계
+남은수가 사람수보다 큰 동안
+  남은수에서 사람수 빼줘
+  평균에 1 더해
+끝
+평균은 평균 말해줘
+
+줄 그어
+줄세운것은 빈 목록
+점수들의 그점수마다 반복해
+  줄세운것에 그점수 넣어
+끝
+줄세운것 정렬해
+줄세운것 거꾸로 해
+높은 점수부터 말해줘
+줄세운것을 빈칸으로 이어 말해줘`,
     },
   ],
 };

@@ -123,7 +123,7 @@ for (const [language, list] of Object.entries(EXAMPLES)) {
     for (const [marker, hint] of [['__import__("random")', 'random'], ['input(', 'a question']]) {
       const usesIt = compiled.python.includes(marker);
       const asksForIt = marker.includes('random')
-        ? /random|랜덤|골라|뽑아|따라|주사위/.test(example.source)
+        ? /random|랜덤|무작위|골라|뽑아|따라|주사위|확률/.test(example.source)
         : /ask|물어|input|\?/.test(example.source);
       if (usesIt && !asksForIt) {
         fail(`${language}/${example.id}`, `compiles to ${hint} but never asks for it`, compiled.python);
