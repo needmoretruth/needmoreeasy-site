@@ -24,10 +24,6 @@
 </head>
 <body>
 
-<div class="stage" aria-hidden="true">
-  <i class="orb"></i><i class="orb"></i><i class="orb"></i><i class="orb"></i>
-</div>
-
 <a class="skip-link" href="#playground">Skip to the writing box</a>
 
 <header class="site-head">
@@ -54,72 +50,6 @@
 
 <main>
 
-<section id="ai-help" class="ai-band">
-  <div class="wrap">
-    <div class="ai-band-head">
-      <h2>If anything here does not make sense, ask your own AI.</h2>
-      <p>
-        Copy one of the three below and paste it at the top of a chat with
-        ChatGPT, Claude or whichever assistant you use. From then on you can
-        just say <em>“write me an NME program that counts to ten”</em>.
-      </p>
-    </div>
-    <ol class="ai-list">
-      <li>
-        <details data-prompt="sentence" data-lang="en">
-          <summary>
-            <span class="ai-name">Teach my AI sentence grammar</span>
-            <span class="ai-why">The short one. Sentences only — no Python, no brackets. Start here if you have never written a program.</span>
-            <span class="ai-open">details</span>
-          </summary>
-          <div class="ai-body">
-            <div class="ai-actions">
-              <button class="btn btn-ghost" type="button" data-prompt-copy>Copy the whole message</button>
-              <button class="btn btn-ghost" type="button" data-prompt-download>Download it</button>
-              <a class="btn btn-ghost" href="/learn/prompts/sentence">Open as a page</a>
-            </div>
-            <pre class="readout ai-text" data-prompt-text data-state="ok">Loading…</pre>
-          </div>
-        </details>
-      </li>
-      <li>
-        <details data-prompt="all-levels" data-lang="en">
-          <summary>
-            <span class="ai-name">Teach my AI all three ways of writing</span>
-            <span class="ai-why">Sentences, the shorter beginner form and Python, plus the modules and every error number. For working with someone who writes Python.</span>
-            <span class="ai-open">details</span>
-          </summary>
-          <div class="ai-body">
-            <div class="ai-actions">
-              <button class="btn btn-ghost" type="button" data-prompt-copy>Copy the whole message</button>
-              <button class="btn btn-ghost" type="button" data-prompt-download>Download it</button>
-              <a class="btn btn-ghost" href="/learn/prompts/all-levels">Open as a page</a>
-            </div>
-            <pre class="readout ai-text" data-prompt-text data-state="ok">Loading…</pre>
-          </div>
-        </details>
-      </li>
-      <li>
-        <details data-prompt="complete" data-lang="en">
-          <summary>
-            <span class="ai-name">Teach my AI everything, with finished examples</span>
-            <span class="ai-why">The two above plus twelve complete programs. The longest and the most accurate.</span>
-            <span class="ai-open">details</span>
-          </summary>
-          <div class="ai-body">
-            <div class="ai-actions">
-              <button class="btn btn-ghost" type="button" data-prompt-copy>Copy the whole message</button>
-              <button class="btn btn-ghost" type="button" data-prompt-download>Download it</button>
-              <a class="btn btn-ghost" href="/learn/prompts/complete">Open as a page</a>
-            </div>
-            <pre class="readout ai-text" data-prompt-text data-state="ok">Loading…</pre>
-          </div>
-        </details>
-      </li>
-    </ol>
-  </div>
-</section>
-
 <section class="hero">
   <div class="wrap">
     <div class="hero-text">
@@ -140,6 +70,10 @@
         <span class="badge">works on a phone</span>
         <span class="badge">English &amp; Korean</span>
       </div>
+      <p class="hero-aside">
+        If any word here is unfamiliar, <a href="#ai-help">ask the AI you
+        already use</a>. There is something ready to paste.
+      </p>
     </div>
     <div class="hero-figure">
       <span class="figure-label">you write</span>
@@ -163,9 +97,8 @@ Welcome</pre>
         <p class="eyebrow">Your writing box</p>
         <h2>Write here, press Run, read the answer below.</h2>
         <p class="lede">
-          Nothing you write leaves this tab. There are three files that stay
-          here for you — open an example, look at it, and your own work is
-          still where you left it.
+          Nothing you write leaves this tab, and three files stay here for you.
+          The examples are below the answer.
         </p>
       </div>
       <div class="play-head-tools">
@@ -180,32 +113,6 @@ Welcome</pre>
       <button type="button" role="tab" data-file="3" aria-selected="false">File 3</button>
     </div>
 
-    <div class="example-groups" id="example-groups" role="group" aria-label="Kinds of example"></div>
-
-    <div class="examples" id="examples" role="group" aria-label="Example programs"></div>
-
-    <div class="version-bar" id="version-bar">
-      <span class="version-label">See this example another way</span>
-      <span class="seg" role="group" aria-label="Which syntax to show">
-        <button type="button" data-example-level="sentence" aria-pressed="true">Sentence</button>
-        <button type="button" data-example-level="beginner" aria-pressed="false">Beginner</button>
-        <button type="button" data-example-level="advanced" aria-pressed="false">Python</button>
-      </span>
-      <span class="seg" role="group" aria-label="Which language to show">
-        <button type="button" data-example-lang="en" aria-pressed="true">English</button>
-        <button type="button" data-example-lang="ko" aria-pressed="false">한국어</button>
-      </span>
-      <span class="version-note" id="version-note" aria-live="polite"></span>
-    </div>
-
-    <div class="file-note" id="file-note" hidden>
-      <p id="file-note-text"></p>
-      <span class="file-note-actions">
-        <button class="btn btn-ghost" type="button" data-copy-to="1">Put it in File 1</button>
-        <button class="btn btn-ghost" type="button" data-copy-to="2">Put it in File 2</button>
-        <button class="btn btn-ghost" type="button" data-copy-to="3">Put it in File 3</button>
-      </span>
-    </div>
 
     <div class="play-tabs" role="tablist" aria-label="Which panel to show">
       <button type="button" role="tab" data-view="nme" aria-selected="true">What you wrote</button>
@@ -283,6 +190,33 @@ Welcome</pre>
       <dl id="values-list"></dl>
     </details>
 
+    <div class="example-groups" id="example-groups" role="group" aria-label="Kinds of example"></div>
+
+    <div class="examples" id="examples" role="group" aria-label="Example programs"></div>
+
+    <div class="version-bar" id="version-bar">
+      <span class="version-label">See this example another way</span>
+      <span class="seg" role="group" aria-label="Which syntax to show">
+        <button type="button" data-example-level="sentence" aria-pressed="true">Sentence</button>
+        <button type="button" data-example-level="beginner" aria-pressed="false">Beginner</button>
+        <button type="button" data-example-level="advanced" aria-pressed="false">Python</button>
+      </span>
+      <span class="seg" role="group" aria-label="Which language to show">
+        <button type="button" data-example-lang="en" aria-pressed="true">English</button>
+        <button type="button" data-example-lang="ko" aria-pressed="false">한국어</button>
+      </span>
+      <span class="version-note" id="version-note" aria-live="polite"></span>
+    </div>
+
+    <div class="file-note" id="file-note" hidden>
+      <p id="file-note-text"></p>
+      <span class="file-note-actions">
+        <button class="btn btn-ghost" type="button" data-copy-to="1">Put it in File 1</button>
+        <button class="btn btn-ghost" type="button" data-copy-to="2">Put it in File 2</button>
+        <button class="btn btn-ghost" type="button" data-copy-to="3">Put it in File 3</button>
+      </span>
+    </div>
+
     <div class="notice" id="answers-wrap" hidden>
       <p data-no-shared-memory></p>
       <label for="answers"><strong>Answers, one per line</strong></label>
@@ -351,6 +285,72 @@ say Nice to meet you name</pre>
       <a href="/learn/guides">the guides</a> add one at a time, starting from
       exactly here.
     </p>
+  </div>
+</section>
+
+<section id="ai-help" class="ai-band">
+  <div class="wrap">
+    <div class="ai-band-head">
+      <h2>If anything here does not make sense, ask your own AI.</h2>
+      <p>
+        Copy one of the three below and paste it at the top of a chat with
+        ChatGPT, Claude or whichever assistant you use. From then on you can
+        just say <em>“write me an NME program that counts to ten”</em>.
+      </p>
+    </div>
+    <ol class="ai-list">
+      <li>
+        <details data-prompt="sentence" data-lang="en">
+          <summary>
+            <span class="ai-name">Teach my AI sentence grammar</span>
+            <span class="ai-why">The short one. Sentences only — no Python, no brackets. Start here if you have never written a program.</span>
+            <span class="ai-open">details</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>Copy the whole message</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>Download it</button>
+              <a class="btn btn-ghost" href="/learn/prompts/sentence">Open as a page</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">Loading…</pre>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details data-prompt="all-levels" data-lang="en">
+          <summary>
+            <span class="ai-name">Teach my AI all three ways of writing</span>
+            <span class="ai-why">Sentences, the shorter beginner form and Python, plus the modules and every error number. For working with someone who writes Python.</span>
+            <span class="ai-open">details</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>Copy the whole message</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>Download it</button>
+              <a class="btn btn-ghost" href="/learn/prompts/all-levels">Open as a page</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">Loading…</pre>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details data-prompt="complete" data-lang="en">
+          <summary>
+            <span class="ai-name">Teach my AI everything, with finished examples</span>
+            <span class="ai-why">The two above plus twelve complete programs. The longest and the most accurate.</span>
+            <span class="ai-open">details</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>Copy the whole message</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>Download it</button>
+              <a class="btn btn-ghost" href="/learn/prompts/complete">Open as a page</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">Loading…</pre>
+          </div>
+        </details>
+      </li>
+    </ol>
   </div>
 </section>
 
@@ -582,7 +582,7 @@ nme run examples/hello-sentence</pre>
 
 <footer class="site-foot">
   <div class="wrap">
-    <span>NeedMoreEasy · Apache-2.0 · compiler <code>0.7.1</code></span>
+    <span>NeedMoreEasy · Apache-2.0 · compiler <code>0.8.0</code><span class="foot-build" id="foot-build"></span></span>
     <span class="foot-spacer"></span>
     <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
     <a href="https://github.com/needmoretruth/needmoreeasy/issues">Issues</a>

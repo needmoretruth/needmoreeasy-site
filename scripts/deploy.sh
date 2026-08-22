@@ -19,6 +19,13 @@ ACCOUNT_ID=CLOUDFLARE_ACCOUNT_ID_WAS_HERE
 
 cd "$REPO_ROOT"
 
+echo "== 싣고 나갈 컴파일러가 저장소의 그 커밋인가 =="
+# The site does not contain the compiler; it pins a commit and builds from it.
+# A fix that was made but not pushed cannot reach the web however many times
+# this runs — which is exactly what happened on 2026-08-22 — so the pin is
+# checked against the language repository before anything is built.
+node scripts/check-compiler-pin.mjs
+
 echo "== 1/3  컴파일러 wasm 빌드 =="
 ( cd crates/nme-web && flock -w 3600 /tmp/big-heavy.lock -c \
     "wasm-pack build --release --target web --out-dir ../../site/assets/wasm --out-name nme" )

@@ -2,7 +2,7 @@
  * compiles from TypeScript.
  *
  * `wasm/nme.js` and `wasm-run/nmerun.js` are wasm-bindgen glue, written into
- * `site/assets/` by `scripts/deploy.sh`; `engine-meta.js` is the four-line file
+ * `site/assets/` by `scripts/deploy.sh`; `engine-meta.js` is the small file
  * `scripts/stamp-assets.mjs` writes. All three are build output, so they are
  * marked external in `scripts/build-scripts.mjs` and their import specifiers
  * survive into the compiled files unchanged.
@@ -51,4 +51,6 @@ declare module '*/nmerun.js' {
 declare module '*/engine-meta.js' {
   export const ENGINE_BYTES: number;
   export const COMPILER_BYTES: number;
+  export const COMPILER_COMMIT: string;
+  export const COMPILER_SHA256: string;
 }

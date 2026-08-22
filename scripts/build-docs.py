@@ -591,10 +591,6 @@ def page_shell(
 </head>
 <body>
 
-<div class="stage" aria-hidden="true">
-  <i class="orb"></i><i class="orb"></i><i class="orb"></i><i class="orb"></i>
-</div>
-
 <a class="skip-link" href="#doc">{escape(words["skip"])}</a>
 
 <header class="site-head">

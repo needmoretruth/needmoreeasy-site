@@ -1,24 +1,37 @@
 /* needmoreeasy.com — the whole look of the site.
  *
- * The design is glass over a moving stage: a dark or light ground, a few slow
- * lights drifting behind it, and every panel a sheet of frosted glass with a
- * lit edge. Depth comes from blur, edge light and shadow — never from colour.
+ * The design is minimal: one ground value, panels one step off it, and a
+ * hairline where two things meet. Depth is not drawn. It used to be — the page
+ * was glass over a moving stage, with four slow lights drifting behind it,
+ * a blur and a lit edge on every panel, a highlight that followed the pointer,
+ * and three sizes of shadow. All of that is gone. What separates one thing
+ * from another now is a line, a step in surface value, and space.
  *
- * COLOUR RULE. The page is achromatic on purpose. Red, yellow and green are
- * reserved for state and appear nowhere else: red is a failure, yellow is
- * something in progress, green is ready or done. A green button that only means
- * "primary" would spend the one signal the reader has, so the primary button is
- * glass like everything else. Search this file for `--ok`, `--warn`, `--bad`:
- * every use should be a status.
+ * WHAT THIS IS FOR. This site exists to show one thing: a sentence a person
+ * writes becomes a line of Python. Everything else on the page is in service
+ * of getting to that, seeing it happen, and running it. A decoration that
+ * competes with it is a decoration to remove.
+ *
+ * COLOUR RULE, unchanged. The page is achromatic on purpose. Red, yellow and
+ * green are reserved for state and appear nowhere else: red is a failure,
+ * yellow is something in progress, green is ready or done. Spending green on
+ * a button that merely means "primary" would spend the one signal the reader
+ * has, so the loudest button is filled with ink instead. Search this file for
+ * `--ok`, `--warn`, `--bad`: every use should be a status.
+ *
+ * MOTION. Three things move, and each one reports something true: the reveal
+ * as a section arrives, the status dot while the engine is working, and the
+ * Python pane marking the moment it was rebuilt. Nothing moves to be pretty.
+ * Everything else is a state change at --dur, and `prefers-reduced-motion`
+ * turns all of it off.
  *
  * LAYERS, back to front:
- *   -3  body background wash
- *   -2  .stage (drifting lights, grid)
- *   -1  grain
+ *   -1  grain (the one texture, so a large flat field does not band)
  *    0  content
  *
  * The whole file works without JavaScript. The theme toggle only overrides what
- * `prefers-color-scheme` already decides.
+ * `prefers-color-scheme` already decides, and the three states are system,
+ * light and dark.
  */
 
 /* --- tokens -------------------------------------------------------------- */
@@ -26,66 +39,91 @@
 :root {
   color-scheme: light dark;
 
-  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Pretendard Variable",
-          Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
-  --mono: ui-monospace, SFMono-Regular, "SF Mono", "JetBrains Mono", "Cascadia Mono",
-          Menlo, Consolas, "D2Coding", "Noto Sans Mono CJK KR", monospace;
+  /* TYPE. This page already downloads 11.5MB so that Python can run in the
+   * browser. A webfont on top of that delays the first screen, and what it
+   * buys is letter shapes. So nothing is shipped: every machine draws with the
+   * face it draws best. Korean readers are this site's first readers, so the
+   * faces that set Hangul well lead the stack. */
+  --sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+          "Segoe UI Variable Text", "Segoe UI", "Pretendard Variable", Pretendard,
+          "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Mono", Menlo,
+          Consolas, "D2Coding", "Noto Sans Mono CJK KR", monospace;
 
-  /* Ground */
-  --bg: #dde2ea;
-  --bg-2: #c9d1de;
-  --stage-a: rgba(255, 255, 255, 1);
-  --stage-b: rgba(96, 99, 104, 0.34);
-  --stage-c: rgba(255, 255, 255, 0.9);
-  --grid: rgba(20, 26, 38, 0.065);
-  --grid-lit: rgba(20, 26, 38, 0.2);
-  --grain: 0.035;
+  /* GROUND. Neither end of the scale is pure. A pure-white field glares under
+   * a lamp, and pure black under pure white leaves an afterimage on the eye
+   * when you look away. */
+  --bg: #fbfbfc;
+  --surface: #ffffff;
+  --surface-2: #f3f4f6;
+  --surface-hover: #eceef1;
+  --sunk: #f6f7f9;
+  --sunk-deep: rgba(20, 24, 32, 0.05);
+  /* A bar that floats over the page has to hide what is behind it, or it
+   * reads as a rendering fault. */
+  --surface-float: rgba(255, 255, 255, 0.97);
+  /* Film grain, small enough to be felt rather than seen. It is the one thing
+   * kept from the old design: a large flat grey bands on a cheap panel, and a
+   * page with no texture at all reads as unfinished rather than as quiet. */
+  --grain: 0.022;
 
-  /* Ink */
-  --ink: #14171c;
-  --ink-soft: rgba(20, 23, 28, 0.68);
-  --ink-faint: rgba(20, 23, 28, 0.48);
+  /* INK. Measured against --bg: 17.2, 8.1 and 4.8 to one. --ink-faint is the
+   * floor, so it is for large text and for marks that are not text. */
+  --ink: #16181c;
+  --ink-soft: #4a4e57;
+  --ink-faint: #6b7079;
 
-  /* Glass */
-  --glass: rgba(255, 255, 255, 0.42);
-  --glass-2: rgba(255, 255, 255, 0.58);
-  --glass-sunk: rgba(255, 255, 255, 0.3);
-  --sunk-deep: rgba(24, 30, 42, 0.06);
-  --glass-hover: rgba(255, 255, 255, 0.72);
-  --edge-top: rgba(255, 255, 255, 0.95);
-  --edge-bottom: rgba(20, 26, 38, 0.10);
-  --hairline: rgba(20, 26, 38, 0.10);
-  --blur: 20px;
-  --sat: 165%;
+  /* LINES do all the separating. Depth used to come from blur, a lit edge and
+   * three sizes of shadow; it now comes from a hairline and from space. A
+   * boundary that a finger can act on gets --line-strong, which clears the
+   * 3:1 that WCAG 1.4.11 asks of a control's edge; --line is for the rest. */
+  --line: rgba(20, 24, 32, 0.11);
+  --line-strong: rgba(20, 24, 32, 0.26);
+  /* One shadow survives, for the one job a line cannot do: saying that a thing
+   * is above the page rather than in it. Menus and the floating Run bar. */
+  --lift: 0 1px 2px rgba(16, 20, 28, 0.06), 0 8px 24px -12px rgba(16, 20, 28, 0.22);
 
-  --shadow-1: 0 1px 2px rgba(16, 20, 28, 0.06), 0 8px 24px -14px rgba(16, 20, 28, 0.35);
-  --shadow-2: 0 2px 6px rgba(16, 20, 28, 0.07), 0 26px 60px -28px rgba(16, 20, 28, 0.45);
-  --shadow-3: 0 3px 10px rgba(16, 20, 28, 0.09), 0 50px 90px -40px rgba(16, 20, 28, 0.5);
-  --sheen: rgba(255, 255, 255, 0.9);
-  /* For a bar that floats over the page. Glass is see-through by design, and
-   * a see-through bar sitting on top of the editor reads as a rendering bug,
-   * so this one is frosted almost solid. */
-  --glass-float: rgba(238, 241, 246, 0.9);
-
-  /* Status — the only colours in the design */
-  --ok: #17915d;
-  --ok-soft: rgba(23, 145, 93, 0.14);
-  --warn: #a9760a;
-  --warn-soft: rgba(169, 118, 10, 0.16);
-  --bad: #c33636;
-  --bad-soft: rgba(195, 54, 54, 0.13);
+  /* STATUS — still the only colours in the design, and now dark enough to be
+   * read as text on either surface. Red is a failure, yellow is something in
+   * progress, green is ready or done, and nothing else may use them. */
+  --ok: #0f7a4c;
+  --ok-soft: rgba(15, 122, 76, 0.10);
+  --warn: #8a5f00;
+  --warn-soft: rgba(138, 95, 0, 0.11);
+  --bad: #b62d2d;
+  --bad-soft: rgba(182, 45, 45, 0.09);
 
   /* Code tones stay achromatic so the status colours keep their meaning. */
-  --tok-dim: rgba(20, 23, 28, 0.42);
-  --tok-strong: rgba(20, 23, 28, 0.95);
-  --tok-mid: rgba(20, 23, 28, 0.72);
+  --tok-dim: rgba(22, 24, 28, 0.46);
+  --tok-mid: rgba(22, 24, 28, 0.72);
+  --tok-strong: rgba(22, 24, 28, 0.96);
 
-  --r-lg: 24px;
-  --r-md: 16px;
-  --r-sm: 10px;
-  --wrap: 1240px;
+  /* SPACE on a 4px step, so that everything on the page lands on the same
+   * rhythm as everything else. */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
+  --s9: 96px;
+
+  --r-lg: 12px;
+  --r-md: 8px;
+  --r-sm: 6px;
+  --wrap: 1160px;
+  /* Prose stops here however wide the window is. Past about this many
+   * characters the eye loses the start of the next line. */
+  --measure: 66ch;
   --gap: clamp(1rem, 2.4vw, 1.75rem);
-  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur: 160ms;
+  /* Small upper-case labels are tracked apart so they read as labels. Hangul
+   * has no upper case, so the same tracking only pushes syllables apart and
+   * the label stops looking like one word — see the :lang(ke) override. */
+  --label-track: 0.16em;
 }
 
 /* Dark is defined twice on purpose: once for a visitor who never touched the
@@ -93,95 +131,74 @@
  * of a colour, or the toggle would only work in one direction. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0a0b0e;
-    --bg-2: #101319;
-    --stage-a: rgba(255, 255, 255, 0.30);
-    --stage-b: rgba(188, 191, 196, 0.24);
-    --stage-c: rgba(255, 255, 255, 0.16);
-    --grid: rgba(255, 255, 255, 0.062);
-    --grid-lit: rgba(255, 255, 255, 0.19);
-    --grain: 0.05;
+    --bg: #0c0d10;
+    --surface: #141519;
+    --surface-2: #1a1c21;
+    --surface-hover: #212329;
+    --sunk: #101216;
+    --sunk-deep: rgba(0, 0, 0, 0.35);
+    --surface-float: rgba(20, 21, 25, 0.97);
+    --grain: 0.030;
 
-    --ink: rgba(255, 255, 255, 0.93);
-    --ink-soft: rgba(255, 255, 255, 0.66);
-    --ink-faint: rgba(255, 255, 255, 0.44);
+    --ink: #e9eaec;
+    --ink-soft: #a8acb4;
+    --ink-faint: #868b94;
 
-    --glass: rgba(255, 255, 255, 0.055);
-    --glass-2: rgba(255, 255, 255, 0.085);
-    --glass-sunk: rgba(8, 10, 14, 0.42);
-    --sunk-deep: rgba(0, 0, 0, 0.42);
-    --glass-hover: rgba(255, 255, 255, 0.12);
-    --edge-top: rgba(255, 255, 255, 0.30);
-    --edge-bottom: rgba(255, 255, 255, 0.04);
-    --hairline: rgba(255, 255, 255, 0.10);
-    --blur: 22px;
-    --sat: 150%;
+    --line: rgba(255, 255, 255, 0.11);
+    --line-strong: rgba(255, 255, 255, 0.26);
+    --lift: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
 
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 30px -18px rgba(0, 0, 0, 0.9);
-    --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.55), 0 30px 70px -30px rgba(0, 0, 0, 0.95);
-    --shadow-3: 0 4px 14px rgba(0, 0, 0, 0.6), 0 60px 110px -45px rgba(0, 0, 0, 1);
-    --sheen: rgba(255, 255, 255, 0.5);
-    --glass-float: rgba(13, 15, 19, 0.9);
+    --ok: #4ec98a;
+    --ok-soft: rgba(78, 201, 138, 0.13);
+    --warn: #e0a63c;
+    --warn-soft: rgba(224, 166, 60, 0.13);
+    --bad: #ef6b6b;
+    --bad-soft: rgba(239, 107, 107, 0.13);
 
-    --ok: #4ade80;
-    --ok-soft: rgba(74, 222, 128, 0.16);
-    --warn: #fbbf4a;
-    --warn-soft: rgba(251, 191, 74, 0.16);
-    --bad: #ff7a6e;
-    --bad-soft: rgba(255, 122, 110, 0.16);
-
-    --tok-dim: rgba(255, 255, 255, 0.38);
-    --tok-strong: rgba(255, 255, 255, 0.96);
+    --tok-dim: rgba(255, 255, 255, 0.42);
     --tok-mid: rgba(255, 255, 255, 0.72);
+    --tok-strong: rgba(255, 255, 255, 0.96);
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0a0b0e;
-  --bg-2: #101319;
-  --stage-a: rgba(255, 255, 255, 0.30);
-  --stage-b: rgba(188, 191, 196, 0.24);
-  --stage-c: rgba(255, 255, 255, 0.16);
-  --grid: rgba(255, 255, 255, 0.062);
-  --grid-lit: rgba(255, 255, 255, 0.19);
-  --grain: 0.05;
+  --bg: #0c0d10;
+  --surface: #141519;
+  --surface-2: #1a1c21;
+  --surface-hover: #212329;
+  --sunk: #101216;
+  --sunk-deep: rgba(0, 0, 0, 0.35);
+  --surface-float: rgba(20, 21, 25, 0.97);
+  --grain: 0.030;
 
-  --ink: rgba(255, 255, 255, 0.93);
-  --ink-soft: rgba(255, 255, 255, 0.66);
-  --ink-faint: rgba(255, 255, 255, 0.44);
+  --ink: #e9eaec;
+  --ink-soft: #a8acb4;
+  --ink-faint: #868b94;
 
-  --glass: rgba(255, 255, 255, 0.055);
-  --glass-2: rgba(255, 255, 255, 0.085);
-  --glass-sunk: rgba(8, 10, 14, 0.42);
-  --sunk-deep: rgba(0, 0, 0, 0.42);
-  --glass-hover: rgba(255, 255, 255, 0.12);
-  --edge-top: rgba(255, 255, 255, 0.30);
-  --edge-bottom: rgba(255, 255, 255, 0.04);
-  --hairline: rgba(255, 255, 255, 0.10);
-  --blur: 22px;
-  --sat: 150%;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.26);
+  --lift: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
 
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 30px -18px rgba(0, 0, 0, 0.9);
-  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.55), 0 30px 70px -30px rgba(0, 0, 0, 0.95);
-  --shadow-3: 0 4px 14px rgba(0, 0, 0, 0.6), 0 60px 110px -45px rgba(0, 0, 0, 1);
-  --sheen: rgba(255, 255, 255, 0.5);
-  --glass-float: rgba(13, 15, 19, 0.9);
+  --ok: #4ec98a;
+  --ok-soft: rgba(78, 201, 138, 0.13);
+  --warn: #e0a63c;
+  --warn-soft: rgba(224, 166, 60, 0.13);
+  --bad: #ef6b6b;
+  --bad-soft: rgba(239, 107, 107, 0.13);
 
-  --ok: #4ade80;
-  --ok-soft: rgba(74, 222, 128, 0.16);
-  --warn: #fbbf4a;
-  --warn-soft: rgba(251, 191, 74, 0.16);
-  --bad: #ff7a6e;
-  --bad-soft: rgba(255, 122, 110, 0.16);
-
-  --tok-dim: rgba(255, 255, 255, 0.38);
-  --tok-strong: rgba(255, 255, 255, 0.96);
+  --tok-dim: rgba(255, 255, 255, 0.42);
   --tok-mid: rgba(255, 255, 255, 0.72);
+  --tok-strong: rgba(255, 255, 255, 0.96);
 }
 
 /* --- base ---------------------------------------------------------------- */
 
 * { box-sizing: border-box; }
+
+/* `hidden` in the markup means the thing is not there. Several components set
+ * their own `display`, which quietly outranked it — a button marked hidden was
+ * on screen anyway. Nothing has a good reason to be shown while hidden. */
+[hidden] { display: none !important; }
 
 html {
   -webkit-text-size-adjust: 100%;
@@ -193,8 +210,10 @@ body {
   margin: 0;
   min-height: 100svh;
   font-family: var(--sans);
-  font-size: clamp(15.5px, 0.35vw + 15px, 17px);
-  line-height: 1.62;
+  /* 16px is the floor a phone will not zoom past, and this page is read by
+   * people who are reading a programming page for the first time. */
+  font-size: clamp(16px, 0.28vw + 15.2px, 17.5px);
+  line-height: 1.68;
   letter-spacing: -0.006em;
   color: var(--ink);
   background: var(--bg);
@@ -203,20 +222,11 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* The ground under the glass. Two washes, so the top of the page is never the
- * same value as the bottom and the glass has something to refract. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -3;
-  background:
-    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 58%, var(--bg) 100%);
-  pointer-events: none;
-}
-
-/* Film grain. Small enough to be felt rather than seen; it is what stops large
- * flat gradients from banding on cheap panels. */
+/* Film grain. The page's ground used to be two washes with four slow lights
+ * drifting behind it, because glass needs something to refract. The ground is
+ * now one value, and the grain is all that is left on it: enough that a large
+ * flat field does not band on a cheap panel, and not enough to be seen as a
+ * texture. */
 body::after {
   content: "";
   position: fixed;
@@ -227,77 +237,14 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* --- the stage: drifting lights and a faint grid ------------------------- */
+/* --- surfaces ------------------------------------------------------------ */
 
-.stage {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  overflow: hidden;
-  pointer-events: none;
-  contain: strict;
-}
-
-.stage .orb {
-  position: absolute;
-  border-radius: 50%;
-  will-change: transform;
-  animation: drift 42s var(--ease) infinite alternate;
-}
-
-/* Four lights, different sizes and periods, so the pattern never visibly
- * repeats. They are gradients rather than blurred boxes: a `filter: blur()`
- * this large costs a phone real frames. */
-.stage .orb:nth-child(1) {
-  width: 78vmax; height: 78vmax; top: -32vmax; left: -18vmax;
-  background: radial-gradient(circle at 50% 50%, var(--stage-a), transparent 62%);
-  animation-duration: 46s;
-}
-.stage .orb:nth-child(2) {
-  width: 62vmax; height: 62vmax; top: 8vh; right: -22vmax; left: auto;
-  background: radial-gradient(circle at 50% 50%, var(--stage-b), transparent 64%);
-  animation-duration: 63s;
-  animation-delay: -12s;
-}
-.stage .orb:nth-child(3) {
-  width: 54vmax; height: 54vmax; bottom: -18vmax; left: 12vw;
-  background: radial-gradient(circle at 50% 50%, var(--stage-c), transparent 60%);
-  animation-duration: 55s;
-  animation-delay: -26s;
-}
-.stage .orb:nth-child(4) {
-  width: 40vmax; height: 40vmax; top: 44vh; left: 38vw;
-  background: radial-gradient(circle at 50% 50%, var(--stage-a), transparent 58%);
-  opacity: 0.6;
-  animation-duration: 71s;
-  animation-delay: -40s;
-}
-
-@keyframes drift {
-  0%   { transform: translate3d(0, 0, 0) scale(1); }
-  50%  { transform: translate3d(6vw, -4vh, 0) scale(1.12); }
-  100% { transform: translate3d(-5vw, 6vh, 0) scale(0.94); }
-}
-
-/* A hairline grid, faded out towards the edges. It gives the glass something
- * with structure to refract, which is what makes blur read as glass. */
-.stage::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 64px 64px;
-  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 20%, transparent 78%);
-  mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 20%, transparent 78%);
-}
-
-/* --- the glass surface --------------------------------------------------- */
-
-/* Everything that looks like a panel gets this. The lit edge is a masked
- * gradient ring rather than a flat border, because a real sheet of glass is
- * bright where the light hits it and dark where it does not. */
+/* Everything that reads as a panel gets this. The old design made a panel out
+ * of frosted glass: a blur, a lit edge drawn as a masked gradient ring, a
+ * specular highlight that followed the pointer, and one of three shadows. A
+ * panel is now a surface one step away from the page, held by a hairline. The
+ * separation is the same; what does it is a line and some space instead of a
+ * light. */
 .glass,
 .hero-figure,
 .pane,
@@ -310,75 +257,10 @@ body::after {
 .step,
 .slots {
   position: relative;
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(var(--sat));
-  backdrop-filter: blur(var(--blur)) saturate(var(--sat));
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow-2);
   isolation: isolate;
-}
-
-.glass::before,
-.hero-figure::before,
-.pane::before,
-.card::before,
-.doc-main::before,
-.doc-rail::before,
-.doc-toc::before,
-.prompt-card::before,
-.ai-list > li::before,
-.step::before,
-.slots::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(150deg, var(--edge-top), var(--edge-bottom) 42%, transparent 62%, var(--edge-top));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* A specular highlight that follows the pointer. `--mx`/`--my` are set by
- * script; without script there is no highlight at all, which is the right
- * outcome — a still highlight in a fixed place would just look like a smudge.
- * The hero panel is deliberately not in this list: its `::after` is already
- * the slow sweep, and an element has only one. */
-.card::after,
-.step::after,
-.prompt-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(240px circle at var(--mx, 30%) var(--my, 0%), var(--sheen), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.5s var(--ease);
-  pointer-events: none;
-  mix-blend-mode: overlay;
-  z-index: 1;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  :is(.card, .prompt-card):hover::after { opacity: 0.5; }
-}
-
-/* Where glass is impossible — an old browser, or a reader who asked for less
- * transparency — the panels become solid. Nothing is lost but the effect. */
-@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
-  .glass { background: color-mix(in srgb, var(--bg) 78%, var(--ink) 6%); }
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .glass {
-    background: color-mix(in srgb, var(--bg) 82%, var(--ink) 8%);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
 }
 
 /* --- layout -------------------------------------------------------------- */
@@ -403,7 +285,7 @@ section[id], [id] { scroll-margin-top: 6rem; }
   left: -9999px;
   top: 0;
   padding: 0.6rem 1rem;
-  background: var(--glass-2);
+  background: var(--surface-2);
   border-radius: 0 0 var(--r-sm) 0;
   z-index: 100;
 }
@@ -416,6 +298,16 @@ section[id], [id] { scroll-margin-top: 6rem; }
 :root:lang(ko) body, :lang(ko) h1, :lang(ko) h2, :lang(ko) h3, :lang(ko) p, :lang(ko) li {
   word-break: keep-all;
 }
+
+/* Hangul sets differently from Latin: every syllable is the same width and
+ * already carries space inside it, so a Korean line wants slightly tighter
+ * tracking and noticeably more leading than the same page in English. A
+ * heading tracked for Latin at -0.036em closes Hangul syllables into a block. */
+:lang(ko) body { line-height: 1.76; letter-spacing: -0.012em; }
+:lang(ko) h1 { letter-spacing: -0.026em; }
+:lang(ko) h2, :lang(ko) h3 { letter-spacing: -0.02em; }
+/* Small caps and wide tracking do nothing for Hangul but push it apart. */
+:lang(ko) { --label-track: 0.04em; }
 
 h1, h2, h3, h4 {
   margin: 0 0 0.5em;
@@ -442,7 +334,7 @@ p { margin: 0 0 1rem; }
   margin: 0 0 0.9rem;
   font-size: 0.72rem;
   font-weight: 620;
-  letter-spacing: 0.19em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
 }
@@ -460,10 +352,12 @@ a {
 }
 a:hover { text-decoration-color: currentColor; }
 
+/* Visible to a keyboard, invisible to a mouse. It follows the shape of what it
+ * is on, so a round button gets a round ring rather than a box around it. */
 :focus-visible {
   outline: 2px solid var(--ink);
-  outline-offset: 3px;
-  border-radius: 4px;
+  outline-offset: 2px;
+  border-radius: inherit;
 }
 
 code, kbd, samp, pre { font-family: var(--mono); }
@@ -472,8 +366,8 @@ p code, li code, td code, th code {
   font-size: 0.88em;
   padding: 0.12em 0.42em;
   border-radius: 6px;
-  background: var(--glass-sunk);
-  border: 1px solid var(--hairline);
+  background: var(--sunk);
+  border: 1px solid var(--line);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -486,10 +380,12 @@ td code, th code {
   word-break: keep-all;
 }
 
+/* One NME statement is exactly one line of Python, and the two panes are read
+ * side by side, so both are set on the same body and the same leading. */
 pre.code, .readout, .terminal, .editor {
   font-family: var(--mono);
-  font-size: 0.86rem;
-  line-height: 1.65;
+  font-size: 0.92rem;
+  line-height: 1.7;
   tab-size: 2;
 }
 
@@ -497,8 +393,8 @@ pre.code {
   margin: 0;
   padding: 1rem 1.15rem;
   overflow-x: auto;
-  background: var(--glass-sunk);
-  border: 1px solid var(--hairline);
+  background: var(--sunk);
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
   color: var(--ink);
   white-space: pre;
@@ -525,33 +421,42 @@ pre code {
   font-weight: 560;
   letter-spacing: -0.01em;
   color: var(--ink);
-  background: var(--glass-2);
-  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
   border-radius: 999px;
   cursor: pointer;
   text-decoration: none;
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
-  backdrop-filter: blur(14px) saturate(150%);
-  box-shadow: var(--shadow-1);
-  transition: transform 0.18s var(--ease), background 0.22s var(--ease),
-              box-shadow 0.22s var(--ease), opacity 0.2s var(--ease);
+  /* A control's own edge has to clear 3:1 to be seen as an edge at all, so
+   * buttons take the stronger line while panels take the quiet one. */
+  border-color: var(--line-strong);
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease),
+              color var(--dur) var(--ease), opacity var(--dur) var(--ease);
 }
 
-.btn:hover { background: var(--glass-hover); box-shadow: var(--shadow-2); }
-.btn:active { transform: translateY(1px) scale(0.99); }
-.btn[disabled] { opacity: 0.42; cursor: not-allowed; box-shadow: none; }
-.btn[disabled]:hover { background: var(--glass-2); }
+.btn:hover { background: var(--surface-hover); }
+.btn:active { background: var(--surface-2); }
+.btn[disabled] { opacity: 0.42; cursor: not-allowed; }
+.btn[disabled]:hover { background: var(--surface-2); }
 
-/* The primary button is brighter glass, not a colour: colour is reserved. */
+/* The one button on a screen that matters most is filled with ink. Red,
+ * yellow and green are spoken for — they mean failed, working and ready — so
+ * the loudest thing an achromatic page can say is solid rather than outlined,
+ * and it says it without spending a status colour. */
 .btn-primary {
-  background: linear-gradient(150deg, var(--glass-hover), var(--glass-2));
-  border-color: var(--edge-top);
-  font-weight: 620;
+  color: var(--bg);
+  background: var(--ink);
+  border-color: var(--ink);
+  font-weight: 600;
 }
-.btn-primary:hover { background: linear-gradient(150deg, var(--glass-hover), var(--glass-hover)); }
+.btn-primary:hover { background: var(--ink-soft); border-color: var(--ink-soft); }
+.btn-primary:active { background: var(--ink); }
 
-.btn-ghost { background: transparent; box-shadow: none; }
-.btn-ghost:hover { background: var(--glass); }
+/* The quiet button. It keeps an edge — without one it reads as a sentence
+ * rather than as something to press, and on a phone the way into the coding
+ * screen was exactly that. The edge is the quiet line, so the filled button
+ * and the outlined one still rank in that order. */
+.btn-ghost { background: transparent; border-color: var(--line); }
+.btn-ghost:hover { background: var(--surface-2); border-color: var(--line-strong); }
 
 .chip {
   font: inherit;
@@ -559,24 +464,33 @@ pre code {
   min-height: 38px;
   padding: 0.34rem 0.85rem;
   color: var(--ink-soft);
-  background: var(--glass);
-  border: 1px solid var(--hairline);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 999px;
   cursor: pointer;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  transition: transform 0.16s var(--ease), background 0.2s var(--ease), color 0.2s var(--ease);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
 }
-.chip:hover { background: var(--glass-hover); color: var(--ink); transform: translateY(-1px); }
+.chip:hover { background: var(--surface-2); color: var(--ink); }
+/* A chosen chip is filled, not lifted. Nothing on this page rises off it. */
 .chip[aria-pressed="true"] {
-  color: var(--ink);
-  background: var(--glass-2);
-  border-color: var(--edge-top);
-  box-shadow: var(--shadow-1);
-  font-weight: 580;
+  color: var(--bg);
+  background: var(--ink);
+  border-color: var(--ink);
+  font-weight: 560;
 }
+.chip[aria-pressed="true"]:hover { background: var(--ink-soft); border-color: var(--ink-soft); }
 
 .badges { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem; }
+
+/* The band of AI prompts used to open the page, which put a thing to read in
+ * front of the thing to do. It sits after the first lesson now, and this line
+ * is how someone who is stuck on the very first word still finds it. */
+.hero-aside {
+  margin-top: var(--s5);
+  color: var(--ink-faint);
+  font-size: 0.92rem;
+}
 
 .badge {
   font-size: 0.74rem;
@@ -584,8 +498,8 @@ pre code {
   padding: 0.28rem 0.7rem;
   border-radius: 999px;
   color: var(--ink-faint);
-  background: var(--glass);
-  border: 1px solid var(--hairline);
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
 
 /* "public beta" is a state, so it is allowed the yellow. */
@@ -603,18 +517,17 @@ pre code {
   top: 0;
   z-index: 50;
   padding-block: 0.55rem;
-  background: color-mix(in srgb, var(--bg) 62%, transparent);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  backdrop-filter: blur(18px) saturate(160%);
+  /* Opaque, not frosted. A see-through bar over a page of code makes the code
+   * behind it hard to read for the sake of an effect. */
+  background: var(--bg);
   border-bottom: 1px solid transparent;
-  transition: border-color 0.3s var(--ease), background 0.3s var(--ease);
+  transition: border-color var(--dur) var(--ease);
 }
 
 /* The rule under the header only appears once the page has moved, so the top
  * of the page is one uninterrupted sheet. */
 .site-head[data-scrolled="true"] {
-  border-bottom-color: var(--hairline);
-  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  border-bottom-color: var(--line);
 }
 
 .site-head .wrap {
@@ -649,15 +562,15 @@ pre code {
   border-radius: var(--r-sm);
   transition: color 0.2s var(--ease), background 0.2s var(--ease);
 }
-.head-nav a:hover { color: var(--ink); background: var(--glass); }
+.head-nav a:hover { color: var(--ink); background: var(--surface); }
 
 .lang-toggle, .theme-toggle {
   display: inline-flex;
   align-items: center;
   padding: 2px;
   gap: 2px;
-  background: var(--glass);
-  border: 1px solid var(--hairline);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 999px;
 }
 
@@ -679,11 +592,11 @@ pre code {
   text-decoration: none;
   transition: color 0.2s var(--ease), background 0.2s var(--ease);
 }
-.lang-toggle a:hover, .theme-toggle button:hover { color: var(--ink); background: var(--glass-2); }
+.lang-toggle a:hover, .theme-toggle button:hover { color: var(--ink); background: var(--surface-2); }
 .lang-toggle a[aria-current="true"], .theme-toggle button[aria-pressed="true"] {
   color: var(--ink);
-  background: var(--glass-2);
-  box-shadow: var(--shadow-1);
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
 
 .theme-toggle button { min-width: 34px; }
@@ -717,30 +630,11 @@ pre code {
   overflow: hidden;
 }
 
-/* The slow highlight that crosses the hero panel. It is the one piece of
- * motion above the fold, so it is long, faint and never loops sharply. */
-.hero-figure::after {
-  content: "";
-  position: absolute;
-  inset: -60%;
-  z-index: 0;
-  background: conic-gradient(from 0deg at 50% 50%,
-    transparent 0deg, transparent 210deg,
-    color-mix(in srgb, var(--sheen) 40%, transparent) 285deg,
-    transparent 350deg, transparent 360deg);
-  filter: blur(34px);
-  animation: sweep 18s linear infinite;
-  pointer-events: none;
-  opacity: 0.7;
-}
-
-@keyframes sweep { to { transform: rotate(1turn); } }
-
 .hero-figure > * { position: relative; z-index: 1; }
 
 .figure-label, .figure-arrow {
   font-size: 0.7rem;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
 }
@@ -755,10 +649,10 @@ pre code {
   content: "";
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, var(--hairline), transparent);
+  background: var(--line);
 }
 
-.hero-figure .code { background: var(--glass-sunk); }
+.hero-figure .code { background: var(--sunk); }
 
 /* --- playground ---------------------------------------------------------- */
 
@@ -794,13 +688,12 @@ pre code {
   font-size: 0.82rem;
   background: transparent;
   border-color: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
 }
-.group-chip:hover { background: var(--glass); }
+.group-chip:hover { background: var(--surface-2); }
 .group-chip[aria-pressed="true"] {
-  background: var(--glass-2);
-  border-color: var(--edge-top);
+  color: var(--bg);
+  background: var(--ink);
+  border-color: var(--ink);
 }
 
 .version-bar {
@@ -836,7 +729,7 @@ pre code {
   font-size: 0.8rem;
   line-height: 1.5;
   color: var(--ink-faint);
-  border-top: 1px solid var(--hairline);
+  border-top: 1px solid var(--line);
 }
 .hash-note b {
   font-family: var(--mono, ui-monospace, monospace);
@@ -864,7 +757,7 @@ pre code {
   flex-wrap: wrap;
   gap: 0.4rem 0.6rem;
   padding: 0.72rem 1.05rem;
-  border-bottom: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--line);
   font-size: 0.78rem;
   color: var(--ink-faint);
 }
@@ -891,6 +784,13 @@ pre code {
   resize: vertical;
   overflow: auto;
   min-height: 210px;
+  /* A 4,300-line program used to make the box 9,000px tall and push Run
+   * twelve screens down the page. The writing surface is capped at the height
+   * of the window instead, so a long program scrolls inside the box and the
+   * button that runs it never leaves the screen. A box taller than the window
+   * cannot show more of the program than the window can, so the cap costs the
+   * writer nothing. */
+  max-height: min(68vh, 820px);
 }
 
 .editor { font-family: var(--mono); width: 100%; display: block; }
@@ -904,7 +804,7 @@ pre code {
  * "this one", not "something is wrong". */
 .pyline { display: inline-block; width: 100%; }
 .pyline[data-at="true"] {
-  background: var(--glass-2);
+  background: var(--surface-2);
   box-shadow: inset 2px 0 0 var(--ink-faint);
 }
 
@@ -939,9 +839,9 @@ pre code {
 
 .answers-box {
   min-height: 0;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
-  background: var(--glass-sunk);
+  background: var(--sunk);
   padding: 0.7rem 0.9rem;
 }
 
@@ -988,8 +888,8 @@ pre code {
   min-width: 140px;
   height: 6px;
   border-radius: 999px;
-  background: var(--glass-sunk);
-  border: 1px solid var(--hairline);
+  background: var(--sunk);
+  border: 1px solid var(--line);
   overflow: hidden;
   position: relative;
 }
@@ -1050,8 +950,7 @@ pre code {
   background: var(--sunk-deep);
   color: var(--ink);
   border-radius: var(--r-lg);
-  border: 1px solid var(--hairline);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--line);
   font-family: var(--mono);
   font-size: 0.85rem;
   line-height: 1.6;
@@ -1104,9 +1003,9 @@ pre code {
  * the answer is usually what the writer expected, and the terminal above is the
  * thing being read. Achromatic, like every other surface on this page. */
 .values {
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
-  background: var(--glass-sunk);
+  background: var(--sunk);
   padding: 0.5rem 0.85rem;
   font-size: 0.9rem;
 }
@@ -1144,16 +1043,16 @@ pre code {
   font-family: var(--mono);
   font-size: 0.9rem;
   color: var(--ink);
-  background: var(--glass-sunk);
-  border: 1px solid var(--hairline);
+  background: var(--sunk);
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
 }
 
 .notice {
   padding: 0.95rem 1.15rem;
   border-radius: var(--r-md);
-  background: var(--glass);
-  border: 1px solid var(--hairline);
+  background: var(--surface);
+  border: 1px solid var(--line);
   font-size: 0.88rem;
   color: var(--ink-soft);
 }
@@ -1176,7 +1075,7 @@ pre code {
 }
 .slot-bar .slot-title {
   font-size: 0.78rem;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
   margin-right: auto;
@@ -1202,14 +1101,13 @@ pre code {
   align-items: center;
   gap: 0.2rem;
   padding: 2px 2px 2px 0.2rem;
-  background: var(--glass);
-  border: 1px solid var(--hairline);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 999px;
 }
 .slot[data-current="true"] {
-  border-color: var(--edge-top);
-  background: var(--glass-2);
-  box-shadow: var(--shadow-1);
+  border-color: var(--line-strong);
+  background: var(--surface-2);
 }
 .slot button {
   font: inherit;
@@ -1223,7 +1121,7 @@ pre code {
   cursor: pointer;
   transition: color 0.2s var(--ease), background 0.2s var(--ease);
 }
-.slot button:hover { color: var(--ink); background: var(--glass-2); }
+.slot button:hover { color: var(--ink); background: var(--surface-2); }
 .slot .slot-open { font-weight: 560; }
 .slot[data-current="true"] .slot-open { color: var(--ink); }
 .slot .slot-drop { padding: 0.2rem 0.55rem; color: var(--ink-faint); }
@@ -1249,7 +1147,7 @@ pre code {
 .card h3 { margin-bottom: 0.15rem; }
 .card .role {
   font-size: 0.74rem;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
   margin-bottom: 0.9rem;
@@ -1273,17 +1171,17 @@ pre code {
   padding: 0.25rem 0.7rem;
   min-height: 30px;
   color: var(--ink-faint);
-  background: var(--glass-2);
-  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
   border-radius: 999px;
   cursor: pointer;
   transition: color 0.2s var(--ease), background 0.2s var(--ease);
 }
-.copy-btn:hover { color: var(--ink); background: var(--glass-hover); }
+.copy-btn:hover { color: var(--ink); background: var(--surface-hover); }
 
 .links { list-style: none; margin: 2rem 0 0; padding: 0; display: grid; gap: 0.15rem; }
-.links li { border-top: 1px solid var(--hairline); }
-.links li:last-child { border-bottom: 1px solid var(--hairline); }
+.links li { border-top: 1px solid var(--line); }
+.links li:last-child { border-bottom: 1px solid var(--line); }
 .links a {
   display: block;
   padding: 1rem 0.25rem 0.3rem;
@@ -1294,13 +1192,20 @@ pre code {
 .links a:hover { color: var(--ink); }
 .links span { display: block; padding: 0 0.25rem 1rem; font-size: 0.88rem; color: var(--ink-faint); }
 .links li { transition: background 0.2s var(--ease); }
-.links li:hover { background: var(--glass); }
+.links li:hover { background: var(--surface); }
 
 /* --- footer -------------------------------------------------------------- */
 
+/* Which compiler this page is actually running, stamped from the pin. */
+.foot-build {
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 0.82em;
+}
+
 .site-foot {
   padding-block: 2.5rem 3.5rem;
-  border-top: 1px solid var(--hairline);
+  border-top: 1px solid var(--line);
   font-size: 0.86rem;
   color: var(--ink-faint);
 }
@@ -1324,9 +1229,8 @@ pre code {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .js .reveal { opacity: 1; transform: none; filter: none; transition: none; }
-  .stage .orb, .hero-figure::after, .progress[data-mode="waiting"] > i,
+  .progress[data-mode="waiting"] > i,
   .status-dot[data-state="busy"] { animation: none; }
-  .hero-figure::after { opacity: 0.25; }
   * { transition-duration: 0.01ms !important; }
 }
 
@@ -1392,7 +1296,7 @@ pre code {
 .rail-group:first-of-type { margin-top: 0.5rem; }
 .rail-group > h3 {
   font-size: 0.7rem;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
   margin: 0 0 0.4rem 0.35rem;
@@ -1406,9 +1310,9 @@ pre code {
   text-decoration: none;
   line-height: 1.35;
 }
-.rail-group a:hover { background: var(--glass-2); color: var(--ink); }
+.rail-group a:hover { background: var(--surface-2); color: var(--ink); }
 .rail-group a[aria-current="page"] {
-  background: var(--glass-2);
+  background: var(--surface-2);
   color: var(--ink);
   font-weight: 580;
   box-shadow: inset 2px 0 0 var(--ink);
@@ -1416,7 +1320,7 @@ pre code {
 
 .doc-toc h3 {
   font-size: 0.7rem;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
   margin: 0 0 0.5rem 0.35rem;
@@ -1430,7 +1334,7 @@ pre code {
   text-decoration: none;
   line-height: 1.35;
 }
-.doc-toc a:hover { background: var(--glass-2); color: var(--ink); }
+.doc-toc a:hover { background: var(--surface-2); color: var(--ink); }
 .doc-toc li.lvl-3 a { padding-left: 1.35rem; font-size: 0.84rem; }
 
 .doc-meta { margin: 0 0 1.6rem; }
@@ -1451,23 +1355,23 @@ pre code {
   gap: 0.75rem;
   margin-top: 2.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--hairline);
+  border-top: 1px solid var(--line);
 }
 .doc-turn a {
   flex: 1;
   padding: 0.85rem 1.05rem;
   border-radius: var(--r-md);
-  background: var(--glass);
-  border: 1px solid var(--hairline);
+  background: var(--surface);
+  border: 1px solid var(--line);
   text-decoration: none;
   font-weight: 560;
   transition: background 0.2s var(--ease), transform 0.2s var(--ease);
 }
-.doc-turn a:hover { background: var(--glass-hover); transform: translateY(-1px); }
+.doc-turn a:hover { background: var(--surface-hover); transform: translateY(-1px); }
 .doc-turn a span {
   display: block;
   font-size: 0.72rem;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
   font-weight: 500;
@@ -1483,7 +1387,7 @@ pre code {
   font-size: clamp(1.3rem, 2vw, 1.7rem);
   margin-top: 2.6rem;
   padding-top: 1.2rem;
-  border-top: 1px solid var(--hairline);
+  border-top: 1px solid var(--line);
 }
 .prose h3 { font-size: 1.12rem; margin-top: 2rem; }
 .prose h4 { font-size: 1rem; margin-top: 1.6rem; color: var(--ink-soft); }
@@ -1492,12 +1396,12 @@ pre code {
 .prose ul, .prose ol { margin: 0 0 1.15rem; padding-left: 1.35rem; }
 .prose li { margin-bottom: 0.45rem; }
 .prose li > ul, .prose li > ol { margin: 0.45rem 0 0; }
-.prose hr { border: 0; border-top: 1px solid var(--hairline); margin: 2.2rem 0; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 2.2rem 0; }
 .prose img { max-width: 100%; height: auto; border-radius: var(--r-md); }
 .prose blockquote {
   margin: 1.3rem 0;
   padding: 0.2rem 0 0.2rem 1.1rem;
-  border-left: 2px solid var(--hairline);
+  border-left: 2px solid var(--line);
   color: var(--ink-soft);
 }
 .prose :is(h2, h3, h4) { scroll-margin-top: 5rem; }
@@ -1517,7 +1421,7 @@ pre code {
 .prose th, .prose td {
   text-align: left;
   padding: 0.6rem 0.8rem;
-  border-bottom: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--line);
   vertical-align: top;
 }
 .prose th { font-weight: 600; color: var(--ink); white-space: nowrap; }
@@ -1529,9 +1433,9 @@ pre code {
 .table-scroll {
   overflow-x: auto;
   margin: 0 0 1.3rem;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
-  background: var(--glass-sunk);
+  background: var(--sunk);
   -webkit-overflow-scrolling: touch;
 }
 .table-scroll table { margin: 0; min-width: 34rem; }
@@ -1562,14 +1466,14 @@ pre code {
   display: inline-flex;
   align-items: center;
   color: var(--ink-faint);
-  background: var(--glass-2);
-  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
   border-radius: 999px;
   cursor: pointer;
   text-decoration: none;
   transition: color 0.2s var(--ease), background 0.2s var(--ease);
 }
-.snippet-tools a:hover, .snippet-tools button:hover { color: var(--ink); background: var(--glass-hover); }
+.snippet-tools a:hover, .snippet-tools button:hover { color: var(--ink); background: var(--surface-hover); }
 
 /* --- guide list and prompts ---------------------------------------------- */
 
@@ -1580,8 +1484,8 @@ pre code {
   padding: 0.6rem 1rem;
   font: inherit;
   color: var(--ink);
-  background: var(--glass);
-  border: 1px solid var(--hairline);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 999px;
 }
 .filter-count { font-size: 0.85rem; color: var(--ink-faint); }
@@ -1593,12 +1497,12 @@ pre code {
   gap: 0.15rem;
   padding: 0.85rem 1.05rem;
   border-radius: var(--r-md);
-  background: var(--glass);
-  border: 1px solid var(--hairline);
+  background: var(--surface);
+  border: 1px solid var(--line);
   text-decoration: none;
   transition: background 0.2s var(--ease), transform 0.2s var(--ease);
 }
-.guide-list a:hover { background: var(--glass-hover); transform: translateY(-1px); }
+.guide-list a:hover { background: var(--surface-hover); transform: translateY(-1px); }
 .guide-list strong { font-weight: 580; letter-spacing: -0.015em; }
 .guide-list span { font-size: 0.86rem; color: var(--ink-faint); }
 .guide-list .stars { color: var(--ink-faint); font-size: 0.8rem; }
@@ -1611,13 +1515,13 @@ pre code {
 .prompt-card .prompt-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.9rem; }
 .prompt-card .btn { min-height: 38px; padding: 0.35rem 0.9rem; font-size: 0.86rem; }
 /* The recommended card is marked by weight and edge, not by colour. */
-.prompt-card.is-pick { background: var(--glass-2); box-shadow: var(--shadow-3); }
+.prompt-card.is-pick { background: var(--surface-2); border-color: var(--line-strong); }
 
 table.syntax { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
 table.syntax th, table.syntax td {
   text-align: left;
   padding: 0.55rem 0.75rem;
-  border-bottom: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--line);
   vertical-align: top;
 }
 /* Wide enough that a spelling and the Python it becomes each read on one or
@@ -1644,16 +1548,16 @@ table.syntax tr:last-child td { border-bottom: 0; }
   font-size: 0.85rem;
   min-height: 40px;
   color: var(--ink-faint);
-  background: var(--glass);
-  border: 1px solid var(--hairline);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 999px;
   cursor: pointer;
 }
 .play-tabs button[aria-selected="true"] {
   color: var(--ink);
-  background: var(--glass-2);
+  background: var(--surface);
+  border: 1px solid var(--line);
   font-weight: 580;
-  box-shadow: var(--shadow-1);
 }
 
 
@@ -1758,7 +1662,10 @@ table.syntax tr:last-child td { border-bottom: 0; }
   font-weight: 620;
   color: var(--ink-faint);
 }
-.ai-name { font-weight: 580; }
+/* The three cells were never named, so the browser placed the pill that spans
+ * both rows before the name that comes first in the markup, and the name ended
+ * up to the right of it. Each cell says where it goes. */
+.ai-name { grid-column: 2; font-weight: 580; }
 .ai-why {
   grid-column: 2;
   color: var(--ink-faint);
@@ -1766,17 +1673,18 @@ table.syntax tr:last-child td { border-bottom: 0; }
   line-height: 1.5;
 }
 .ai-open {
+  grid-column: 3;
   grid-row: 1 / span 2;
   align-self: center;
   font-size: 0.78rem;
   color: var(--ink-faint);
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.2rem 0.7rem;
   white-space: nowrap;
 }
-.ai-list summary:hover .ai-open { color: var(--ink); background: var(--glass-2); }
-.ai-list details[open] .ai-open { background: var(--glass-2); color: var(--ink); }
+.ai-list summary:hover .ai-open { color: var(--ink); background: var(--surface-2); }
+.ai-list details[open] .ai-open { background: var(--surface-2); color: var(--ink); }
 
 .ai-body {
   padding: 0 clamp(0.9rem, 2vw, 1.25rem) clamp(0.9rem, 2vw, 1.25rem);
@@ -1806,8 +1714,8 @@ table.syntax tr:last-child td { border-bottom: 0; }
   gap: 0.3rem;
   padding: 0.25rem;
   margin-bottom: 0.85rem;
-  background: var(--glass-sunk);
-  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
   border-radius: 999px;
   width: fit-content;
   max-width: 100%;
@@ -1829,12 +1737,12 @@ table.syntax tr:last-child td { border-bottom: 0; }
   white-space: nowrap;
   transition: background 0.2s var(--ease), color 0.2s var(--ease);
 }
-.file-tabs button:hover { color: var(--ink); background: var(--glass); }
+.file-tabs button:hover { color: var(--ink-soft); }
 .file-tabs button[aria-selected="true"] {
   color: var(--ink);
-  background: var(--glass-2);
+  background: var(--surface);
+  border: 1px solid var(--line);
   font-weight: 580;
-  box-shadow: var(--shadow-1);
 }
 .file-tabs button[data-used="true"]::after {
   content: "";
@@ -1855,8 +1763,8 @@ table.syntax tr:last-child td { border-bottom: 0; }
   gap: 0.5rem 0.85rem;
   margin-bottom: 0.85rem;
   padding: 0.7rem 0.95rem;
-  background: var(--glass-sunk);
-  border: 1px solid var(--hairline);
+  background: var(--sunk);
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
   font-size: 0.88rem;
   color: var(--ink-soft);
@@ -1981,12 +1889,10 @@ table.syntax tr:last-child td { border-bottom: 0; }
     bottom: 0.6rem;
     z-index: 5;
     padding: 0.5rem 0.65rem;
-    background: var(--glass-float);
-    border: 1px solid var(--hairline);
+    background: var(--surface-float);
+    border: 1px solid var(--line);
     border-radius: 999px;
-    -webkit-backdrop-filter: blur(18px) saturate(150%);
-    backdrop-filter: blur(18px) saturate(150%);
-    box-shadow: var(--shadow-3);
+    box-shadow: var(--lift);
   }
   /* Everything in the floating bar on one line at 360px: the two buttons keep
    * their touch size, the note gives up the space instead. */
@@ -2134,22 +2040,20 @@ table.syntax tr:last-child td { border-bottom: 0; }
 
 @media (prefers-contrast: more) {
   :root {
-    --hairline: color-mix(in srgb, var(--ink) 45%, transparent);
+    --line: color-mix(in srgb, var(--ink) 45%, transparent);
+    --line-strong: color-mix(in srgb, var(--ink) 62%, transparent);
     --ink-soft: var(--ink);
     --ink-faint: color-mix(in srgb, var(--ink) 78%, transparent);
-    --glass: color-mix(in srgb, var(--bg) 88%, var(--ink) 10%);
-    --glass-2: color-mix(in srgb, var(--bg) 82%, var(--ink) 14%);
   }
-  .glass { -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 
-/* Printing a guide should give a plain document, not a screenshot of glass. */
+/* Printing a guide should give a plain document. */
 @media print {
   .js .reveal { opacity: 1; transform: none; filter: none; }
-  .stage, .site-head, .doc-rail, .doc-toc, .snippet-tools, .site-foot { display: none; }
+  .site-head, .doc-rail, .doc-toc, .snippet-tools, .site-foot { display: none; }
   body { background: #fff; color: #000; }
-  body::before, body::after { display: none; }
-  .glass { background: none; box-shadow: none; border: 1px solid #ccc; }
+  body::after { display: none; }
+  .glass { background: none; border: 1px solid #ccc; }
 }
 
 .slot .slot-edit {
@@ -2179,21 +2083,15 @@ table.syntax tr:last-child td { border-bottom: 0; }
 
 /* --- the last ten per cent ------------------------------------------------ */
 
-/* A light travels from what you wrote toward the Python it became. It is the
- * one thing on the page that says "this is a compiler" without words. */
+/* The arrow between what you wrote and the Python it became used to carry a
+ * light travelling along it. The page keeps one moving thing, and it is not
+ * this: it is the Python pane marking the moment it was rebuilt, which is a
+ * report rather than an ornament. The arrow states the direction and stops. */
 .figure-arrow::after {
-  background-image: linear-gradient(90deg, transparent, var(--edge-top), transparent);
-  background-size: 42% 100%;
-  background-repeat: no-repeat;
-  animation: flow 3.2s var(--ease) infinite;
-}
-@keyframes flow {
-  from { background-position: -45% 0; }
-  to { background-position: 145% 0; }
+  background-image: none;
 }
 
-/* Sections are divided by light rather than by a rule: brightest in the middle,
- * gone at the edges. */
+/* Sections are divided by a hairline, edge to edge of the column. */
 main > section + section::before {
   content: "";
   position: absolute;
@@ -2202,15 +2100,18 @@ main > section + section::before {
   transform: translateX(-50%);
   width: min(100% - 2rem, var(--wrap));
   height: 1px;
-  background: radial-gradient(60% 100% at 50% 50%, var(--edge-top), transparent 72%);
+  background: var(--line);
   pointer-events: none;
 }
 
+/* Cards used to rise three pixels and cast a shadow under the pointer. Nothing
+ * on this page rises off it any more; hovering a card darkens its edge, which
+ * is the same information without the movement. */
 .card, .prompt-card, .pane {
-  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), background 0.3s var(--ease);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
 @media (hover: hover) and (pointer: fine) {
-  .card:hover, .prompt-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-3); }
+  .card:hover, .prompt-card:hover { border-color: var(--line-strong); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2238,30 +2139,13 @@ main > section + section::before {
 .prompt-card { grid-template-rows: auto auto auto 1fr; }
 .prompt-card .prompt-actions { margin-top: auto; align-items: flex-end; }
 
-/* The pointer's beam: the same grid, brighter, shown only where the light is.
- * `--px`/`--py` are set by script; before the first pointer move the mask sits
- * off-screen, so nothing shows. */
-.stage .beam {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(var(--grid-lit) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-lit) 1px, transparent 1px),
-    radial-gradient(340px circle at var(--px, -1000px) var(--py, -1000px),
-      color-mix(in srgb, var(--edge-top) 45%, transparent), transparent 70%);
-  background-size: 64px 64px, 64px 64px, 100% 100%;
-  -webkit-mask-image: radial-gradient(340px circle at var(--px, -1000px) var(--py, -1000px), #000 10%, transparent 72%);
-  mask-image: radial-gradient(340px circle at var(--px, -1000px) var(--py, -1000px), #000 10%, transparent 72%);
-}
-
 /* The Python pane lights its edge for a moment each time it is rebuilt, so the
  * "compiled as you type" promise is visible rather than merely true. */
 .pane-python[data-fresh="true"] {
-  box-shadow: var(--shadow-2), 0 0 0 1px var(--edge-top);
+  border-color: var(--line-strong);
 }
 @media (prefers-reduced-motion: reduce) {
-  .pane-python[data-fresh="true"] { box-shadow: var(--shadow-2); }
+  .pane-python[data-fresh="true"] { border-color: var(--line); }
 }
 
 /* A caret that blinks while a program is running. Output can be silent for a
@@ -2344,7 +2228,7 @@ main > section + section::before {
 :root[data-focus="true"] .panes { flex: 1 1 auto; min-height: 11rem; }
 :root[data-focus="true"] .pane { min-height: 0; }
 :root[data-focus="true"] .editor,
-:root[data-focus="true"] .readout { min-height: 0; resize: none; }
+:root[data-focus="true"] .readout { min-height: 0; max-height: none; resize: none; }
 /* The pane's own floor is there so a box inside a page is not a slit; here the
  * height comes from the window and the floor would only fight it. */
 :root[data-focus="true"] .pane { min-height: 0; }
@@ -2370,8 +2254,6 @@ main > section + section::before {
     background: none;
     border: 0;
     box-shadow: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
   }
   :root[data-focus="true"] #playground[data-tall="true"] .pane-nme .editor { padding-bottom: 1rem; }
   :root[data-focus="true"] .pane-nme .editor { flex: 1 1 auto; }
@@ -2433,13 +2315,13 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   min-width: 44px;
   min-height: 40px;
   padding: 0 0.5rem;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
-  background: var(--glass);
+  background: var(--surface);
   text-decoration: none;
   font-variant-numeric: tabular-nums;
 }
-.numstrip > a:hover { background: var(--glass-hover); }
+.numstrip > a:hover { background: var(--surface-hover); }
 
 /* ── 무엇이 · 어디서 · 왜 잘못됐는지 ──────────────────────────────────────
  * 전에는 컴파일이 실패하면 실행 단추가 꺼지기만 했습니다. 오류 글은 파이썬
@@ -2479,20 +2361,20 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   padding: 0.2rem 0.7rem;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--bad) 40%, transparent);
-  background: var(--glass-2);
+  background: var(--surface-2);
   color: var(--bad);
   cursor: pointer;
   white-space: nowrap;
 }
-.problem-line:hover { background: var(--glass-hover); }
+.problem-line:hover { background: var(--surface-hover); }
 /* The line itself, quoted back. A person recognises their own sentence faster
  * than they find a line number. */
 .problem-source {
   margin: 0;
   padding: 0.5rem 0.75rem;
   border-radius: var(--r-sm, 8px);
-  background: var(--glass-sunk);
-  border: 1px solid var(--hairline);
+  background: var(--sunk);
+  border: 1px solid var(--line);
   font-family: var(--mono);
   font-size: 0.86rem;
   overflow-x: auto;
@@ -2561,9 +2443,9 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   display: inline-flex;
   gap: 2px;
   padding: 2px;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--glass-sunk);
+  background: var(--surface-2);
 }
 .seg button {
   font: inherit;
@@ -2578,12 +2460,15 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   white-space: nowrap;
   transition: background 0.2s var(--ease), color 0.2s var(--ease);
 }
-.seg button:hover { color: var(--ink); background: var(--glass); }
+.seg button:hover { color: var(--ink-soft); }
+/* The chosen cell is the one lifted out of the groove — one step lighter than
+ * the track it sits in, with an edge. It used to be the same value as its own
+ * track, which read as nothing being chosen at all. */
 .seg button[aria-pressed="true"] {
   color: var(--ink);
-  background: var(--glass-2);
+  background: var(--surface);
+  border: 1px solid var(--line);
   font-weight: 580;
-  box-shadow: var(--shadow-1);
 }
 .tidy-note {
   flex: 1 1 14rem;

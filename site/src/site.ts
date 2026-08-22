@@ -15,7 +15,7 @@
 
 import init, { compile, tidy } from './wasm/nme.js';
 import { EXAMPLES, GROUPS, GROUP_LABELS } from './examples.js';
-import { COMPILER_BYTES } from './engine-meta.js';
+import { COMPILER_BYTES, COMPILER_COMMIT, COMPILER_SHA256 } from './engine-meta.js';
 import type { Example, ExampleGroup, ExampleLanguage } from './examples.js';
 
 const LANG: ExampleLanguage = document.documentElement.lang === 'ko' ? 'ko' : 'en';
@@ -332,51 +332,6 @@ function wireHeaderHeight(): void {
   addEventListener('resize', sync);
   // Web fonts and the wrapping they change arrive after the first measurement.
   if ('fonts' in document) void document.fonts.ready.then(sync);
-}
-
-/* The grid behind the glass is almost invisible until light falls on it. The
- * pointer is that light: a soft circle where the structure shows through.
- * It is one element and one custom property, and phones never get it because
- * there is no pointer to follow. */
-function wireBeam(): void {
-  const stage = queryMaybe(document, '.stage', HTMLElement);
-  if (!stage) return;
-  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  const beam = document.createElement('i');
-  beam.className = 'beam';
-  stage.append(beam);
-
-  let x = 0;
-  let y = 0;
-  let queued = false;
-  addEventListener('pointermove', (event) => {
-    x = event.clientX;
-    y = event.clientY;
-    if (queued) return;
-    queued = true;
-    requestAnimationFrame(() => {
-      queued = false;
-      stage.style.setProperty('--px', `${x}px`);
-      stage.style.setProperty('--py', `${y}px`);
-    });
-  }, { passive: true });
-}
-
-/* Glass has a highlight where the light hits it, and here the light is the
- * pointer. Touch screens have no pointer to follow, so they never pay for it. */
-function wirePointerSheen(): void {
-  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  for (const panel of queryAll(document, '.card, .prompt-card', HTMLElement)) {
-    panel.addEventListener('pointermove', (event) => {
-      const box = panel.getBoundingClientRect();
-      panel.style.setProperty('--mx', `${event.clientX - box.left}px`);
-      panel.style.setProperty('--my', `${event.clientY - box.top}px`);
-    });
-  }
 }
 
 /* The hero says "you write this, it becomes that". Revealing the second block
@@ -2783,13 +2738,26 @@ wireHeroLines();
 wireHeaderEdge();
 wireHeaderHeight();
 wireReveal();
-wirePointerSheen();
-wireBeam();
 wireCopyButtons();
 wireFileCopyButtons();
 wireAiPrompts();
 wireDocRail();
 wireGuideFilter();
+
+/* The footer names a version, and a version number is written by hand. On
+ * 2026-08-22 it said 0.7.1 while the compiler on the page was three fixes
+ * behind that, and nothing a reader could see would have told them. The build
+ * is stamped from the pin at deploy time, so this cannot drift: the commit is
+ * which source it came from, the hash is the file the browser downloaded. */
+function showBuild(): void {
+  const slot = queryMaybe(document, '#foot-build', HTMLElement);
+  if (!slot) return;
+  slot.textContent = ` (${COMPILER_COMMIT.slice(0, 7)})`;
+  slot.title = LANG === 'ko'
+    ? `빌드 커밋 ${COMPILER_COMMIT}\nwasm sha256 ${COMPILER_SHA256}`
+    : `built from ${COMPILER_COMMIT}\nwasm sha256 ${COMPILER_SHA256}`;
+}
+showBuild();
 
 const headerNav = queryMaybe(document, '.head-nav', HTMLElement);
 if (headerNav) wireStrip(headerNav);

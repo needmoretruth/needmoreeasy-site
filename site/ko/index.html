@@ -24,10 +24,6 @@
 </head>
 <body>
 
-<div class="stage" aria-hidden="true">
-  <i class="orb"></i><i class="orb"></i><i class="orb"></i><i class="orb"></i>
-</div>
-
 <a class="skip-link" href="#playground">쓰는 칸으로 건너뛰기</a>
 
 <header class="site-head">
@@ -54,72 +50,6 @@
 
 <main>
 
-<section id="ai-help" class="ai-band">
-  <div class="wrap">
-    <div class="ai-band-head">
-      <h2>여기 있는 말이 이해되지 않으면, 쓰던 AI에게 물어보세요.</h2>
-      <p>
-        아래 셋 중 하나를 복사해 ChatGPT·Claude 같은 대화창 맨 앞에 붙여넣으세요.
-        그다음부터는 <em>“NME로 열까지 세는 프로그램 만들어 줘”</em>라고 말하면
-        됩니다.
-      </p>
-    </div>
-    <ol class="ai-list">
-      <li>
-        <details data-prompt="sentence" data-lang="ko">
-          <summary>
-            <span class="ai-name">문장문법만 가르치기</span>
-            <span class="ai-why">가장 짧습니다. 문장문법만 담았고 파이썬은 없습니다. 처음이라면 이것 하나면 됩니다.</span>
-            <span class="ai-open">상세</span>
-          </summary>
-          <div class="ai-body">
-            <div class="ai-actions">
-              <button class="btn btn-ghost" type="button" data-prompt-copy>전체 복사</button>
-              <button class="btn btn-ghost" type="button" data-prompt-download>내려받기</button>
-              <a class="btn btn-ghost" href="/ko/learn/prompts/sentence">문서로 열기</a>
-            </div>
-            <pre class="readout ai-text" data-prompt-text data-state="ok">불러오는 중…</pre>
-          </div>
-        </details>
-      </li>
-      <li>
-        <details data-prompt="all-levels" data-lang="ko">
-          <summary>
-            <span class="ai-name">세 가지 문법을 전부 가르치기</span>
-            <span class="ai-why">문장문법·초급 문법·파이썬에 모듈과 오류 번호까지. 파이썬을 쓰는 사람과 같이 일할 때 씁니다.</span>
-            <span class="ai-open">상세</span>
-          </summary>
-          <div class="ai-body">
-            <div class="ai-actions">
-              <button class="btn btn-ghost" type="button" data-prompt-copy>전체 복사</button>
-              <button class="btn btn-ghost" type="button" data-prompt-download>내려받기</button>
-              <a class="btn btn-ghost" href="/ko/learn/prompts/all-levels">문서로 열기</a>
-            </div>
-            <pre class="readout ai-text" data-prompt-text data-state="ok">불러오는 중…</pre>
-          </div>
-        </details>
-      </li>
-      <li>
-        <details data-prompt="complete" data-lang="ko">
-          <summary>
-            <span class="ai-name">전부 가르치기 — 완성된 예제까지</span>
-            <span class="ai-why">위의 둘에 완성된 프로그램 열두 개를 더한 것. 가장 길고 가장 정확합니다.</span>
-            <span class="ai-open">상세</span>
-          </summary>
-          <div class="ai-body">
-            <div class="ai-actions">
-              <button class="btn btn-ghost" type="button" data-prompt-copy>전체 복사</button>
-              <button class="btn btn-ghost" type="button" data-prompt-download>내려받기</button>
-              <a class="btn btn-ghost" href="/ko/learn/prompts/complete">문서로 열기</a>
-            </div>
-            <pre class="readout ai-text" data-prompt-text data-state="ok">불러오는 중…</pre>
-          </div>
-        </details>
-      </li>
-    </ol>
-  </div>
-</section>
-
 <section class="hero">
   <div class="wrap">
     <div class="hero-text">
@@ -140,6 +70,10 @@
         <span class="badge">휴대폰에서도 됩니다</span>
         <span class="badge">한국어 · 영어</span>
       </div>
+      <p class="hero-aside">
+        여기 나오는 말이 하나라도 낯설면 <a href="#ai-help">쓰던 AI에게 물어보세요</a>.
+        붙여넣을 글을 준비해 두었습니다.
+      </p>
     </div>
     <div class="hero-figure">
       <span class="figure-label">이렇게 쓰면</span>
@@ -163,8 +97,8 @@
         <p class="eyebrow">쓰는 칸</p>
         <h2>여기에 쓰고, 실행을 누르면, 아래에 결과가 나옵니다.</h2>
         <p class="lede">
-          쓰신 글은 이 창 밖으로 나가지 않습니다. 파일 셋이 이 브라우저에 계속
-          남아 있으니, 예제를 열어 보고 돌아와도 쓰던 것은 그대로 있습니다.
+          쓰신 글은 이 창 밖으로 나가지 않고, 파일 셋은 이 브라우저에 남습니다.
+          예제는 결과 아래에 있습니다.
         </p>
       </div>
       <div class="play-head-tools">
@@ -179,32 +113,6 @@
       <button type="button" role="tab" data-file="3" aria-selected="false">파일 3</button>
     </div>
 
-    <div class="example-groups" id="example-groups" role="group" aria-label="예제 갈래"></div>
-
-    <div class="examples" id="examples" role="group" aria-label="예제 프로그램"></div>
-
-    <div class="version-bar" id="version-bar">
-      <span class="version-label">이 예제를 다른 문법·다른 말로</span>
-      <span class="seg" role="group" aria-label="어느 문법으로 볼지">
-        <button type="button" data-example-level="sentence" aria-pressed="true">문장</button>
-        <button type="button" data-example-level="beginner" aria-pressed="false">초급</button>
-        <button type="button" data-example-level="advanced" aria-pressed="false">파이썬</button>
-      </span>
-      <span class="seg" role="group" aria-label="어느 말로 볼지">
-        <button type="button" data-example-lang="ko" aria-pressed="true">한국어</button>
-        <button type="button" data-example-lang="en" aria-pressed="false">English</button>
-      </span>
-      <span class="version-note" id="version-note" aria-live="polite"></span>
-    </div>
-
-    <div class="file-note" id="file-note" hidden>
-      <p id="file-note-text"></p>
-      <span class="file-note-actions">
-        <button class="btn btn-ghost" type="button" data-copy-to="1">파일 1에 넣기</button>
-        <button class="btn btn-ghost" type="button" data-copy-to="2">파일 2에 넣기</button>
-        <button class="btn btn-ghost" type="button" data-copy-to="3">파일 3에 넣기</button>
-      </span>
-    </div>
 
     <div class="play-tabs" role="tablist" aria-label="어느 칸을 볼지">
       <button type="button" role="tab" data-view="nme" aria-selected="true">쓴 글</button>
@@ -282,6 +190,33 @@
       <dl id="values-list"></dl>
     </details>
 
+    <div class="example-groups" id="example-groups" role="group" aria-label="예제 갈래"></div>
+
+    <div class="examples" id="examples" role="group" aria-label="예제 프로그램"></div>
+
+    <div class="version-bar" id="version-bar">
+      <span class="version-label">이 예제를 다른 문법·다른 말로</span>
+      <span class="seg" role="group" aria-label="어느 문법으로 볼지">
+        <button type="button" data-example-level="sentence" aria-pressed="true">문장</button>
+        <button type="button" data-example-level="beginner" aria-pressed="false">초급</button>
+        <button type="button" data-example-level="advanced" aria-pressed="false">파이썬</button>
+      </span>
+      <span class="seg" role="group" aria-label="어느 말로 볼지">
+        <button type="button" data-example-lang="ko" aria-pressed="true">한국어</button>
+        <button type="button" data-example-lang="en" aria-pressed="false">English</button>
+      </span>
+      <span class="version-note" id="version-note" aria-live="polite"></span>
+    </div>
+
+    <div class="file-note" id="file-note" hidden>
+      <p id="file-note-text"></p>
+      <span class="file-note-actions">
+        <button class="btn btn-ghost" type="button" data-copy-to="1">파일 1에 넣기</button>
+        <button class="btn btn-ghost" type="button" data-copy-to="2">파일 2에 넣기</button>
+        <button class="btn btn-ghost" type="button" data-copy-to="3">파일 3에 넣기</button>
+      </span>
+    </div>
+
     <div class="notice" id="answers-wrap" hidden>
       <p data-no-shared-memory></p>
       <label for="answers"><strong>미리 적어 두는 대답 — 한 줄에 하나</strong></label>
@@ -351,6 +286,72 @@
       <a href="/ko/learn/guides">가이드</a>가 정확히 여기서부터 하나씩
       더해 갑니다.
     </p>
+  </div>
+</section>
+
+<section id="ai-help" class="ai-band">
+  <div class="wrap">
+    <div class="ai-band-head">
+      <h2>여기 있는 말이 이해되지 않으면, 쓰던 AI에게 물어보세요.</h2>
+      <p>
+        아래 셋 중 하나를 복사해 ChatGPT·Claude 같은 대화창 맨 앞에 붙여넣으세요.
+        그다음부터는 <em>“NME로 열까지 세는 프로그램 만들어 줘”</em>라고 말하면
+        됩니다.
+      </p>
+    </div>
+    <ol class="ai-list">
+      <li>
+        <details data-prompt="sentence" data-lang="ko">
+          <summary>
+            <span class="ai-name">문장문법만 가르치기</span>
+            <span class="ai-why">가장 짧습니다. 문장문법만 담았고 파이썬은 없습니다. 처음이라면 이것 하나면 됩니다.</span>
+            <span class="ai-open">상세</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>전체 복사</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>내려받기</button>
+              <a class="btn btn-ghost" href="/ko/learn/prompts/sentence">문서로 열기</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">불러오는 중…</pre>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details data-prompt="all-levels" data-lang="ko">
+          <summary>
+            <span class="ai-name">세 가지 문법을 전부 가르치기</span>
+            <span class="ai-why">문장문법·초급 문법·파이썬에 모듈과 오류 번호까지. 파이썬을 쓰는 사람과 같이 일할 때 씁니다.</span>
+            <span class="ai-open">상세</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>전체 복사</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>내려받기</button>
+              <a class="btn btn-ghost" href="/ko/learn/prompts/all-levels">문서로 열기</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">불러오는 중…</pre>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details data-prompt="complete" data-lang="ko">
+          <summary>
+            <span class="ai-name">전부 가르치기 — 완성된 예제까지</span>
+            <span class="ai-why">위의 둘에 완성된 프로그램 열두 개를 더한 것. 가장 길고 가장 정확합니다.</span>
+            <span class="ai-open">상세</span>
+          </summary>
+          <div class="ai-body">
+            <div class="ai-actions">
+              <button class="btn btn-ghost" type="button" data-prompt-copy>전체 복사</button>
+              <button class="btn btn-ghost" type="button" data-prompt-download>내려받기</button>
+              <a class="btn btn-ghost" href="/ko/learn/prompts/complete">문서로 열기</a>
+            </div>
+            <pre class="readout ai-text" data-prompt-text data-state="ok">불러오는 중…</pre>
+          </div>
+        </details>
+      </li>
+    </ol>
   </div>
 </section>
 
@@ -577,7 +578,7 @@ nme run examples/hello-sentence</pre>
 
 <footer class="site-foot">
   <div class="wrap">
-    <span>NeedMoreEasy · Apache-2.0 · 컴파일러 <code>0.7.1</code></span>
+    <span>NeedMoreEasy · Apache-2.0 · 컴파일러 <code>0.8.0</code><span class="foot-build" id="foot-build"></span></span>
     <span class="foot-spacer"></span>
     <a href="https://github.com/needmoretruth/needmoreeasy">GitHub</a>
     <a href="https://github.com/needmoretruth/needmoreeasy/issues">문제 알리기</a>

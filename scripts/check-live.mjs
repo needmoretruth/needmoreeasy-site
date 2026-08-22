@@ -37,6 +37,50 @@ const ok = (message) => console.log('ok   ' + message);
   await page.close();
 }
 
+/* 1b. the compiler on the page has to be the one the pin names.
+ *
+ * On 2026-08-22 the site said 0.7.1, the pin was right, the wasm hash matched
+ * what was deployed — and the compiler on the page was still three fixes
+ * behind, because those fixes had never been committed. A status code cannot
+ * see that and neither can a hash. The only thing that can is compiling a line
+ * that used to come out wrong.
+ *
+ * Each entry is a program and the Python that release must produce. Add one
+ * whenever a release turns on something a reader could not do before. */
+{
+  const CHANGES = [
+    ['0.8.0 이름 끝의 「면」이 대입을 삼키지 않음',
+     '적이름은 황금가면 도적왕 레마르\n적이름 말해줘',
+     '적이름 = "황금가면 도적왕 레마르"'],
+    ['0.8.0 정수 몫',
+     '총점은 47\n줄수는 총점을 5로 나눈 몫\n줄수 말해줘',
+     '줄수 = 총점 // 5'],
+    ['0.8.0 글자를 숫자로',
+     '답글은 42\n답은 답글을 숫자로 바꾼 것\n답 말해줘',
+     '답 = int(답글)'],
+  ];
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  await page.goto(BASE + '/ko/', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => document.querySelector('#engine-dot')?.dataset.state === 'ready', null, { timeout: 120000 });
+
+  const build = await page.textContent('#foot-build');
+  if (build && build.trim()) ok(`바닥글이 빌드를 밝힘 — 컴파일러${build}`);
+  else note('바닥글에 빌드 커밋이 없음');
+
+  for (const [name, source, expected] of CHANGES) {
+    const python = await page.evaluate(async (code) => {
+      const editor = document.querySelector('#editor');
+      editor.value = code;
+      editor.dispatchEvent(new Event('input'));
+      await new Promise((wake) => setTimeout(wake, 700));
+      return document.querySelector('#python')?.textContent ?? '';
+    }, source);
+    if (python.includes(expected)) ok(name);
+    else note(`${name} — 나온 것: ${python.trim().split('\n')[0] || '(없음)'}`);
+  }
+  await page.close();
+}
+
 /* 2. a wrong address must say so */
 {
   const page = await browser.newPage();

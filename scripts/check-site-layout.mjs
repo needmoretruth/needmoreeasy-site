@@ -52,7 +52,6 @@ for (const theme of ['light', 'dark']) {
           scrollW: doc.scrollWidth,
           clientW: doc.clientWidth,
           bodyBg: getComputedStyle(document.body).backgroundColor,
-          stage: !!document.querySelector('.stage .orb'),
           themeToggle: document.querySelectorAll('[data-theme-choice]').length,
           small: small.slice(0, 4),
         };
@@ -60,7 +59,6 @@ for (const theme of ['light', 'dark']) {
 
       const tag = `${theme} ${width} ${path}`;
       if (info.scrollW > info.clientW + 1) note(`${tag}: 가로 넘침 ${info.scrollW} > ${info.clientW}`);
-      if (!info.stage) note(`${tag}: 배경 무대 없음`);
       if (info.themeToggle !== 3) note(`${tag}: 테마 단추 ${info.themeToggle}개`);
       if (info.bodyBg === 'rgba(0, 0, 0, 0)') note(`${tag}: 본문 배경 없음`);
       if (info.small.length) note(`${tag}: 누르기 작은 요소 ${info.small.join(', ')}`);
