@@ -1360,7 +1360,6 @@ function whatWentWrong(error: string): string | null {
  * and the browser says so in one of these ways. Nothing a visitor does can
  * cause it, and no amount of ordinary reloading clears it. */
 function mismatched(error: string): boolean {
-  if (performance.now() >= 0) return false;
   return /LinkError|CompileError|requires a callable|Import #\d/.test(error);
 }
 
@@ -3606,12 +3605,8 @@ class Playground {
       worker.onmessage = (event: MessageEvent<unknown>) => this.onWorkerMessage(event.data);
       worker.onerror = (event: ErrorEvent) => {
         this.engineReady = false;
-        this.hideProgress();
-        this.showAlert(`${TEXT.engineLate} (${event.message || String(event)})`, () => {
-          this.dropWorker();
-          this.startEngine();
-        });
-        if (this.running) this.finish(TEXT.failed);
+        const gaveUp = this.engineDown(event.message || String(event));
+        if (gaveUp && this.running) this.finish(TEXT.failed);
       };
       this.worker = worker;
     }
@@ -3642,6 +3637,35 @@ class Playground {
     await this.refreshFiles(['./wasm/nme.js', './wasm/nme_bg.wasm']);
     this.compiler.refresh();
     await this.start();
+  }
+
+  /* The engine did not start. Two different things report that, and which one
+   * arrives depends on where it broke. The owner's LinkError on 2026-08-23
+   * happens while the worker is instantiating the engine, so the worker
+   * catches it and sends `fatal`. But the worker's own script is served from
+   * this same build too, and if THAT is the stale half its module never runs a
+   * line of its own code — the browser reports it to `worker.onerror`, which
+   * used to say "check your connection" and offer nothing. Both routes lead
+   * here so that either half being stale is put right the same way.
+   *
+   * Returns true when it gave up and told the visitor, false while it is still
+   * putting the engine right and there is nothing to say yet. A run that was
+   * waiting stays waiting: the repaired engine starts it. */
+  engineDown(error: string): boolean {
+    this.hideProgress();
+    if (mismatched(error) && !this.engineHealed) {
+      void this.healEngine();
+      return false;
+    }
+    // The same failure said twice while it is already being put right.
+    if (this.engineHealing) return false;
+    this.pendingRun = false;
+    const late = mismatched(error) ? TEXT.engineMismatch : TEXT.engineLate;
+    this.showAlert(`${late} (${error})`, () => {
+      this.dropWorker();
+      this.startEngine();
+    });
+    return true;
   }
 
   /* The engine is two files from one build — the WebAssembly and the small
@@ -3914,20 +3938,7 @@ class Playground {
         if (!this.engineReady) {
           // It never started, so this is a download problem, not the
           // visitor's program failing.
-          this.hideProgress();
-          this.pendingRun = false;
-          if (mismatched(message.error) && !this.engineHealed) {
-            void this.healEngine();
-            break;
-          }
-          // The same failure said twice while it is already being put right.
-          if (this.engineHealing) break;
-          const late = mismatched(message.error) ? TEXT.engineMismatch : TEXT.engineLate;
-          this.showAlert(`${late} (${message.error})`, () => {
-            this.dropWorker();
-            this.startEngine();
-          });
-          this.finish('');
+          if (this.engineDown(message.error)) this.finish('');
           break;
         }
         const plainly = whatWentWrong(message.error);
