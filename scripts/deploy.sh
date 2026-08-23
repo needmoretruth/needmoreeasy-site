@@ -3,8 +3,11 @@
 #
 #   bash scripts/deploy.sh
 #
-# Credentials come from ~/nmt/web/.env (CLOUDFLARE_EMAIL + CLOUDFLARE_API_KEY),
-# the same pair every other Cloudflare task on this machine uses.
+# Everything Cloudflare needs comes from ~/nmt/web/.env, the same file every
+# other Cloudflare task on this machine uses: CLOUDFLARE_EMAIL,
+# CLOUDFLARE_API_KEY, CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_ZONE_ID. The two ids
+# are not secrets on their own, but they name a real account, and this
+# repository is meant to be readable by anyone.
 #
 # Both cargo builds go through the machine-wide heavy-work lock, because a
 # parallel heavy build once froze this box hard enough to need a power cycle.
@@ -13,7 +16,6 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="${NME_ENV_FILE:-$HOME/nmt/web/.env}"
 PROJECT=needmoreeasy
-ACCOUNT_ID=CLOUDFLARE_ACCOUNT_ID_WAS_HERE
 
 [ -f "$ENV_FILE" ] || { echo "no .env at $ENV_FILE" >&2; exit 1; }
 
@@ -124,15 +126,17 @@ set -a
 # shellcheck disable=SC1090
 . "$ENV_FILE"
 set +a
-export CLOUDFLARE_EMAIL CLOUDFLARE_API_KEY
-export CLOUDFLARE_ACCOUNT_ID="$ACCOUNT_ID"
+for needed in CLOUDFLARE_EMAIL CLOUDFLARE_API_KEY CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_ZONE_ID; do
+  [ -n "${!needed:-}" ] || { echo "$needed is missing from $ENV_FILE" >&2; exit 1; }
+done
+export CLOUDFLARE_EMAIL CLOUDFLARE_API_KEY CLOUDFLARE_ACCOUNT_ID
 npx --yes wrangler@4 pages deploy site --project-name "$PROJECT" --branch main --commit-dirty=true
 
 echo "== 가장자리 캐시 비우기 =="
 # Pages serves each deployment immediately, but Cloudflare's edge may still be
 # holding the previous copy of an asset; without this a fixed stylesheet can
 # stay invisible for as long as its cache lifetime.
-curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/CLOUDFLARE_ZONE_ID_WAS_HERE/purge_cache" \
+curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
   -H "X-Auth-Email: ${CLOUDFLARE_EMAIL}" -H "X-Auth-Key: ${CLOUDFLARE_API_KEY}" \
   -H "Content-Type: application/json" --data '{"purge_everything":true}' \
   -o /dev/null -w "  purge -> HTTP %{http_code}\n"

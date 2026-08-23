@@ -46,11 +46,18 @@ __pycache__/
 **/.aider*
 **/copilot-instructions.md
 
+# Wrangler's local cache. It writes the Cloudflare account id into
+# .wrangler/cache/pages.json, which has no business being in a public repository.
+.wrangler/
+
 # Secrets. Deploy credentials live in the shell environment, never in a file here.
 .env
 .env.*
+.dev.vars
+.dev.vars.*
 *.key
 *.pem
+*.log
 
 # Plain-text prompts, written by scripts/build-docs.py from the language repo.
 /site/assets/prompts/
