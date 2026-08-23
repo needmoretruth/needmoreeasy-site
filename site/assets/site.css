@@ -12,12 +12,18 @@
  * of getting to that, seeing it happen, and running it. A decoration that
  * competes with it is a decoration to remove.
  *
- * COLOUR RULE, unchanged. The page is achromatic on purpose. Red, yellow and
- * green are reserved for state and appear nowhere else: red is a failure,
- * yellow is something in progress, green is ready or done. Spending green on
- * a button that merely means "primary" would spend the one signal the reader
- * has, so the loudest button is filled with ink instead. Search this file for
- * `--ok`, `--warn`, `--bad`: every use should be a status.
+ * COLOUR RULE. The page is achromatic on purpose. Red, yellow and green are
+ * reserved for state and appear nowhere else: red is a failure, yellow is
+ * something in progress, green is ready or done. Spending green on a button
+ * that merely means "primary" would spend the one signal the reader has, so
+ * the loudest button is filled with ink instead. Search this file for `--ok`,
+ * `--warn`, `--bad`: every use should be a status.
+ *
+ * There is now one exception, and it is deliberate: a comment inside code is
+ * green (`--tok-com`), the green every editor in the world gives it. It is
+ * outside the rule rather than a hole in it — it never appears in the page's
+ * own furniture, only inside a code pane, where the reader is already looking
+ * at code and reading that green as "this line is a note".
  *
  * MOTION. Three things move, and each one reports something true: the reveal
  * as a section arrives, the status dot while the engine is working, and the
@@ -50,38 +56,46 @@
   --mono: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Mono", Menlo,
           Consolas, "D2Coding", "Noto Sans Mono CJK KR", monospace;
 
-  /* GROUND. Neither end of the scale is pure. A pure-white field glares under
-   * a lamp, and pure black under pure white leaves an afterimage on the eye
-   * when you look away. */
-  --bg: #fbfbfc;
+  /* GROUND. Both ends of the scale are pure. The owner asked for a blacker
+   * black and a whiter white, which is what minimal usually means, and pure
+   * ends are also the only ones that need no explaining: white is #fff and
+   * black is #000. What that costs is the cushion the old off-white gave the
+   * eye, so the two things that cushion now are the grain and the fact that
+   * every large field is broken by a hairline rather than by a fill. */
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f3f4f6;
-  --surface-hover: #eceef1;
-  --sunk: #f6f7f9;
-  --sunk-deep: rgba(20, 24, 32, 0.05);
+  --surface-2: #f4f4f4;
+  --surface-hover: #ebebeb;
+  --sunk: #fafafa;
+  --sunk-deep: rgba(0, 0, 0, 0.05);
   /* A bar that floats over the page has to hide what is behind it, or it
    * reads as a rendering fault. */
   --surface-float: rgba(255, 255, 255, 0.97);
   /* Film grain, small enough to be felt rather than seen. It is the one thing
    * kept from the old design: a large flat grey bands on a cheap panel, and a
-   * page with no texture at all reads as unfinished rather than as quiet. */
-  --grain: 0.022;
+   * page with no texture at all reads as unfinished rather than as quiet. It
+   * is lighter than it was, because grain on a pure white ground is the one
+   * thing that can stop it being pure white. */
+  --grain: 0.015;
 
-  /* INK. Measured against --bg: 17.2, 8.1 and 4.8 to one. --ink-faint is the
-   * floor, so it is for large text and for marks that are not text. */
-  --ink: #16181c;
-  --ink-soft: #4a4e57;
-  --ink-faint: #6b7079;
+  /* INK. Black, and two greys under it. Both greys are neutral now rather than
+   * blue-cast: a hue that is only visible next to another grey is a decision
+   * the page cannot explain. Measured against #fff: 21, 9.7 and 5.5 to one —
+   * every one clears 4.5, which the old faint grey cleared by 0.3 of a point.
+   * --ink-faint is still the floor, so it is for large text and for marks. */
+  --ink: #000000;
+  --ink-soft: #454545;
+  --ink-faint: #6a6a6a;
 
   /* LINES do all the separating. Depth used to come from blur, a lit edge and
    * three sizes of shadow; it now comes from a hairline and from space. A
    * boundary that a finger can act on gets --line-strong, which clears the
    * 3:1 that WCAG 1.4.11 asks of a control's edge; --line is for the rest. */
-  --line: rgba(20, 24, 32, 0.11);
-  --line-strong: rgba(20, 24, 32, 0.26);
+  --line: rgba(0, 0, 0, 0.11);
+  --line-strong: rgba(0, 0, 0, 0.27);
   /* One shadow survives, for the one job a line cannot do: saying that a thing
    * is above the page rather than in it. Menus and the floating Run bar. */
-  --lift: 0 1px 2px rgba(16, 20, 28, 0.06), 0 8px 24px -12px rgba(16, 20, 28, 0.22);
+  --lift: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px -12px rgba(0, 0, 0, 0.22);
 
   /* STATUS — still the only colours in the design, and now dark enough to be
    * read as text on either surface. Red is a failure, yellow is something in
@@ -94,9 +108,16 @@
   --bad-soft: rgba(182, 45, 45, 0.09);
 
   /* Code tones stay achromatic so the status colours keep their meaning. */
-  --tok-dim: rgba(22, 24, 28, 0.46);
-  --tok-mid: rgba(22, 24, 28, 0.72);
-  --tok-strong: rgba(22, 24, 28, 0.96);
+  --tok-dim: rgba(0, 0, 0, 0.46);
+  --tok-mid: rgba(0, 0, 0, 0.72);
+  --tok-strong: rgba(0, 0, 0, 0.96);
+  /* The one colour in the code, and the owner asked for it by name: the green
+   * every editor gives a comment. It is VS Code's own — #008000 on a light
+   * ground, #6A9955 on a dark one — because a reader who has seen any editor
+   * has seen this exact green mean "this line is a note, not an instruction",
+   * and that is the single most useful thing a first-time reader can be told
+   * about a `#` line. 5.1 and 6.3 to one against their grounds. */
+  --tok-com: #008000;
 
   /* SPACE on a 4px step, so that everything on the page lands on the same
    * rhythm as everything else. */
@@ -110,9 +131,34 @@
   --s8: 64px;
   --s9: 96px;
 
-  --r-lg: 12px;
-  --r-md: 8px;
-  --r-sm: 6px;
+  /* CORNERS. 20/13/9, up from 12/8/6. A rounder corner is the other half of
+   * what the owner asked for. The three keep their ratio, so one token still
+   * moves the whole page: --r-lg is a panel, --r-md a control, --r-sm a small
+   * thing inside one. What is already a pill stays a pill. */
+  --r-lg: 20px;
+  --r-md: 13px;
+  --r-sm: 9px;
+
+  /* TYPE SCALE. One page was drawing text at twenty-four different sizes —
+   * 11.2, 11.3, 11.5, 11.8, 12.5, 12.8, 13.1, 13.8, 14.0, 14.1, 14.4, 14.7,
+   * 15.0, 16.3, 16.7, 16.8 and up. Sizes a third of a pixel apart are not a
+   * hierarchy, they are an accident, and the small end of that list is below
+   * what anyone reads on a phone. There are five sizes under the body now and
+   * each one has a job:
+   *   --t-xs   13px  a mark beside something else: badge, eyebrow, stamp
+   *   --t-sm   14px  a thing you press, and the inside of a table
+   *   --t-ms   15px  a second paragraph — a caption, a card's explanation
+   *   --t-base 16px  running text, matching the body
+   *   --t-md   18px  a small heading, and the line under a title
+   * 13px is the floor. Nothing on this site is smaller than that, on any
+   * screen, because the reader may be meeting a programming page for the
+   * first time. */
+  --t-xs: 0.8125rem;
+  --t-sm: 0.875rem;
+  --t-ms: 0.9375rem;
+  --t-base: 1rem;
+  --t-md: 1.125rem;
+
   --wrap: 1160px;
   /* Prose stops here however wide the window is. Past about this many
    * characters the eye loses the start of the next line. */
@@ -131,21 +177,21 @@
  * of a colour, or the toggle would only work in one direction. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0c0d10;
-    --surface: #141519;
-    --surface-2: #1a1c21;
-    --surface-hover: #212329;
-    --sunk: #101216;
-    --sunk-deep: rgba(0, 0, 0, 0.35);
-    --surface-float: rgba(20, 21, 25, 0.97);
-    --grain: 0.030;
+    --bg: #000000;
+    --surface: #0b0b0b;
+    --surface-2: #151515;
+    --surface-hover: #202020;
+    --sunk: #060606;
+    --sunk-deep: rgba(0, 0, 0, 0.55);
+    --surface-float: rgba(10, 10, 10, 0.97);
+    --grain: 0.026;
 
-    --ink: #e9eaec;
-    --ink-soft: #a8acb4;
-    --ink-faint: #868b94;
+    --ink: #ffffff;
+    --ink-soft: #a6a6a6;
+    --ink-faint: #7d7d7d;
 
-    --line: rgba(255, 255, 255, 0.11);
-    --line-strong: rgba(255, 255, 255, 0.26);
+    --line: rgba(255, 255, 255, 0.13);
+    --line-strong: rgba(255, 255, 255, 0.30);
     --lift: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
 
     --ok: #4ec98a;
@@ -155,28 +201,29 @@
     --bad: #ef6b6b;
     --bad-soft: rgba(239, 107, 107, 0.13);
 
-    --tok-dim: rgba(255, 255, 255, 0.42);
+    --tok-dim: rgba(255, 255, 255, 0.46);
     --tok-mid: rgba(255, 255, 255, 0.72);
     --tok-strong: rgba(255, 255, 255, 0.96);
+    --tok-com: #6a9955;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0c0d10;
-  --surface: #141519;
-  --surface-2: #1a1c21;
-  --surface-hover: #212329;
-  --sunk: #101216;
-  --sunk-deep: rgba(0, 0, 0, 0.35);
-  --surface-float: rgba(20, 21, 25, 0.97);
-  --grain: 0.030;
+  --bg: #000000;
+  --surface: #0b0b0b;
+  --surface-2: #151515;
+  --surface-hover: #202020;
+  --sunk: #060606;
+  --sunk-deep: rgba(0, 0, 0, 0.55);
+  --surface-float: rgba(10, 10, 10, 0.97);
+  --grain: 0.026;
 
-  --ink: #e9eaec;
-  --ink-soft: #a8acb4;
-  --ink-faint: #868b94;
+  --ink: #ffffff;
+  --ink-soft: #a6a6a6;
+  --ink-faint: #7d7d7d;
 
-  --line: rgba(255, 255, 255, 0.11);
-  --line-strong: rgba(255, 255, 255, 0.26);
+  --line: rgba(255, 255, 255, 0.13);
+  --line-strong: rgba(255, 255, 255, 0.30);
   --lift: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
 
   --ok: #4ec98a;
@@ -186,9 +233,10 @@
   --bad: #ef6b6b;
   --bad-soft: rgba(239, 107, 107, 0.13);
 
-  --tok-dim: rgba(255, 255, 255, 0.42);
+  --tok-dim: rgba(255, 255, 255, 0.46);
   --tok-mid: rgba(255, 255, 255, 0.72);
   --tok-strong: rgba(255, 255, 255, 0.96);
+  --tok-com: #6a9955;
 }
 
 /* --- base ---------------------------------------------------------------- */
@@ -332,7 +380,7 @@ p { margin: 0 0 1rem; }
 
 .eyebrow {
   margin: 0 0 0.9rem;
-  font-size: 0.72rem;
+  font-size: var(--t-xs);
   font-weight: 620;
   letter-spacing: var(--label-track);
   text-transform: uppercase;
@@ -340,7 +388,7 @@ p { margin: 0 0 1rem; }
 }
 
 .fineprint {
-  font-size: 0.9rem;
+  font-size: var(--t-base);
   color: var(--ink-faint);
 }
 
@@ -365,7 +413,7 @@ code, kbd, samp, pre { font-family: var(--mono); }
 p code, li code, td code, th code {
   font-size: 0.88em;
   padding: 0.12em 0.42em;
-  border-radius: 6px;
+  border-radius: 7px;
   background: var(--sunk);
   border: 1px solid var(--line);
   white-space: pre-wrap;
@@ -384,7 +432,7 @@ td code, th code {
  * side by side, so both are set on the same body and the same leading. */
 pre.code, .readout, .terminal, .editor {
   font-family: var(--mono);
-  font-size: 0.92rem;
+  font-size: var(--t-base);
   line-height: 1.7;
   tab-size: 2;
 }
@@ -460,7 +508,7 @@ pre code {
 
 .chip {
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--t-ms);
   min-height: 38px;
   padding: 0.34rem 0.85rem;
   color: var(--ink-soft);
@@ -489,11 +537,11 @@ pre code {
 .hero-aside {
   margin-top: var(--s5);
   color: var(--ink-faint);
-  font-size: 0.92rem;
+  font-size: var(--t-base);
 }
 
 .badge {
-  font-size: 0.74rem;
+  font-size: var(--t-xs);
   letter-spacing: 0.02em;
   padding: 0.28rem 0.7rem;
   border-radius: 999px;
@@ -540,7 +588,7 @@ pre code {
 .brand {
   font-weight: 700;
   letter-spacing: -0.04em;
-  font-size: 1.02rem;
+  font-size: var(--t-md);
   text-decoration: none;
   padding: 0.4rem 0;
   white-space: nowrap;
@@ -555,7 +603,7 @@ pre code {
 }
 
 .head-nav a {
-  font-size: 0.92rem;
+  font-size: var(--t-base);
   color: var(--ink-soft);
   text-decoration: none;
   padding: 0.5rem 0.6rem;
@@ -576,7 +624,7 @@ pre code {
 
 .lang-toggle a, .theme-toggle button {
   font: inherit;
-  font-size: 0.78rem;
+  font-size: var(--t-xs);
   font-weight: 560;
   line-height: 1;
   padding: 0.42rem 0.62rem;
@@ -633,7 +681,7 @@ pre code {
 .hero-figure > * { position: relative; z-index: 1; }
 
 .figure-label, .figure-arrow {
-  font-size: 0.7rem;
+  font-size: var(--t-xs);
   letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -685,7 +733,7 @@ pre code {
  * long list. The names are plain text until one is chosen, so the row above
  * looks like tabs and the row below like the things they hold. */
 .group-chip {
-  font-size: 0.82rem;
+  font-size: var(--t-ms);
   background: transparent;
   border-color: transparent;
 }
@@ -704,14 +752,14 @@ pre code {
   margin-top: 0.7rem;
 }
 .version-label {
-  font-size: 0.82rem;
+  font-size: var(--t-ms);
   color: var(--ink-soft);
   white-space: nowrap;
 }
 .version-note {
   flex: 1 1 12rem;
   min-width: 0;
-  font-size: 0.8rem;
+  font-size: var(--t-sm);
   line-height: 1.45;
   color: var(--ink-faint);
 }
@@ -726,7 +774,7 @@ pre code {
 .hash-note {
   margin: 0;
   padding: 0.55rem 1.05rem 0.7rem;
-  font-size: 0.8rem;
+  font-size: var(--t-sm);
   line-height: 1.5;
   color: var(--ink-faint);
   border-top: 1px solid var(--line);
@@ -758,11 +806,11 @@ pre code {
   gap: 0.4rem 0.6rem;
   padding: 0.72rem 1.05rem;
   border-bottom: 1px solid var(--line);
-  font-size: 0.78rem;
+  font-size: var(--t-xs);
   color: var(--ink-faint);
 }
 .pane-head strong {
-  font-size: 0.86rem;
+  font-size: var(--t-ms);
   font-weight: 600;
   color: var(--ink);
   letter-spacing: -0.01em;
@@ -792,6 +840,57 @@ pre code {
    * writer nothing. */
   max-height: min(68vh, 820px);
 }
+
+/* --- the bar under the editor's heading: find, and rename a job -----------
+ *
+ * Both of these act on the program in the box, so they sit with the box rather
+ * than in the row of buttons that copy it away. One bar, one job at a time:
+ * opening one closes the other, because two rows of controls over a text box
+ * is the thing this page is trying not to be.
+ *
+ * Find selects the hit in the text box itself. A text box cannot be given a
+ * highlight, and selecting is better than one anyway: the reader can start
+ * typing over what they were looking for. */
+.editor-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  padding: 0.5rem 1.05rem 0.55rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--sunk);
+}
+.editor-row { display: flex; align-items: center; gap: 0.35rem; flex: 1 1 16rem; min-width: 0; }
+.editor-input,
+.editor-select {
+  font: inherit;
+  font-size: var(--t-sm);
+  font-family: var(--mono);
+  min-height: 38px;
+  min-width: 0;
+  flex: 1 1 6rem;
+  padding: 0.3rem 0.7rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+}
+.editor-select { flex: 0 1 10rem; }
+.editor-input:focus-visible, .editor-select:focus-visible { outline-offset: 1px; }
+.editor-count {
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.editor-msg {
+  flex: 1 1 100%;
+  font-size: var(--t-xs);
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.editor-msg:empty { display: none; }
+.editor-close { margin-left: auto; }
 
 .editor { font-family: var(--mono); width: 100%; display: block; }
 .editor:focus-visible { outline-offset: -3px; }
@@ -830,7 +929,7 @@ pre code {
 .echo-note {
   margin: 0;
   padding: 0.5rem 1.15rem 0.85rem;
-  font-size: 0.84rem;
+  font-size: var(--t-ms);
   color: var(--ink-soft);
 }
 .echo-note strong { color: var(--ink); font-weight: 600; }
@@ -856,7 +955,7 @@ pre code {
 }
 
 .run-note {
-  font-size: 0.88rem;
+  font-size: var(--t-ms);
   color: var(--ink-soft);
   display: inline-flex;
   align-items: center;
@@ -938,10 +1037,10 @@ pre code {
   background: var(--bad);
   color: var(--bg);
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: var(--t-ms);
 }
-.alert p { margin: 0; flex: 1; font-size: 0.92rem; }
-.alert .btn { min-height: 34px; padding: 0.3rem 0.85rem; font-size: 0.85rem; }
+.alert p { margin: 0; flex: 1; font-size: var(--t-base); }
+.alert .btn { min-height: 34px; padding: 0.3rem 0.85rem; font-size: var(--t-ms); }
 
 .terminal {
   /* Room for a few lines, not for a screenful of nothing. An empty box this
@@ -957,7 +1056,7 @@ pre code {
   border-radius: var(--r-lg);
   border: 1px solid var(--line);
   font-family: var(--mono);
-  font-size: 0.85rem;
+  font-size: var(--t-ms);
   line-height: 1.6;
 }
 .terminal:empty::before {
@@ -1012,7 +1111,7 @@ pre code {
   border-radius: var(--r-md);
   background: var(--sunk);
   padding: 0.5rem 0.85rem;
-  font-size: 0.9rem;
+  font-size: var(--t-base);
 }
 .values > summary {
   cursor: pointer;
@@ -1028,7 +1127,7 @@ pre code {
   grid-template-columns: auto 1fr;
   gap: 0.2rem 0.9rem;
   font-family: var(--mono);
-  font-size: 0.85rem;
+  font-size: var(--t-ms);
 }
 .values dt { color: var(--ink); white-space: nowrap; }
 .values dd {
@@ -1046,7 +1145,7 @@ pre code {
   padding: 0.6rem 0.95rem;
   font: inherit;
   font-family: var(--mono);
-  font-size: 0.9rem;
+  font-size: var(--t-base);
   color: var(--ink);
   background: var(--sunk);
   border: 1px solid var(--line);
@@ -1058,7 +1157,7 @@ pre code {
   border-radius: var(--r-md);
   background: var(--surface);
   border: 1px solid var(--line);
-  font-size: 0.88rem;
+  font-size: var(--t-ms);
   color: var(--ink-soft);
 }
 .notice p:last-child { margin-bottom: 0; }
@@ -1079,13 +1178,13 @@ pre code {
   gap: 0.5rem;
 }
 .slot-bar .slot-title {
-  font-size: 0.78rem;
+  font-size: var(--t-xs);
   letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
   margin-right: auto;
 }
-.slot-bar .btn { min-height: 36px; padding: 0.3rem 0.85rem; font-size: 0.85rem; }
+.slot-bar .btn { min-height: 36px; padding: 0.3rem 0.85rem; font-size: var(--t-ms); }
 
 .slot-list {
   display: flex;
@@ -1097,7 +1196,7 @@ pre code {
 }
 .slot-list:empty::after {
   content: attr(data-empty);
-  font-size: 0.86rem;
+  font-size: var(--t-ms);
   color: var(--ink-faint);
 }
 
@@ -1116,7 +1215,7 @@ pre code {
 }
 .slot button {
   font: inherit;
-  font-size: 0.84rem;
+  font-size: var(--t-ms);
   color: var(--ink-soft);
   background: none;
   border: 0;
@@ -1133,7 +1232,7 @@ pre code {
 .slot .slot-drop:hover { color: var(--bad); background: var(--bad-soft); }
 
 .saved-flash {
-  font-size: 0.84rem;
+  font-size: var(--t-ms);
   color: var(--ok);
   opacity: 0;
   transition: opacity 0.25s var(--ease);
@@ -1151,14 +1250,14 @@ pre code {
 .card { padding: clamp(1.15rem, 2vw, 1.6rem); }
 .card h3 { margin-bottom: 0.15rem; }
 .card .role {
-  font-size: 0.74rem;
+  font-size: var(--t-xs);
   letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
   margin-bottom: 0.9rem;
 }
-.card p { color: var(--ink-soft); font-size: 0.94rem; }
-.card pre.code { margin-top: 1rem; font-size: 0.8rem; }
+.card p { color: var(--ink-soft); font-size: var(--t-base); }
+.card pre.code { margin-top: 1rem; font-size: var(--t-sm); }
 
 .split { display: grid; gap: clamp(1.5rem, 3vw, 3rem); align-items: center; }
 /* A grid item defaults to `min-width: auto`, which lets one long line of code
@@ -1172,7 +1271,7 @@ pre code {
 
 .copy-btn {
   font: inherit;
-  font-size: 0.76rem;
+  font-size: var(--t-xs);
   padding: 0.25rem 0.7rem;
   min-height: 30px;
   color: var(--ink-faint);
@@ -1195,7 +1294,7 @@ pre code {
   letter-spacing: -0.015em;
 }
 .links a:hover { color: var(--ink); }
-.links span { display: block; padding: 0 0.25rem 1rem; font-size: 0.88rem; color: var(--ink-faint); }
+.links span { display: block; padding: 0 0.25rem 1rem; font-size: var(--t-ms); color: var(--ink-faint); }
 .links li { transition: background 0.2s var(--ease); }
 .links li:hover { background: var(--surface); }
 
@@ -1205,13 +1304,13 @@ pre code {
 .foot-build {
   color: var(--ink-faint);
   font-family: var(--mono);
-  font-size: 0.82em;
+  font-size: var(--t-xs);
 }
 
 .site-foot {
   padding-block: 2.5rem 3.5rem;
   border-top: 1px solid var(--line);
-  font-size: 0.86rem;
+  font-size: var(--t-ms);
   color: var(--ink-faint);
 }
 .site-foot .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.1rem; }
@@ -1241,12 +1340,17 @@ pre code {
 
 /* --- code colouring ------------------------------------------------------ */
 
-/* Achromatic by design. A syntax rainbow here would compete with the three
- * status colours, and weight plus opacity separate the tokens well enough. */
+/* Almost achromatic. A syntax rainbow here would compete with the three status
+ * colours, so weight and opacity still separate keywords, strings and numbers.
+ * The comment is the one exception, and it is the owner's: a `#` line gets the
+ * green every editor gives it. That green is worth the exception because it is
+ * already learned — someone who has opened any editor knows it means "not an
+ * instruction" — and because the whole page turns on telling a line that does
+ * something from a line that does not. */
 .tok-kw { color: var(--tok-strong); font-weight: 620; }
 .tok-str { color: var(--tok-mid); }
 .tok-num { color: var(--tok-mid); font-variant-numeric: tabular-nums; }
-.tok-com { color: var(--tok-dim); font-style: italic; }
+.tok-com { color: var(--tok-com); font-style: italic; }
 
 /* --- documentation pages ------------------------------------------------- */
 
@@ -1254,7 +1358,7 @@ pre code {
 .doc-shell .wrap { display: grid; gap: clamp(1.25rem, 2.5vw, 2.25rem); align-items: start; }
 
 .doc-crumbs {
-  font-size: 0.82rem;
+  font-size: var(--t-ms);
   color: var(--ink-faint);
   display: flex;
   flex-wrap: wrap;
@@ -1273,7 +1377,7 @@ pre code {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 0.9rem 0.85rem;
-  font-size: 0.88rem;
+  font-size: var(--t-ms);
 }
 
 .doc-rail > summary {
@@ -1300,7 +1404,7 @@ pre code {
 .rail-group { margin-top: 1rem; }
 .rail-group:first-of-type { margin-top: 0.5rem; }
 .rail-group > h3 {
-  font-size: 0.7rem;
+  font-size: var(--t-xs);
   letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -1324,7 +1428,7 @@ pre code {
 }
 
 .doc-toc h3 {
-  font-size: 0.7rem;
+  font-size: var(--t-xs);
   letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -1340,7 +1444,7 @@ pre code {
   line-height: 1.35;
 }
 .doc-toc a:hover { background: var(--surface-2); color: var(--ink); }
-.doc-toc li.lvl-3 a { padding-left: 1.35rem; font-size: 0.84rem; }
+.doc-toc li.lvl-3 a { padding-left: 1.35rem; font-size: var(--t-ms); }
 
 .doc-meta { margin: 0 0 1.6rem; }
 .doc-meta .badges { margin-top: 0.9rem; }
@@ -1349,7 +1453,7 @@ pre code {
   grid-template-columns: auto 1fr;
   gap: 0.2rem 0.8rem;
   margin: 0;
-  font-size: 0.88rem;
+  font-size: var(--t-ms);
 }
 .doc-meta dt { color: var(--ink-faint); }
 .doc-meta dd { margin: 0; color: var(--ink-soft); }
@@ -1375,7 +1479,7 @@ pre code {
 .doc-turn a:hover { background: var(--surface-hover); transform: translateY(-1px); }
 .doc-turn a span {
   display: block;
-  font-size: 0.72rem;
+  font-size: var(--t-xs);
   letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -1399,8 +1503,8 @@ pre code {
   padding-top: 1.2rem;
   border-top: 1px solid var(--line);
 }
-.prose h3 { font-size: 1.12rem; margin-top: 2rem; }
-.prose h4 { font-size: 1rem; margin-top: 1.6rem; color: var(--ink-soft); }
+.prose h3 { font-size: var(--t-md); margin-top: 2rem; }
+.prose h4 { font-size: var(--t-base); margin-top: 1.6rem; color: var(--ink-soft); }
 .prose h1 + p, .prose h2 + p, .prose h3 + p { margin-top: 0; }
 .prose > p:first-of-type { color: var(--ink-soft); }
 .prose ul, .prose ol { margin: 0 0 1.15rem; padding-left: 1.35rem; }
@@ -1427,7 +1531,7 @@ pre code {
 }
 .prose :is(h2, h3, h4):hover .anchor, .prose .anchor:focus { opacity: 1; }
 
-.prose table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.prose table { border-collapse: collapse; width: 100%; font-size: var(--t-base); }
 .prose th, .prose td {
   text-align: left;
   padding: 0.6rem 0.8rem;
@@ -1470,7 +1574,7 @@ pre code {
 .snippet-tools a, .snippet-tools button {
   font: inherit;
   font-family: var(--sans);
-  font-size: 0.74rem;
+  font-size: var(--t-xs);
   padding: 0.24rem 0.7rem;
   min-height: 30px;
   display: inline-flex;
@@ -1498,7 +1602,7 @@ pre code {
   border: 1px solid var(--line);
   border-radius: 999px;
 }
-.filter-count { font-size: 0.85rem; color: var(--ink-faint); }
+.filter-count { font-size: var(--t-ms); color: var(--ink-faint); }
 
 .guide-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
 .guide-list li[hidden] { display: none; }
@@ -1514,20 +1618,20 @@ pre code {
 }
 .guide-list a:hover { background: var(--surface-hover); transform: translateY(-1px); }
 .guide-list strong { font-weight: 580; letter-spacing: -0.015em; }
-.guide-list span { font-size: 0.86rem; color: var(--ink-faint); }
-.guide-list .stars { color: var(--ink-faint); font-size: 0.8rem; }
+.guide-list span { font-size: var(--t-ms); color: var(--ink-faint); }
+.guide-list .stars { color: var(--ink-faint); font-size: var(--t-sm); }
 
 .prompt-grid { display: grid; gap: 1rem; margin: 1.8rem 0; }
 .prompt-card { padding: 1.3rem; display: grid; gap: 0.35rem; align-content: start; }
 .prompt-card :is(h2, h3) { margin: 0; font-size: clamp(1.05rem, 1.3vw, 1.28rem); }
-.prompt-card p { color: var(--ink-soft); font-size: 0.92rem; margin: 0.3rem 0 0; }
-.prompt-card .prompt-size { font-size: 0.78rem; color: var(--ink-faint); }
+.prompt-card p { color: var(--ink-soft); font-size: var(--t-base); margin: 0.3rem 0 0; }
+.prompt-card .prompt-size { font-size: var(--t-xs); color: var(--ink-faint); }
 .prompt-card .prompt-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.9rem; }
-.prompt-card .btn { min-height: 38px; padding: 0.35rem 0.9rem; font-size: 0.86rem; }
+.prompt-card .btn { min-height: 38px; padding: 0.35rem 0.9rem; font-size: var(--t-ms); }
 /* The recommended card is marked by weight and edge, not by colour. */
 .prompt-card.is-pick { background: var(--surface-2); border-color: var(--line-strong); }
 
-table.syntax { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+table.syntax { width: 100%; border-collapse: collapse; font-size: var(--t-ms); }
 table.syntax th, table.syntax td {
   text-align: left;
   padding: 0.55rem 0.75rem;
@@ -1555,7 +1659,7 @@ table.syntax tr:last-child td { border-bottom: 0; }
 .play-tabs button {
   flex: 1;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--t-ms);
   min-height: 40px;
   color: var(--ink-faint);
   background: var(--surface);
@@ -1638,7 +1742,7 @@ table.syntax tr:last-child td { border-bottom: 0; }
 }
 .ai-band-head p {
   color: var(--ink-soft);
-  font-size: 0.92rem;
+  font-size: var(--t-base);
   max-width: 68ch;
   margin-bottom: 1rem;
 }
@@ -1679,14 +1783,14 @@ table.syntax tr:last-child td { border-bottom: 0; }
 .ai-why {
   grid-column: 2;
   color: var(--ink-faint);
-  font-size: 0.86rem;
+  font-size: var(--t-ms);
   line-height: 1.5;
 }
 .ai-open {
   grid-column: 3;
   grid-row: 1 / span 2;
   align-self: center;
-  font-size: 0.78rem;
+  font-size: var(--t-xs);
   color: var(--ink-faint);
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -1702,13 +1806,13 @@ table.syntax tr:last-child td { border-bottom: 0; }
   gap: 0.7rem;
 }
 .ai-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-.ai-actions .btn { min-height: 36px; padding: 0.3rem 0.85rem; font-size: 0.85rem; }
+.ai-actions .btn { min-height: 36px; padding: 0.3rem 0.85rem; font-size: var(--t-ms); }
 .ai-text {
   max-height: 22rem;
   overflow: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 0.78rem;
+  font-size: var(--t-xs);
   line-height: 1.55;
 }
 
@@ -1736,7 +1840,7 @@ table.syntax tr:last-child td { border-bottom: 0; }
 .file-tabs button {
   flex: none;
   font: inherit;
-  font-size: 0.86rem;
+  font-size: var(--t-ms);
   padding: 0.4rem 0.95rem;
   min-height: 38px;
   border: 0;
@@ -1776,7 +1880,7 @@ table.syntax tr:last-child td { border-bottom: 0; }
   background: var(--sunk);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  font-size: 0.88rem;
+  font-size: var(--t-ms);
   color: var(--ink-soft);
 }
 .file-note[hidden] { display: none; }
@@ -1790,7 +1894,7 @@ table.syntax tr:last-child td { border-bottom: 0; }
 }
 .file-note p { margin: 0; flex: 1 1 14rem; }
 .file-note-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.file-note .btn { min-height: 36px; padding: 0.3rem 0.8rem; font-size: 0.83rem; }
+.file-note .btn { min-height: 36px; padding: 0.3rem 0.8rem; font-size: var(--t-ms); }
 
 /* --- first steps --------------------------------------------------------- */
 
@@ -1809,10 +1913,10 @@ table.syntax tr:last-child td { border-bottom: 0; }
   align-content: start;
   gap: 0.55rem;
 }
-.step h3 { font-size: 1.05rem; margin: 0; }
-.step p { margin: 0; color: var(--ink-soft); font-size: 0.94rem; }
-.step pre.code { margin: 0.3rem 0 0; font-size: 0.82rem; }
-.step .btn { justify-self: start; min-height: 38px; padding: 0.35rem 0.95rem; font-size: 0.86rem; }
+.step h3 { font-size: var(--t-md); margin: 0; }
+.step p { margin: 0; color: var(--ink-soft); font-size: var(--t-base); }
+.step pre.code { margin: 0.3rem 0 0; font-size: var(--t-ms); }
+.step .btn { justify-self: start; min-height: 38px; padding: 0.35rem 0.95rem; font-size: var(--t-ms); }
 .after-steps { margin-top: 2rem; }
 
 /* --- the saved-programs drawer ------------------------------------------- */
@@ -1874,12 +1978,12 @@ table.syntax tr:last-child td { border-bottom: 0; }
    * take a row of their own instead and share it evenly. */
   .pane-head { padding: 0.6rem 0.85rem; flex-wrap: wrap; }
   .pane-head .pane-tools { width: 100%; margin-left: 0; }
-  .pane-tools .copy-btn { flex: 1; justify-content: center; font-size: 0.78rem; }
+  .pane-tools .copy-btn { flex: 1; justify-content: center; font-size: var(--t-xs); }
   /* Written as two classes so that raising every menu entry to a finger
    * height on touch screens cannot switch this one back on. */
   .head-nav a.nav-hide-sm { display: none; }
   .head-nav { gap: 0; }
-  .head-nav a { padding: 0.5rem 0.45rem; font-size: 0.88rem; }
+  .head-nav a { padding: 0.5rem 0.45rem; font-size: var(--t-ms); }
   h1 { font-size: clamp(2rem, 8.5vw, 2.6rem); }
   .doc-toc { display: none; }
   .doc-rail { position: static; max-height: none; }
@@ -1908,7 +2012,7 @@ table.syntax tr:last-child td { border-bottom: 0; }
    * their touch size, the note gives up the space instead. */
   .run-bar { gap: 0.4rem; }
   .run-bar .btn { padding: 0.5rem 0.95rem; }
-  .run-note { font-size: 0.78rem; flex: 1 1 6rem; min-width: 0; }
+  .run-note { font-size: var(--t-xs); flex: 1 1 6rem; min-width: 0; }
 }
 
 @media (max-width: 700px) {
@@ -1971,9 +2075,9 @@ table.syntax tr:last-child td { border-bottom: 0; }
   }
   /* The brand, both toggles and a menu row have to fit 390px of phone, so the
    * toggles lose their padding rather than the menu losing an entry. */
-  .lang-toggle a, .theme-toggle button { font-size: 0.72rem; padding: 0.34rem 0.5rem; min-height: 30px; }
+  .lang-toggle a, .theme-toggle button { font-size: var(--t-xs); padding: 0.34rem 0.5rem; min-height: 30px; }
   .theme-toggle button { min-width: 30px; }
-  .brand { font-size: 0.95rem; }
+  .brand { font-size: var(--t-base); }
   /* The "details" pill had a row of its own under the description. Once every
    * tap target grew to 44px that row cost 50px a card, and moving the pill
    * back beside the text cost more still — the description wrapped two lines
@@ -1995,21 +2099,21 @@ table.syntax tr:last-child td { border-bottom: 0; }
     transition: transform 0.2s var(--ease);
   }
   .ai-list details[open] summary::after { transform: rotate(45deg); }
-  .ai-band-head p { font-size: 0.88rem; }
-  .ai-band-head h2 { font-size: 1.02rem; }
+  .ai-band-head p { font-size: var(--t-ms); }
+  .ai-band-head h2 { font-size: var(--t-md); }
   .ai-list summary { padding: 0.65rem 0.8rem; gap: 0.1rem 0.5rem; }
-  .ai-why { font-size: 0.82rem; }
+  .ai-why { font-size: var(--t-ms); }
   .ai-list { gap: 0.45rem; }
-  .ai-text { max-height: 16rem; font-size: 0.74rem; }
+  .ai-text { max-height: 16rem; font-size: var(--t-xs); }
   .ai-actions .btn { flex: 1 1 auto; }
   /* Four tabs across 320px: they keep their own width and the strip scrolls,
    * rather than the words breaking mid-syllable. */
   .file-tabs { width: 100%; }
-  .file-tabs button { flex: 1 1 auto; padding: 0.4rem 0.6rem; font-size: 0.81rem; }
+  .file-tabs button { flex: 1 1 auto; padding: 0.4rem 0.6rem; font-size: var(--t-sm); }
   .file-note { align-items: stretch; }
   .file-note p { flex-basis: 100%; }
   .file-note-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.35rem; }
-  .file-note .btn { padding: 0.3rem 0.35rem; font-size: 0.78rem; }
+  .file-note .btn { padding: 0.3rem 0.35rem; font-size: var(--t-xs); }
 }
 
 @media (min-width: 560px) {
@@ -2068,7 +2172,7 @@ table.syntax tr:last-child td { border-bottom: 0; }
 
 .slot .slot-edit {
   padding: 0.2rem 0.5rem;
-  font-size: 0.86rem;
+  font-size: var(--t-ms);
   color: var(--ink-faint);
 }
 .slot .slot-edit:hover { color: var(--ink); }
@@ -2081,13 +2185,13 @@ table.syntax tr:last-child td { border-bottom: 0; }
   padding-top: 0.2rem;
 }
 .slot-name-row[hidden] { display: none; }
-.slot-name-label { font-size: 0.84rem; color: var(--ink-faint); }
+.slot-name-label { font-size: var(--t-ms); color: var(--ink-faint); }
 .slot-name-row .term-input { flex: 1 1 160px; font-family: var(--sans); }
-.slot-name-row .btn { min-height: 38px; padding: 0.3rem 0.9rem; font-size: 0.86rem; }
+.slot-name-row .btn { min-height: 38px; padding: 0.3rem 0.9rem; font-size: var(--t-ms); }
 .slot .slot-drop[data-sure="true"] {
   color: var(--bad);
   background: var(--bad-soft);
-  font-size: 0.78rem;
+  font-size: var(--t-xs);
   padding: 0.2rem 0.6rem;
 }
 
@@ -2294,7 +2398,7 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
  * 세로 안쪽 여백은 줄 높이를 바꾸지 않으면서 누를 수 있는 넓이만 키웁니다. */
 @media (pointer: coarse) {
   /* 코드는 초보자가 한 글자씩 옮겨 적는 글입니다. 13.8px은 그러기에 작습니다. */
-  pre.code, .readout { font-size: 0.92rem; }
+  pre.code, .readout { font-size: var(--t-base); }
   /* 머리의 두 토글이 30px로 줄어 있었습니다. 폭은 그대로 두고 높이만 되돌립니다. */
   .lang-toggle a, .theme-toggle button { min-height: 44px; }
   .doc-crumbs a, .site-foot a, .fineprint a, .doc-meta dl dd a { padding: 0.5rem 0.2rem; }
@@ -2308,12 +2412,12 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
  * 먹(--ink-soft)으로 올립니다. 크기도 11.2~11.8px에서 12.5px 위로 올립니다. */
 .badge, .doc-turn a span, .rail-group h3, .figure-label {
   color: var(--ink-soft);
-  font-size: 0.78rem;
+  font-size: var(--t-xs);
 }
 .fineprint { color: var(--ink-soft); }
-.snippet-tools a, .snippet-tools button { color: var(--ink-soft); font-size: 0.78rem; }
+.snippet-tools a, .snippet-tools button { color: var(--ink-soft); font-size: var(--t-xs); }
 .doc-crumbs { color: var(--ink-soft); }
-.lang-toggle a, .theme-toggle button { font-size: 0.78rem; }
+.lang-toggle a, .theme-toggle button { font-size: var(--t-xs); }
 
 /* 여러 개의 짧은 번호 링크가 한 줄에 늘어선 곳(가이드 목차의 「주제로 찾기」)은
  * 링크 하나가 20×19px이고 사이가 10px이었습니다. 칩으로 바꿔 벌려 놓습니다. */
@@ -2362,10 +2466,10 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   flex-wrap: wrap;
   gap: 0.5rem 0.6rem;
 }
-.problem-head strong { font-size: 0.98rem; font-weight: 600; }
+.problem-head strong { font-size: var(--t-base); font-weight: 600; }
 .problem-line {
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--t-sm);
   font-weight: 600;
   min-height: 32px;
   padding: 0.2rem 0.7rem;
@@ -2386,18 +2490,18 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   background: var(--sunk);
   border: 1px solid var(--line);
   font-family: var(--mono);
-  font-size: 0.86rem;
+  font-size: var(--t-ms);
   overflow-x: auto;
   white-space: pre;
 }
-.problem-why { font-size: 0.92rem; color: var(--ink); }
-.problem-fix { font-size: 0.92rem; color: var(--ink-soft); }
-.problem-code { font-size: 0.78rem; color: var(--ink-soft); font-family: var(--mono); }
+.problem-why { font-size: var(--t-base); color: var(--ink); }
+.problem-fix { font-size: var(--t-base); color: var(--ink-soft); }
+.problem-code { font-size: var(--t-xs); color: var(--ink-soft); font-family: var(--mono); }
 
 /* The error code's own page, folded away. A beginner who cannot get past a
  * message needs more words, and a reader who already understood the fix does
  * not want them in the way — so it opens on a press and stays open. */
-.problem-detail { font-size: 0.86rem; }
+.problem-detail { font-size: var(--t-ms); }
 .problem-detail > summary {
   cursor: pointer;
   width: fit-content;
@@ -2459,7 +2563,7 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
 }
 .seg button {
   font: inherit;
-  font-size: 0.82rem;
+  font-size: var(--t-ms);
   padding: 0.3rem 0.7rem;
   min-height: 34px;
   border: 0;
@@ -2483,7 +2587,7 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
 .tidy-note {
   flex: 1 1 14rem;
   min-width: 0;
-  font-size: 0.82rem;
+  font-size: var(--t-ms);
   line-height: 1.45;
   color: var(--ink-faint);
 }
@@ -2513,11 +2617,11 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   flex: none;
   padding-inline: 0.6rem;
   min-height: 34px;
-  font-size: 0.8rem;
+  font-size: var(--t-sm);
 }
 :root[data-focus="true"] .seg { flex: none; }
 :root[data-focus="true"] .seg button {
-  font-size: 0.78rem;
+  font-size: var(--t-xs);
   padding-inline: 0.5rem;
   min-height: 32px;
 }
@@ -2538,7 +2642,7 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
 @media (pointer: coarse) {
   :root {
     --tap: 44px;
-    --tap-text: 0.875rem;
+    --tap-text: var(--t-sm);
   }
   .btn,
   .chip,
@@ -2596,7 +2700,7 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   :root[data-focus="true"] .seg button,
   :root[data-focus="true"] .tidy-bar .btn {
     min-height: 40px;
-    font-size: 0.82rem;
+    font-size: var(--t-ms);
   }
 }
 
@@ -2621,6 +2725,6 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
 /* 설명 문장은 한 크기다. 두 가지가 섞여 있어 같은 뜻의 두 문단이 다른 크기로
  * 보였다. */
 @media (max-width: 819px) {
-  .lede { font-size: 1.02rem; }
-  h3 { font-size: 1.02rem; }
+  .lede { font-size: var(--t-md); }
+  h3 { font-size: var(--t-md); }
 }

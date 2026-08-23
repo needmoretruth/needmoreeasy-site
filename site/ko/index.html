@@ -31,10 +31,10 @@
     <a class="brand" href="/ko/">need<span>more</span>easy</a>
     <nav class="head-nav" aria-label="사이트">
       <a href="#playground">직접 써 보기</a>
-      <a href="#first-steps">첫걸음</a>
+      <a class="nav-hide-sm" href="#first-steps">첫걸음</a>
       <a class="nav-hide-sm" href="#screen=code">코딩 화면</a>
       <a href="/ko/learn/guides">가이드</a>
-      <a href="#ai-help">AI에게 묻기</a>
+      <a class="nav-hide-sm" href="#ai-help">AI에게 묻기</a>
     </nav>
       <span class="theme-toggle" role="group" aria-label="화면 밝기">
         <button type="button" data-theme-choice="light" aria-pressed="false" title="밝게" aria-label="밝게"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg></button>
@@ -98,7 +98,7 @@
         <h2>여기에 쓰고, 실행을 누르면, 아래에 결과가 나옵니다.</h2>
         <p class="lede">
           쓰신 글은 이 창 밖으로 나가지 않고, 파일 셋은 이 브라우저에 남습니다.
-          예제는 결과 아래에 있습니다.
+          바로 아래 예제를 하나 누르면 그 프로그램이 칸에 들어옵니다.
         </p>
       </div>
       <div class="play-head-tools">
@@ -113,6 +113,24 @@
       <button type="button" role="tab" data-file="3" aria-selected="false">파일 3</button>
     </div>
 
+    <div class="example-groups" id="example-groups" role="group" aria-label="예제 갈래"></div>
+
+    <div class="examples" id="examples" role="group" aria-label="예제 프로그램"></div>
+
+    <div class="version-bar" id="version-bar">
+      <span class="version-label">이 예제를 다른 문법·다른 말로</span>
+      <span class="seg" role="group" aria-label="어느 문법으로 볼지">
+        <button type="button" data-example-level="sentence" aria-pressed="true">문장</button>
+        <button type="button" data-example-level="beginner" aria-pressed="false">초급</button>
+        <button type="button" data-example-level="advanced" aria-pressed="false">파이썬</button>
+      </span>
+      <span class="seg" role="group" aria-label="어느 말로 볼지">
+        <button type="button" data-example-lang="ko" aria-pressed="true">한국어</button>
+        <button type="button" data-example-lang="en" aria-pressed="false">English</button>
+      </span>
+      <span class="version-note" id="version-note" aria-live="polite"></span>
+    </div>
+
 
     <div class="play-tabs" role="tablist" aria-label="어느 칸을 볼지">
       <button type="button" role="tab" data-view="nme" aria-selected="true">쓴 글</button>
@@ -121,7 +139,22 @@
 
     <div class="panes" data-view="nme">
       <div class="pane pane-nme">
-        <div class="pane-head"><strong id="editor-title">예제</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>복사</button><button class="copy-btn" type="button" data-copy-link>링크 복사</button><button class="copy-btn" type="button" data-download-editor>내려받기</button></span></div>
+        <div class="pane-head"><strong id="editor-title">예제</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>복사</button><button class="copy-btn" type="button" data-copy-link>링크 복사</button><button class="copy-btn" type="button" data-find-open>찾기</button><button class="copy-btn" type="button" data-rename-open>이름 바꾸기</button><button class="copy-btn" type="button" data-download-editor>내려받기</button></span></div>
+        <div class="editor-bar" id="editor-bar" hidden>
+          <span class="editor-row" id="find-row">
+            <input class="editor-input" id="find-text" type="text" autocomplete="off" spellcheck="false" placeholder="코드에서 찾을 글자" aria-label="코드에서 찾기">
+            <span class="editor-count" id="find-count" aria-live="polite"></span>
+            <button class="copy-btn" type="button" id="find-prev" aria-label="앞의 것">이전</button>
+            <button class="copy-btn" type="button" id="find-next" aria-label="다음 것">다음</button>
+          </span>
+          <span class="editor-row" id="rename-row" hidden>
+            <select class="editor-select" id="rename-from" aria-label="이름을 바꿀 일"></select>
+            <input class="editor-input" id="rename-to" type="text" autocomplete="off" spellcheck="false" placeholder="새 이름" aria-label="새 이름">
+            <button class="copy-btn" type="button" id="rename-go">바꾸기</button>
+          </span>
+          <span class="editor-msg" id="editor-msg" aria-live="polite"></span>
+          <button class="copy-btn editor-close" type="button" id="editor-bar-close" aria-label="찾기 칸 닫기">닫기</button>
+        </div>
         <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
                   autocorrect="off" aria-label="내가 쓴 프로그램"></textarea>
         <p class="hash-note" id="hash-note" hidden>앞에 <b>#</b>이 붙은 줄은 <strong>아무 일도 하지 않습니다</strong>. 사람이 읽으라고 적어 둔 쪽지라서, 지워도 프로그램은 똑같이 돌아갑니다.</p>
@@ -190,23 +223,6 @@
       <dl id="values-list"></dl>
     </details>
 
-    <div class="example-groups" id="example-groups" role="group" aria-label="예제 갈래"></div>
-
-    <div class="examples" id="examples" role="group" aria-label="예제 프로그램"></div>
-
-    <div class="version-bar" id="version-bar">
-      <span class="version-label">이 예제를 다른 문법·다른 말로</span>
-      <span class="seg" role="group" aria-label="어느 문법으로 볼지">
-        <button type="button" data-example-level="sentence" aria-pressed="true">문장</button>
-        <button type="button" data-example-level="beginner" aria-pressed="false">초급</button>
-        <button type="button" data-example-level="advanced" aria-pressed="false">파이썬</button>
-      </span>
-      <span class="seg" role="group" aria-label="어느 말로 볼지">
-        <button type="button" data-example-lang="ko" aria-pressed="true">한국어</button>
-        <button type="button" data-example-lang="en" aria-pressed="false">English</button>
-      </span>
-      <span class="version-note" id="version-note" aria-live="polite"></span>
-    </div>
 
     <div class="file-note" id="file-note" hidden>
       <p id="file-note-text"></p>

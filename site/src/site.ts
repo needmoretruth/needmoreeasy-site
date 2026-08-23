@@ -14,9 +14,15 @@
  */
 
 import init, { compile, tidy } from './wasm/nme.js';
-import { EXAMPLES, GROUPS, GROUP_LABELS } from './examples.js';
+import { EXAMPLES, GROUPS, GROUP_LABELS, ALL_LABEL } from './examples.js';
 import { COMPILER_BYTES, COMPILER_COMMIT, COMPILER_SHA256 } from './engine-meta.js';
 import type { Example, ExampleGroup, ExampleLanguage } from './examples.js';
+
+/* What the strip is filtered by. 'all' is not a group an example can belong
+ * to — it is the absence of a filter — so it is a separate word rather than an
+ * eighth member of ExampleGroup, and the two places that compare a group
+ * against it have to say so. */
+type GroupChoice = ExampleGroup | 'all';
 
 const LANG: ExampleLanguage = document.documentElement.lang === 'ko' ? 'ko' : 'en';
 const STORE_KEY = 'nme-lang';
@@ -90,6 +96,17 @@ const TEXT = {
         : `Rewrote ${lines} lines. The program does the same thing.`,
     tidyUndone: 'Put back the way you wrote it.',
     tidyWait: 'The compiler has not arrived yet.',
+    findNone: 'not found',
+    findAt: (at: number, of: number) => `${at} of ${of}`,
+    renameNoJobs: 'This program has no named jobs to rename yet.',
+    renameNeedName: 'Type the new name.',
+    renameBadName: 'A name is one word, with no spaces and no digit at the front.',
+    renameTaken: 'Something in this program is already called that.',
+    renameDone: (count: number, to: string) => `Renamed ${count} ${count === 1 ? 'place' : 'places'} to ${to}.`,
+    renameNothing: 'Nothing to rename — that name is not used as a job anywhere.',
+    renameUnsafe: 'Not renamed. That word is also part of what the program prints, so changing it would change what the program says.',
+    renameBroken: 'Not renamed. The program stops compiling with that name.',
+    renameWait: 'The compiler has not arrived yet.',
     versionFixed: 'This one is about the way it is written, so it stays as written.',
     versionSame: 'The sentence version is the one shown — the rewrite did not hold.',
   },
@@ -159,6 +176,17 @@ const TEXT = {
     tidyDone: (lines: number): string => `${lines}줄을 다시 썼습니다. 프로그램이 하는 일은 그대로입니다.`,
     tidyUndone: '쓰셨던 그대로 되돌렸습니다.',
     tidyWait: '컴파일러가 아직 도착하지 않았습니다.',
+    findNone: '없습니다',
+    findAt: (at: number, of: number) => `${of}개 가운데 ${at}번째`,
+    renameNoJobs: '이 프로그램에는 아직 이름 붙인 일이 없습니다.',
+    renameNeedName: '새 이름을 적어 주세요.',
+    renameBadName: '이름은 한 낱말입니다. 사이에 빈칸을 두지 않고, 숫자로 시작하지 않습니다.',
+    renameTaken: '그 이름을 쓰는 것이 이 프로그램에 이미 있습니다.',
+    renameDone: (count: number, to: string) => `${count}곳을 ${to}로 바꿨습니다.`,
+    renameNothing: '바꿀 곳이 없습니다. 그 이름을 일로 쓰는 자리가 없습니다.',
+    renameUnsafe: '바꾸지 않았습니다. 그 낱말은 프로그램이 화면에 내보내는 글에도 들어 있어서, 바꾸면 프로그램이 하는 말이 달라집니다.',
+    renameBroken: '바꾸지 않았습니다. 그 이름으로는 프로그램이 컴파일되지 않습니다.',
+    renameWait: '컴파일러가 아직 도착하지 않았습니다.',
     versionFixed: '이 예제는 「어떻게 쓰는가」 자체가 내용이라 쓰인 그대로 둡니다.',
     versionSame: '다시 쓰기가 확인을 통과하지 못해 문장 표기 그대로 보여 드립니다.',
   },
@@ -599,6 +627,196 @@ function byLine(html: string, echoed: Set<number>): string {
       return `<span class="pyline" data-line="${at}"${mark}>${text}</span>`;
     })
     .join('\n');
+}
+
+/* --- finding in the code, and renaming a job ------------------------------ */
+
+/* What counts as one letter of a name. NME names are Korean at least as often
+ * as they are English, so this cannot be `\w`: it has to hold Hangul as well
+ * as the digits and the underscore a name may carry inside it. Two runs of the
+ * same letters are the same name only when neither side of them is another
+ * letter — otherwise `평화` would match inside `평화로운`. */
+const NAME_LETTER = /[\wÀ-￿]/;
+
+function isNameLetter(ch: string | undefined): boolean {
+  return ch !== undefined && NAME_LETTER.test(ch);
+}
+
+/* Every place `name` stands on its own in `text`, as an index.
+ *
+ * "On its own" cannot mean "with a space on both sides", because Korean does
+ * not write it that way: `더하기라는 일` is the job `더하기` with the ending
+ * `라는` welded to it, and `공격을` is `공격` with `을`. So only the FRONT of
+ * the word is fenced — the letter before it may not be part of a name — and
+ * what comes after is settled by `known`, the set of names the program really
+ * has. At each candidate the longest name in that set that starts here wins:
+ * `더하기라는` yields `더하기` because `더하기라는` is not a name anyone made,
+ * while `더하기값` yields `더하기값` and is therefore left alone. With no set
+ * to consult, the old rule stands and both sides are fenced. */
+function wholeWordSpots(text: string, name: string, known?: ReadonlySet<string>): number[] {
+  const spots: number[] = [];
+  if (name === '') return spots;
+  let at = text.indexOf(name);
+  while (at !== -1) {
+    if (!isNameLetter(text[at - 1])) {
+      if (known === undefined) {
+        if (!isNameLetter(text[at + name.length])) spots.push(at);
+      } else if (longestKnownAt(text, at, known) === name) {
+        spots.push(at);
+      }
+    }
+    at = text.indexOf(name, at + 1);
+  }
+  return spots;
+}
+
+/* The longest name in `known` that starts at `at`, or '' if none does. The run
+ * of name letters at `at` is at most a handful long, so this walks it down
+ * from the far end rather than searching the set. */
+function longestKnownAt(text: string, at: number, known: ReadonlySet<string>): string {
+  let end = at;
+  while (end < text.length && isNameLetter(text[end])) end += 1;
+  for (let stop = end; stop > at; stop -= 1) {
+    const piece = text.slice(at, stop);
+    if (known.has(piece)) return piece;
+  }
+  return '';
+}
+
+function replaceWholeWord(text: string, from: string, to: string, known?: ReadonlySet<string>): string {
+  let out = '';
+  let last = 0;
+  for (const at of wholeWordSpots(text, from, known)) {
+    out += text.slice(last, at) + to;
+    last = at + from.length;
+  }
+  return out + text.slice(last);
+}
+
+/* Every name the compiled program actually has, read off the Python with its
+ * quoted strings taken out. This is what tells `더하기라는` from `더하기값`. */
+function knownNames(python: string): Set<string> {
+  const found = new Set<string>();
+  for (const match of outsideStrings(python).matchAll(/[\wÀ-￿]+/g)) {
+    const word = match[0];
+    if (!/^[0-9]/.test(word)) found.add(word);
+  }
+  return found;
+}
+
+/* The parts of a line of Python that are NOT inside a quoted string. A name
+ * that survives only inside quotes is a word the program prints, not a job
+ * being called, and renaming it would change what the program says. */
+function outsideStrings(line: string): string {
+  let out = '';
+  let quote = '';
+  for (let at = 0; at < line.length; at += 1) {
+    const ch = line[at] ?? '';
+    if (quote !== '') {
+      if (ch === '\\') { at += 1; continue; }
+      if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'") { quote = ch; out += ' '; continue; }
+    out += ch;
+  }
+  return out;
+}
+
+/* `line` with `to` written back as `from`, but only where it is a name. What
+ * is inside a quoted string is left exactly as it is, which is the whole point
+ * of the check this serves. */
+function putNameBack(line: string, to: string, from: string): string {
+  let out = '';
+  let plain = '';
+  let quote = '';
+  const flush = (): void => { out += replaceWholeWord(plain, to, from); plain = ''; };
+  for (let at = 0; at < line.length; at += 1) {
+    const ch = line[at] ?? '';
+    if (quote !== '') {
+      out += ch;
+      if (ch === '\\' && at + 1 < line.length) { out += line[at + 1] ?? ''; at += 1; continue; }
+      if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'") { flush(); quote = ch; out += ch; continue; }
+    plain += ch;
+  }
+  flush();
+  return out;
+}
+
+/* The names of the jobs this program makes, read out of the Python the
+ * compiler produced rather than out of the sentences. A job is a job because
+ * the compiler wrote a `def` for it. No other test is as sure, and this one
+ * works the same for all three levels and for both languages. */
+function jobNames(python: string): string[] {
+  const found = new Set<string>();
+  for (const match of python.matchAll(/^[ \t]*def[ \t]+([^\s(]+)[ \t]*\(/gm)) {
+    const name = match[1];
+    if (name !== undefined && name !== '') found.add(name);
+  }
+  return [...found];
+}
+
+interface RenameOutcome {
+  readonly text: string;
+  readonly count: number;
+  readonly unsafe: boolean;
+  readonly broken: boolean;
+}
+
+/* Rename one job everywhere it IS that job, and nowhere else.
+ *
+ * The owner's rule was exact: rename the job, and do not touch other code that
+ * merely has the same letters in it. Searching the text cannot tell those
+ * apart — `공격` can be a job on one line and the word a story prints on the
+ * next — so this does not search the text. It asks the compiler twice.
+ *
+ * One NME statement becomes exactly one physical Python line, so line N of the
+ * program is line N of the Python beside it. For every line that contains the
+ * name, the Python for THAT line is stripped of its quoted strings; if the
+ * name is still there, the line used it as a name and the line is rewritten.
+ * If the name only survives inside quotes, the line was printing the word, and
+ * it is left alone.
+ *
+ * Then the whole program is compiled again and checked line by line: the new
+ * Python, with the new name put back to the old one OUTSIDE its strings, has
+ * to be exactly what it was. If one line is not, the rename moved something
+ * that was not a name, and nothing at all is applied. */
+function renameJob(
+  source: string,
+  python: string,
+  from: string,
+  to: string,
+  compileOne: (text: string) => CompileOutcome,
+): RenameOutcome {
+  const nothing = { text: source, count: 0, unsafe: false, broken: false };
+  const known = knownNames(python);
+  const wrote = source.split('\n');
+  const made = python.split('\n');
+  const out = wrote.slice();
+  let count = 0;
+  for (let at = 0; at < wrote.length; at += 1) {
+    const line = wrote[at] ?? '';
+    const spots = wholeWordSpots(line, from, known);
+    if (spots.length === 0) continue;
+    if (wholeWordSpots(outsideStrings(made[at] ?? ''), from).length === 0) continue;
+    out[at] = replaceWholeWord(line, from, to, known);
+    count += spots.length;
+  }
+  if (count === 0) return nothing;
+  const text = out.join('\n');
+  const after = compileOne(text);
+  if (!after.ok) return { ...nothing, broken: true };
+  const remade = after.python.split('\n');
+  if (remade.length !== made.length) return { ...nothing, unsafe: true };
+  for (let at = 0; at < made.length; at += 1) {
+    const was = made[at] ?? '';
+    const now = remade[at] ?? '';
+    if (now !== was && putNameBack(now, to, from) !== was) return { ...nothing, unsafe: true };
+  }
+  return { text, count, unsafe: false, broken: false };
 }
 
 /* --- documentation pages -------------------------------------------------- */
@@ -1083,6 +1301,15 @@ class Playground {
   readonly groupBar: HTMLElement | null;
   readonly versionBar: HTMLElement | null;
   readonly versionNote: HTMLElement | null;
+  readonly editorBar: HTMLElement | null;
+  readonly findRow: HTMLElement | null;
+  readonly findText: HTMLInputElement | null;
+  readonly findCount: HTMLElement | null;
+  readonly renameRow: HTMLElement | null;
+  readonly renameFrom: HTMLSelectElement | null;
+  readonly renameTo: HTMLInputElement | null;
+  readonly editorMsg: HTMLElement | null;
+  findAt = -1;
 
   worker: Worker | null;
   compiled: string;
@@ -1114,7 +1341,7 @@ class Playground {
    * six ways of writing it the visitor asked for. `openExample` is null once
    * they have opened one of their own files instead. */
   openExample: Example | null = null;
-  exampleGroup: ExampleGroup = GROUPS[0] ?? 'start';
+  exampleGroup: GroupChoice = GROUPS[0] ?? 'start';
   exampleLevel = 'sentence';
   exampleLang: ExampleLanguage = LANG;
   markChips: (() => void) | null = null;
@@ -1173,6 +1400,14 @@ class Playground {
     this.groupBar = queryMaybe(root, '#example-groups', HTMLElement);
     this.versionBar = queryMaybe(root, '#version-bar', HTMLElement);
     this.versionNote = queryMaybe(root, '#version-note', HTMLElement);
+    this.editorBar = queryMaybe(root, '#editor-bar', HTMLElement);
+    this.findRow = queryMaybe(root, '#find-row', HTMLElement);
+    this.findText = queryMaybe(root, '#find-text', HTMLInputElement);
+    this.findCount = queryMaybe(root, '#find-count', HTMLElement);
+    this.renameRow = queryMaybe(root, '#rename-row', HTMLElement);
+    this.renameFrom = queryMaybe(root, '#rename-from', HTMLSelectElement);
+    this.renameTo = queryMaybe(root, '#rename-to', HTMLInputElement);
+    this.editorMsg = queryMaybe(root, '#editor-msg', HTMLElement);
 
     this.worker = null;
     this.compiled = '';
@@ -1316,11 +1551,11 @@ class Playground {
    * can drift away from the sentence one. */
   buildGroups(): void {
     if (!this.groupBar) return;
-    for (const group of GROUPS) {
+    for (const group of ['all', ...GROUPS] as readonly GroupChoice[]) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'chip group-chip';
-      button.textContent = GROUP_LABELS[LANG][group];
+      button.textContent = group === 'all' ? ALL_LABEL[LANG] : GROUP_LABELS[LANG][group];
       button.setAttribute('aria-pressed', String(group === this.exampleGroup));
       button.dataset.group = group;
       button.addEventListener('click', () => this.showGroup(group));
@@ -1329,7 +1564,7 @@ class Playground {
     wireStrip(this.groupBar);
   }
 
-  showGroup(group: ExampleGroup): void {
+  showGroup(group: GroupChoice): void {
     this.exampleGroup = group;
     this.groupBar?.querySelectorAll('.group-chip').forEach((chip) => {
       chip.setAttribute('aria-pressed', String(chip instanceof HTMLElement && chip.dataset.group === group));
@@ -1339,8 +1574,12 @@ class Playground {
 
   drawChips(): void {
     this.chips.textContent = '';
-    for (const example of EXAMPLES[LANG]) {
-      if (example.group !== this.exampleGroup) continue;
+    // Under "everything" the chips still come out group by group, so the run
+    // of examples reads the same as it does inside a single group.
+    const shown = this.exampleGroup === 'all'
+      ? GROUPS.flatMap((group) => EXAMPLES[LANG].filter((example) => example.group === group))
+      : EXAMPLES[LANG].filter((example) => example.group === this.exampleGroup);
+    for (const example of shown) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'chip';
@@ -1434,6 +1673,42 @@ class Playground {
     for (const kind of ['keyup', 'click', 'focus', 'blur'] as const) {
       this.editor.addEventListener(kind, () => this.markLine());
     }
+
+    // Find and rename live in one bar under the editor's own heading, so that
+    // the two things that act on the program you are writing sit with it and
+    // not with the buttons that copy it away.
+    for (const button of queryAll(document, '[data-find-open]', HTMLElement)) {
+      button.addEventListener('click', () => this.openEditorBar('find'));
+    }
+    for (const button of queryAll(document, '[data-rename-open]', HTMLElement)) {
+      button.addEventListener('click', () => this.openEditorBar('rename'));
+    }
+    queryMaybe(document, '#editor-bar-close', HTMLElement)
+      ?.addEventListener('click', () => this.closeEditorBar());
+    queryMaybe(document, '#find-next', HTMLElement)
+      ?.addEventListener('click', () => this.runFind(1));
+    queryMaybe(document, '#find-prev', HTMLElement)
+      ?.addEventListener('click', () => this.runFind(-1));
+    queryMaybe(document, '#rename-go', HTMLElement)
+      ?.addEventListener('click', () => this.doRename());
+    this.findText?.addEventListener('input', () => { this.findAt = -1; this.runFind(0); });
+    this.findText?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') { event.preventDefault(); this.runFind(event.shiftKey ? -1 : 1); }
+      if (event.key === 'Escape') { event.preventDefault(); this.closeEditorBar(); }
+    });
+    this.renameTo?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') { event.preventDefault(); this.doRename(); }
+      if (event.key === 'Escape') { event.preventDefault(); this.closeEditorBar(); }
+    });
+    // The key everyone already presses to look for something. The browser's
+    // own find cannot see inside a text box, so this one takes it over while
+    // the caret is in the program.
+    this.editor.addEventListener('keydown', (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        this.openEditorBar('find');
+      }
+    });
 
     this.editor.addEventListener('input', () => {
       clearTimeout(this.debounce);
@@ -2208,7 +2483,8 @@ class Playground {
     if (this.versionNote) this.versionNote.textContent = '';
     this.editor.value = this.exampleSource(example);
     // A link may open an example from a group that is not the one on show.
-    if (example.group !== this.exampleGroup) {
+    // Showing everything is not a group to be corrected away from.
+    if (this.exampleGroup !== 'all' && example.group !== this.exampleGroup) {
       this.showGroup(example.group);
     } else {
       this.chips.querySelectorAll('.chip').forEach((chip) => {
@@ -2221,6 +2497,120 @@ class Playground {
     this.compileNow();
     this.writeFiles();
     if (this.grow) this.grow();
+  }
+
+  /* --- finding in the code, and renaming a job ---------------------------- */
+
+  openEditorBar(mode: 'find' | 'rename'): void {
+    if (!this.editorBar) return;
+    this.editorBar.hidden = false;
+    if (this.findRow) this.findRow.hidden = mode !== 'find';
+    if (this.renameRow) this.renameRow.hidden = mode !== 'rename';
+    this.say('');
+    if (mode === 'find') {
+      this.findAt = -1;
+      this.findText?.focus();
+      this.findText?.select();
+      this.runFind(0);
+    } else {
+      this.fillJobNames();
+      this.renameTo?.focus();
+    }
+  }
+
+  closeEditorBar(): void {
+    if (this.editorBar) this.editorBar.hidden = true;
+    this.editor.focus();
+  }
+
+  say(message: string): void {
+    if (this.editorMsg) this.editorMsg.textContent = message;
+  }
+
+  /* Step through the places the text appears: 0 stays where you are, 1 goes on,
+   * -1 goes back. The editor is a plain text box, so showing a hit means
+   * selecting it — which also lets the reader start editing it straight away. */
+  runFind(step: number): void {
+    if (!this.findText || !this.findCount) return;
+    const needle = this.findText.value;
+    if (needle === '') { this.findCount.textContent = ''; this.findAt = -1; return; }
+    const hay = this.editor.value;
+    const spots: number[] = [];
+    let at = hay.indexOf(needle);
+    while (at !== -1) { spots.push(at); at = hay.indexOf(needle, at + 1); }
+    if (spots.length === 0) {
+      this.findCount.textContent = TEXT.findNone;
+      this.findAt = -1;
+      return;
+    }
+    if (this.findAt < 0) {
+      // Start from wherever the caret already is, so Find carries on from
+      // where the reader is looking rather than from the top of the file.
+      const from = this.editor.selectionStart;
+      const next = spots.findIndex((spot) => spot >= from);
+      this.findAt = next === -1 ? 0 : next;
+    } else {
+      this.findAt = (this.findAt + step + spots.length) % spots.length;
+    }
+    const spot = spots[this.findAt] ?? 0;
+    this.editor.focus();
+    this.editor.setSelectionRange(spot, spot + needle.length);
+    this.scrollEditorTo(spot);
+    this.findCount.textContent = TEXT.findAt(this.findAt + 1, spots.length);
+  }
+
+  /* A text box does not scroll to a selection that script put there. Counting
+   * the newlines before it gives the line, and the line times its height is
+   * where the box has to be. */
+  scrollEditorTo(spot: number): void {
+    const height = parseFloat(getComputedStyle(this.editor).lineHeight);
+    if (!Number.isFinite(height) || height <= 0) return;
+    const want = (this.editor.value.slice(0, spot).split('\n').length - 1) * height;
+    const top = this.editor.scrollTop;
+    const box = this.editor.clientHeight;
+    if (want < top || want > top + box - height * 2) {
+      this.editor.scrollTop = Math.max(0, want - box / 2);
+    }
+  }
+
+  fillJobNames(): void {
+    if (!this.renameFrom) return;
+    const names = jobNames(this.compiled).sort((a, b) => a.localeCompare(b));
+    const had = this.renameFrom.value;
+    this.renameFrom.textContent = '';
+    for (const name of names) {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      this.renameFrom.append(option);
+    }
+    this.renameFrom.disabled = names.length === 0;
+    if (names.includes(had)) this.renameFrom.value = had;
+    if (names.length === 0) this.say(TEXT.renameNoJobs);
+  }
+
+  doRename(): void {
+    if (!this.renameFrom || !this.renameTo) return;
+    if (!this.compilerReady) { this.say(TEXT.renameWait); return; }
+    const from = this.renameFrom.value;
+    const to = this.renameTo.value.trim();
+    if (from === '') { this.say(TEXT.renameNoJobs); return; }
+    if (to === '') { this.say(TEXT.renameNeedName); return; }
+    if (to === from) { this.say(TEXT.renameNeedName); return; }
+    if (/\s/.test(to) || /^[0-9]/.test(to) || !isNameLetter(to[0])) { this.say(TEXT.renameBadName); return; }
+    if (wholeWordSpots(this.editor.value, to).length > 0) { this.say(TEXT.renameTaken); return; }
+    const outcome = renameJob(this.editor.value, this.compiled, from, to,
+      (text) => readCompileOutcome(compile(text)));
+    if (outcome.broken) { this.say(TEXT.renameBroken); return; }
+    if (outcome.unsafe) { this.say(TEXT.renameUnsafe); return; }
+    if (outcome.count === 0) { this.say(TEXT.renameNothing); return; }
+    this.editor.value = outcome.text;
+    this.compileNow();
+    this.writeFiles();
+    this.drawFiles();
+    this.say(TEXT.renameDone(outcome.count, to));
+    this.renameTo.value = '';
+    this.fillJobNames();
   }
 
   compileNow(): void {

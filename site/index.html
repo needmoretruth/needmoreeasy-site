@@ -31,10 +31,10 @@
     <a class="brand" href="/">need<span>more</span>easy</a>
     <nav class="head-nav" aria-label="Site">
       <a href="#playground">Write something</a>
-      <a href="#first-steps">First steps</a>
+      <a class="nav-hide-sm" href="#first-steps">First steps</a>
       <a class="nav-hide-sm" href="#screen=code">Coding screen</a>
       <a href="/learn/guides">Guides</a>
-      <a href="#ai-help">Ask an AI</a>
+      <a class="nav-hide-sm" href="#ai-help">Ask an AI</a>
     </nav>
       <span class="theme-toggle" role="group" aria-label="Theme">
         <button type="button" data-theme-choice="light" aria-pressed="false" title="Light" aria-label="Light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg></button>
@@ -98,7 +98,7 @@ Welcome</pre>
         <h2>Write here, press Run, read the answer below.</h2>
         <p class="lede">
           Nothing you write leaves this tab, and three files stay here for you.
-          The examples are below the answer.
+          Press one of the examples just below and its program opens in the box.
         </p>
       </div>
       <div class="play-head-tools">
@@ -113,6 +113,24 @@ Welcome</pre>
       <button type="button" role="tab" data-file="3" aria-selected="false">File 3</button>
     </div>
 
+    <div class="example-groups" id="example-groups" role="group" aria-label="Kinds of example"></div>
+
+    <div class="examples" id="examples" role="group" aria-label="Example programs"></div>
+
+    <div class="version-bar" id="version-bar">
+      <span class="version-label">See this example another way</span>
+      <span class="seg" role="group" aria-label="Which syntax to show">
+        <button type="button" data-example-level="sentence" aria-pressed="true">Sentence</button>
+        <button type="button" data-example-level="beginner" aria-pressed="false">Beginner</button>
+        <button type="button" data-example-level="advanced" aria-pressed="false">Python</button>
+      </span>
+      <span class="seg" role="group" aria-label="Which language to show">
+        <button type="button" data-example-lang="en" aria-pressed="true">English</button>
+        <button type="button" data-example-lang="ko" aria-pressed="false">한국어</button>
+      </span>
+      <span class="version-note" id="version-note" aria-live="polite"></span>
+    </div>
+
 
     <div class="play-tabs" role="tablist" aria-label="Which panel to show">
       <button type="button" role="tab" data-view="nme" aria-selected="true">What you wrote</button>
@@ -121,7 +139,22 @@ Welcome</pre>
 
     <div class="panes" data-view="nme">
       <div class="pane pane-nme">
-        <div class="pane-head"><strong id="editor-title">Examples</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>copy</button><button class="copy-btn" type="button" data-copy-link>share link</button><button class="copy-btn" type="button" data-download-editor>download</button></span></div>
+        <div class="pane-head"><strong id="editor-title">Examples</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>copy</button><button class="copy-btn" type="button" data-copy-link>share link</button><button class="copy-btn" type="button" data-find-open>find</button><button class="copy-btn" type="button" data-rename-open>rename a job</button><button class="copy-btn" type="button" data-download-editor>download</button></span></div>
+        <div class="editor-bar" id="editor-bar" hidden>
+          <span class="editor-row" id="find-row">
+            <input class="editor-input" id="find-text" type="text" autocomplete="off" spellcheck="false" placeholder="find in the code" aria-label="Find in the code">
+            <span class="editor-count" id="find-count" aria-live="polite"></span>
+            <button class="copy-btn" type="button" id="find-prev" aria-label="Previous one">back</button>
+            <button class="copy-btn" type="button" id="find-next" aria-label="Next one">next</button>
+          </span>
+          <span class="editor-row" id="rename-row" hidden>
+            <select class="editor-select" id="rename-from" aria-label="The job to rename"></select>
+            <input class="editor-input" id="rename-to" type="text" autocomplete="off" spellcheck="false" placeholder="new name" aria-label="New name">
+            <button class="copy-btn" type="button" id="rename-go">rename</button>
+          </span>
+          <span class="editor-msg" id="editor-msg" aria-live="polite"></span>
+          <button class="copy-btn editor-close" type="button" id="editor-bar-close" aria-label="Close the find box">close</button>
+        </div>
         <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
                   autocorrect="off" aria-label="Your program"></textarea>
         <p class="hash-note" id="hash-note" hidden>A line starting with <b>#</b> <strong>does nothing at all</strong>. It is a note left for a person to read — delete it and the program runs exactly the same.</p>
@@ -190,23 +223,6 @@ Welcome</pre>
       <dl id="values-list"></dl>
     </details>
 
-    <div class="example-groups" id="example-groups" role="group" aria-label="Kinds of example"></div>
-
-    <div class="examples" id="examples" role="group" aria-label="Example programs"></div>
-
-    <div class="version-bar" id="version-bar">
-      <span class="version-label">See this example another way</span>
-      <span class="seg" role="group" aria-label="Which syntax to show">
-        <button type="button" data-example-level="sentence" aria-pressed="true">Sentence</button>
-        <button type="button" data-example-level="beginner" aria-pressed="false">Beginner</button>
-        <button type="button" data-example-level="advanced" aria-pressed="false">Python</button>
-      </span>
-      <span class="seg" role="group" aria-label="Which language to show">
-        <button type="button" data-example-lang="en" aria-pressed="true">English</button>
-        <button type="button" data-example-lang="ko" aria-pressed="false">한국어</button>
-      </span>
-      <span class="version-note" id="version-note" aria-live="polite"></span>
-    </div>
 
     <div class="file-note" id="file-note" hidden>
       <p id="file-note-text"></p>
