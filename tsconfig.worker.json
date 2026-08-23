@@ -1,5 +1,5 @@
 {
-  /* The Python engine's worker. Same strictness as the page, different world:
+  /* The two workers. Same strictness as the page, different world:
    * `WebWorker` instead of `DOM`, so anything that reaches for the document in
    * here is a compile error rather than a blank screen at run time. */
   "compilerOptions": {
@@ -28,6 +28,7 @@
   },
   "include": [
     "site/src/externals.d.ts",
-    "site/src/play-worker.ts"
+    "site/src/play-worker.ts",
+    "site/src/compile-worker.ts"
   ]
 }

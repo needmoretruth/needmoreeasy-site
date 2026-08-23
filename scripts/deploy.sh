@@ -100,6 +100,11 @@ node scripts/check-site-layout.mjs http://127.0.0.1:8788
 # cleared 3:1 while the value it named gave 1.93:1, and nothing caught it.
 node scripts/check-site-contrast.mjs http://127.0.0.1:8788
 node scripts/check-site-playground.mjs http://127.0.0.1:8788
+# Typing in the biggest example the site offers, watched with a longtask
+# observer. Compiling used to happen on the page's own thread and froze the tab
+# for 3,966 ms per keystroke; a check that polls with setTimeout cannot see
+# that, because the freeze stops the poll too.
+node scripts/check-site-speed.mjs http://127.0.0.1:8788
 node scripts/check-site-structure.mjs http://127.0.0.1:8788
 # What a visitor sees when a download never arrives, and when the engine is
 # slow — the two paths that are invisible until they go wrong.

@@ -12,6 +12,7 @@
  *   site/src/site.ts         -> site/assets/site.js         module, end of <body>
  *   site/src/examples.ts     -> site/assets/examples.js     module, imported by site.js
  *   site/src/play-worker.ts  -> site/assets/play-worker.js  module worker
+ *   site/src/compile-worker.ts -> site/assets/compile-worker.js  module worker
  *
  * Three imports are deliberately left alone rather than bundled in:
  * `./wasm/nme.js` and `./wasm-run/nmerun.js` are wasm-bindgen glue that
@@ -72,6 +73,13 @@ const ENTRIES = [
     format: 'esm',
     external: ['./wasm-run/nmerun.js', './engine-meta.js'],
     banner: 'Compiled from site/src/play-worker.ts.',
+  },
+  {
+    entry: 'compile-worker.ts',
+    out: 'compile-worker.js',
+    format: 'esm',
+    external: ['./wasm/nme.js'],
+    banner: 'Compiled from site/src/compile-worker.ts.',
   },
 ];
 

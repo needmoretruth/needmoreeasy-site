@@ -13,7 +13,6 @@
  * it to `site/assets/site.js`, which is the file the page loads.
  */
 
-import init, { compile, tidy } from './wasm/nme.js';
 import { EXAMPLES, GROUPS, GROUP_LABELS, ALL_LABEL } from './examples.js';
 import { COMPILER_BYTES, COMPILER_COMMIT, COMPILER_SHA256 } from './engine-meta.js';
 import type { Example, ExampleGroup, ExampleLanguage } from './examples.js';
@@ -34,6 +33,7 @@ const TEXT = {
     errorLabel: 'what the compiler says',
     errorNote: 'fix this line and it will compile',
     bootCompiler: 'fetching the compiler…',
+    compiling: 'turning it into Python…',
     bootEngine: 'fetching the Python engine — 11 MB, once…',
     engineReady: 'ready to run',
     waitingToRun: 'the engine has not arrived yet — this will run the moment it does',
@@ -98,12 +98,14 @@ const TEXT = {
     tidyWait: 'The compiler has not arrived yet.',
     findNone: 'not found',
     findAt: (at: number, of: number) => `${at} of ${of}`,
-    renameNoJobs: 'This program has no named jobs to rename yet.',
+    renameNoJobs: 'This program has nothing named yet — no jobs and no remembered values.',
+    renameJobs: 'jobs',
+    renameValues: 'values it remembers',
     renameNeedName: 'Type the new name.',
     renameBadName: 'A name is one word, with no spaces and no digit at the front.',
     renameTaken: 'Something in this program is already called that.',
     renameDone: (count: number, to: string) => `Renamed ${count} ${count === 1 ? 'place' : 'places'} to ${to}.`,
-    renameNothing: 'Nothing to rename — that name is not used as a job anywhere.',
+    renameNothing: 'Nothing to rename — nowhere in this program is that a name.',
     renameUnsafe: 'Not renamed. That word is also part of what the program prints, so changing it would change what the program says.',
     renameBroken: 'Not renamed. The program stops compiling with that name.',
     renameWait: 'The compiler has not arrived yet.',
@@ -116,6 +118,7 @@ const TEXT = {
     errorLabel: '컴파일러가 알려주는 내용',
     errorNote: '이 줄을 고치면 됩니다',
     bootCompiler: '컴파일러를 내려받는 중입니다…',
+    compiling: '파이썬으로 바꾸는 중입니다…',
     bootEngine: '파이썬 실행기를 내려받는 중입니다 — 11MB, 처음 한 번만…',
     engineReady: '실행 준비가 됐습니다',
     waitingToRun: '실행기가 아직 도착하지 않았습니다. 도착하는 즉시 실행합니다.',
@@ -178,12 +181,14 @@ const TEXT = {
     tidyWait: '컴파일러가 아직 도착하지 않았습니다.',
     findNone: '없습니다',
     findAt: (at: number, of: number) => `${of}개 가운데 ${at}번째`,
-    renameNoJobs: '이 프로그램에는 아직 이름 붙인 일이 없습니다.',
+    renameNoJobs: '이 프로그램에는 아직 이름 붙인 것이 없습니다 — 일도 값도 없습니다.',
+    renameJobs: '일',
+    renameValues: '기억해 둔 값',
     renameNeedName: '새 이름을 적어 주세요.',
     renameBadName: '이름은 한 낱말입니다. 사이에 빈칸을 두지 않고, 숫자로 시작하지 않습니다.',
     renameTaken: '그 이름을 쓰는 것이 이 프로그램에 이미 있습니다.',
     renameDone: (count: number, to: string) => `${count}곳을 ${to}로 바꿨습니다.`,
-    renameNothing: '바꿀 곳이 없습니다. 그 이름을 일로 쓰는 자리가 없습니다.',
+    renameNothing: '바꿀 곳이 없습니다. 이 프로그램에서 그것을 이름으로 쓰는 자리가 없습니다.',
     renameUnsafe: '바꾸지 않았습니다. 그 낱말은 프로그램이 화면에 내보내는 글에도 들어 있어서, 바꾸면 프로그램이 하는 말이 달라집니다.',
     renameBroken: '바꾸지 않았습니다. 그 이름으로는 프로그램이 컴파일되지 않습니다.',
     renameWait: '컴파일러가 아직 도착하지 않았습니다.',
@@ -782,17 +787,62 @@ function putNameBack(line: string, to: string, from: string): string {
   return out;
 }
 
-/* The names of the jobs this program makes, read out of the Python the
- * compiler produced rather than out of the sentences. A job is a job because
- * the compiler wrote a `def` for it. No other test is as sure, and this one
- * works the same for all three levels and for both languages. */
-function jobNames(python: string): string[] {
-  const found = new Set<string>();
-  for (const match of python.matchAll(/^[ \t]*def[ \t]+([^\s(]+)[ \t]*\(/gm)) {
-    const name = match[1];
-    if (name !== undefined && name !== '') found.add(name);
+interface ProgramNames {
+  readonly jobs: readonly string[];
+  readonly values: readonly string[];
+}
+
+/* Every name this program gives to something, read out of the Python the
+ * compiler produced rather than out of the sentences. Reading the Python is
+ * what makes this work the same at all three levels and in both languages, and
+ * it is the only way to tell a name from a word that merely looks like one.
+ *
+ * It used to collect `def` lines and nothing else, so a program with a hundred
+ * remembered values offered six things to rename. A value is a name too, and
+ * the safety of a rename never came from this list: it comes from compiling
+ * the renamed program and checking the Python is the same one, letter for
+ * letter, with the new name put back to the old. Anything in here that is not
+ * really a name simply fails that check and nothing is applied.
+ *
+ * Strings are stripped first, so a word the program prints is not mistaken for
+ * a name it keeps. */
+const NAME_RUN = '[\\wÀ-\uffff]+';
+const WHOLE_NAME = new RegExp(`^${NAME_RUN}$`);
+const PARAM_NAME = new RegExp(`^\\s*\\*{0,2}(${NAME_RUN})`);
+
+function programNames(python: string): ProgramNames {
+  const jobs = new Set<string>();
+  const values = new Set<string>();
+  const keep = (name: string | undefined, into: Set<string>): void => {
+    if (name === undefined) return;
+    const word = name.trim();
+    if (word !== '' && !/^[0-9]/.test(word) && WHOLE_NAME.test(word)) into.add(word);
+  };
+  const job = new RegExp(`^\\s*def\\s+(${NAME_RUN})\\s*\\(([^)]*)\\)`);
+  const loop = new RegExp(`^\\s*for\\s+(.+?)\\s+in\\s`);
+  const put = new RegExp(`^\\s*(${NAME_RUN}(?:\\s*,\\s*${NAME_RUN})*)\\s*(?:[-+*/%]|//|\\*\\*)?=(?!=)`);
+  const named = new RegExp(`\\bas\\s+(${NAME_RUN})`);
+  const declared = new RegExp(`^\\s*(?:global|nonlocal)\\s+(.+)$`);
+  for (const raw of python.split('\n')) {
+    const line = outsideStrings(raw);
+    const isJob = job.exec(line);
+    if (isJob) {
+      keep(isJob[1], jobs);
+      // A parameter is a name the program uses like any other, and renaming it
+      // is a rename everywhere or nowhere, which is what the check enforces.
+      for (const piece of (isJob[2] ?? '').split(',')) {
+        keep(PARAM_NAME.exec(piece)?.[1], values);
+      }
+      continue;
+    }
+    for (const pattern of [loop, put, named, declared]) {
+      const hit = pattern.exec(line);
+      if (hit === null) continue;
+      for (const piece of (hit[1] ?? '').split(',')) keep(piece, values);
+    }
   }
-  return [...found];
+  for (const name of jobs) values.delete(name);
+  return { jobs: [...jobs], values: [...values] };
 }
 
 interface RenameOutcome {
@@ -820,13 +870,13 @@ interface RenameOutcome {
  * Python, with the new name put back to the old one OUTSIDE its strings, has
  * to be exactly what it was. If one line is not, the rename moved something
  * that was not a name, and nothing at all is applied. */
-function renameJob(
+async function renameJob(
   source: string,
   python: string,
   from: string,
   to: string,
-  compileOne: (text: string) => CompileOutcome,
-): RenameOutcome {
+  compileOne: (text: string) => Promise<CompileOutcome | null>,
+): Promise<RenameOutcome | null> {
   const nothing = { text: source, count: 0, unsafe: false, broken: false };
   const known = knownNames(python);
   const wrote = source.split('\n');
@@ -843,7 +893,10 @@ function renameJob(
   }
   if (count === 0) return nothing;
   const text = out.join('\n');
-  const after = compileOne(text);
+  // `null` means the check never ran: something else asked the compiler for
+  // something newer. Nothing is applied without the check.
+  const after = await compileOne(text);
+  if (after === null) return null;
   if (!after.ok) return { ...nothing, broken: true };
   const remade = after.python.split('\n');
   if (remade.length !== made.length) return { ...nothing, unsafe: true };
@@ -1265,6 +1318,94 @@ function whatWentWrong(error: string): string | null {
   return null;
 }
 
+/* --- the compiler, on its own thread -------------------------------------- */
+
+interface CompileAsk {
+  readonly type: 'compile' | 'tidy';
+  readonly id: number;
+  readonly source: string;
+  readonly level: string;
+  readonly language: string;
+}
+
+/* The page's end of `compile-worker.ts`. One request at a time, newest wins.
+ *
+ * A call into WebAssembly cannot be interrupted from outside: it runs to its
+ * end whether or not anybody still wants the answer. Every keystroke makes the
+ * running compile pointless, so the only way to stop paying for it is to end
+ * the thread it is on. That is affordable here because the module is compiled
+ * from bytes once — about 5 ms — and every worker after the first is handed
+ * that same module, which instantiates in well under a millisecond.
+ *
+ * A request that is thrown away settles to `null` rather than rejecting or
+ * hanging for ever. Every caller reads that the same way: a newer answer is
+ * already on its way, so do nothing and let it arrive. */
+class CompilerLink {
+  private worker: Worker | null = null;
+  private module: WebAssembly.Module | null = null;
+  private next = 1;
+  private open: { readonly id: number; readonly settle: (json: string | null) => void } | null = null;
+  private readonly onFatal: (error: string) => void;
+
+  constructor(onFatal: (error: string) => void) {
+    this.onFatal = onFatal;
+  }
+
+  async start(bytes: BufferSource): Promise<void> {
+    this.module = await WebAssembly.compile(bytes);
+    this.spawn();
+  }
+
+  private spawn(): Worker {
+    const worker = new Worker('/assets/compile-worker.js', { type: 'module' });
+    worker.onmessage = (event: MessageEvent<unknown>): void => this.hear(event.data);
+    worker.onerror = (event: ErrorEvent): void => this.onFatal(event.message || String(event));
+    if (this.module) worker.postMessage({ type: 'start', module: this.module });
+    this.worker = worker;
+    return worker;
+  }
+
+  private hear(raw: unknown): void {
+    if (typeof raw !== 'object' || raw === null || !('type' in raw)) return;
+    if (raw.type === 'fatal') {
+      this.onFatal('error' in raw && typeof raw.error === 'string' ? raw.error : '');
+      return;
+    }
+    if (raw.type !== 'done') return;
+    if (!('id' in raw) || typeof raw.id !== 'number') return;
+    if (!('json' in raw) || typeof raw.json !== 'string') return;
+    const open = this.open;
+    if (open === null || open.id !== raw.id) return;
+    this.open = null;
+    open.settle(raw.json);
+  }
+
+  private ask(ask: CompileAsk): Promise<string | null> {
+    const running = this.open;
+    if (running !== null) {
+      this.open = null;
+      this.worker?.terminate();
+      this.spawn();
+      running.settle(null);
+    }
+    const worker = this.worker ?? this.spawn();
+    return new Promise((settle) => {
+      this.open = { id: ask.id, settle };
+      worker.postMessage(ask);
+    });
+  }
+
+  compile(source: string): Promise<string | null> {
+    this.next += 1;
+    return this.ask({ type: 'compile', id: this.next, source, level: '', language: '' });
+  }
+
+  tidy(source: string, level: string, language: string): Promise<string | null> {
+    this.next += 1;
+    return this.ask({ type: 'tidy', id: this.next, source, level, language });
+  }
+}
+
 class Playground {
   readonly editor: HTMLTextAreaElement;
   /* The coloured copy under the editor, and the box that holds the two
@@ -1364,7 +1505,16 @@ class Playground {
   findAt = -1;
 
   worker: Worker | null;
+  readonly compiler: CompilerLink;
   compiled: string;
+  /* The exact text that produced `compiled`. Compiling is no longer instant,
+   * so "is the Python beside this program still the Python for it?" is a real
+   * question — Run asks it before it runs anything. */
+  compiledFrom: string;
+  /* How long the last compile took. The wait after the last keystroke is set
+   * from it rather than from a guess: a four-line program should answer as you
+   * type, and a four-thousand-line one should wait until you pause. */
+  compileMs: number;
   debounce: number;
   compilerReady: boolean;
   engineReady: boolean;
@@ -1464,7 +1614,13 @@ class Playground {
     this.editorMsg = queryMaybe(root, '#editor-msg', HTMLElement);
 
     this.worker = null;
+    this.compiler = new CompilerLink((error) => {
+      this.compilerReady = false;
+      this.showAlert(`${TEXT.compilerLate} (${error})`, () => { void this.start(); });
+    });
     this.compiled = '';
+    this.compiledFrom = '';
+    this.compileMs = 0;
     this.debounce = 0;
     this.compilerReady = false;
     this.engineReady = false;
@@ -1488,7 +1644,7 @@ class Playground {
     // address bar decide what is on screen.
     this.readShelf();
     const first = EXAMPLES[LANG][0];
-    if (!this.loadFromHash() && !this.showActiveFile() && first) this.load(first);
+    if (!this.loadFromHash() && !this.showActiveFile() && first) void this.load(first);
     this.drawFiles();
   }
 
@@ -1500,7 +1656,7 @@ class Playground {
     if (asked) {
       const found = EXAMPLES[LANG].find((example) => example.id === asked[1]);
       if (found) {
-        this.load(found);
+        void this.load(found);
         return true;
       }
     }
@@ -1640,7 +1796,7 @@ class Playground {
       button.textContent = example.label;
       button.dataset.example = example.id;
       button.setAttribute('aria-pressed', String(example.id === this.openExample?.id));
-      button.addEventListener('click', () => this.load(example));
+      button.addEventListener('click', () => { void this.load(example); });
       this.chips.append(button);
     }
     this.chips.scrollLeft = 0;
@@ -1672,7 +1828,7 @@ class Playground {
    * from the language that was asked for, rewritten into the level that was
    * asked for. A rewrite that the compiler will not stand behind is not shown
    * at all — the sentence version is, and the note says why. */
-  exampleSource(example: Example): string {
+  async exampleSource(example: Example): Promise<string> {
     const set = EXAMPLES[this.exampleLang];
     const base = set.find((other) => other.id === example.id) ?? example;
     if (base.fixed === true || base.fails === true || this.exampleLevel === 'sentence') return base.source;
@@ -1680,7 +1836,9 @@ class Playground {
       if (this.versionNote) this.versionNote.textContent = TEXT.tidyWait;
       return base.source;
     }
-    const outcome = readTidyOutcome(tidy(base.source, this.exampleLevel, this.exampleLang));
+    const json = await this.compiler.tidy(base.source, this.exampleLevel, this.exampleLang);
+    if (json === null) return base.source;
+    const outcome = readTidyOutcome(json);
     if (!outcome.ok || outcome.nme.trim() === '') {
       if (this.versionNote) this.versionNote.textContent = TEXT.versionSame;
       return base.source;
@@ -1693,30 +1851,30 @@ class Playground {
     for (const button of queryAll(this.versionBar, '[data-example-level]', HTMLButtonElement)) {
       button.addEventListener('click', () => {
         this.exampleLevel = button.dataset.exampleLevel ?? 'sentence';
-        this.reopenExample();
+        void this.reopenExample();
       });
     }
     for (const button of queryAll(this.versionBar, '[data-example-lang]', HTMLButtonElement)) {
       button.addEventListener('click', () => {
         const asked = button.dataset.exampleLang;
         this.exampleLang = asked === 'ko' || asked === 'en' ? asked : LANG;
-        this.reopenExample();
+        void this.reopenExample();
       });
     }
   }
 
   /* The same example again, in whichever of the six ways is chosen now. */
-  reopenExample(): void {
+  async reopenExample(): Promise<void> {
     const example = this.openExample;
     if (!example) {
       this.drawVersions();
       return;
     }
     if (this.versionNote) this.versionNote.textContent = '';
-    this.setEditorText(this.exampleSource(example));
+    this.setEditorText(await this.exampleSource(example));
     this.terminal.textContent = '';
     this.drawVersions();
-    this.compileNow();
+    void this.compileNow();
     this.writeFiles();
     if (this.grow) this.grow();
   }
@@ -1744,14 +1902,14 @@ class Playground {
     queryMaybe(document, '#find-prev', HTMLElement)
       ?.addEventListener('click', () => this.runFind(-1));
     queryMaybe(document, '#rename-go', HTMLElement)
-      ?.addEventListener('click', () => this.doRename());
+      ?.addEventListener('click', () => { void this.doRename(); });
     this.findText?.addEventListener('input', () => { this.findAt = -1; this.runFind(0); });
     this.findText?.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') { event.preventDefault(); this.runFind(event.shiftKey ? -1 : 1); }
       if (event.key === 'Escape') { event.preventDefault(); this.closeEditorBar(); }
     });
     this.renameTo?.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') { event.preventDefault(); this.doRename(); }
+      if (event.key === 'Enter') { event.preventDefault(); void this.doRename(); }
       if (event.key === 'Escape') { event.preventDefault(); this.closeEditorBar(); }
     });
     // The key everyone already presses to look for something. The browser's
@@ -1764,13 +1922,23 @@ class Playground {
       }
     });
 
+    /* How long to wait after the last keystroke. A short program compiles in
+     * a few milliseconds and should answer while you type; a four-thousand-line
+     * one takes seconds, and starting a compile between two letters of a word
+     * only throws it away again. So the wait is half of what the last compile
+     * actually cost, held between a tenth of a second and four tenths
+     * of a second — measured, not guessed, and it re-tunes itself as the
+     * program grows or as the compiler gets faster. The cap is low because a
+     * compile that is overtaken is now cancelled outright: waiting longer
+     * saves a little battery and costs everyone the wait. */
     this.editor.addEventListener('input', () => {
       clearTimeout(this.debounce);
+      const wait = Math.min(400, Math.max(120, Math.round(this.compileMs / 2)));
       this.debounce = setTimeout(() => {
-        this.compileNow();
+        void this.compileNow();
         this.writeFiles();
         this.drawFiles();
-      }, 180);
+      }, wait);
     });
 
     // On a phone the two code panes become two tabs over one panel. They carry
@@ -1820,7 +1988,7 @@ class Playground {
     this.wireVersions();
     this.wireFocus();
     this.wireTidy();
-    this.runButton.addEventListener('click', () => this.run());
+    this.runButton.addEventListener('click', () => { void this.run(); });
     if (this.problemLine) {
       this.problemLine.addEventListener('click', () => {
         const line = this.problemLine?.textContent?.match(/\d+/)?.[0];
@@ -1832,7 +2000,7 @@ class Playground {
     this.editor.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
-        if (!this.runButton.disabled) this.run();
+        if (!this.runButton.disabled) void this.run();
       }
     });
     this.runButton.title = TEXT.runHint;
@@ -1910,13 +2078,17 @@ class Playground {
     if (this.tidyNote) this.tidyNote.textContent = message;
   }
 
-  tidyNow(): void {
+  async tidyNow(): Promise<void> {
     if (!this.compilerReady) {
       this.sayTidy(TEXT.tidyWait);
       return;
     }
     const before = this.editor.value;
-    const outcome = readTidyOutcome(tidy(before, this.tidyChoice('level'), this.tidyChoice('lang')));
+    const json = await this.compiler.tidy(before, this.tidyChoice('level'), this.tidyChoice('lang'));
+    // Typing during the rewrite takes the compiler back; the text on screen is
+    // what the visitor wants, so this quietly stands down.
+    if (json === null) return;
+    const outcome = readTidyOutcome(json);
     if (!outcome.ok) {
       // The band under the editor is where a line number belongs, and it is
       // already there for the same reason. Point at it rather than repeat it.
@@ -1936,7 +2108,7 @@ class Playground {
     this.setEditorText(outcome.nme);
     this.sayTidy(TEXT.tidyDone(outcome.changed));
     if (this.tidyUndoButton) this.tidyUndoButton.hidden = false;
-    this.compileNow();
+    void this.compileNow();
     this.writeFiles();
     this.drawFiles();
     if (this.grow) this.grow();
@@ -1948,7 +2120,7 @@ class Playground {
     this.beforeTidy = null;
     if (this.tidyUndoButton) this.tidyUndoButton.hidden = true;
     this.sayTidy(TEXT.tidyUndone);
-    this.compileNow();
+    void this.compileNow();
     this.writeFiles();
     this.drawFiles();
     if (this.grow) this.grow();
@@ -1957,7 +2129,7 @@ class Playground {
   wireTidy(): void {
     if (!this.tidyBar) return;
     this.sayTidy(TEXT.tidyIdle);
-    this.tidyButton?.addEventListener('click', () => this.tidyNow());
+    this.tidyButton?.addEventListener('click', () => { void this.tidyNow(); });
     this.tidyUndoButton?.addEventListener('click', () => this.undoTidy());
     for (const kind of ['lang', 'level'] as const) {
       const group = this.tidyBar.querySelectorAll(`[data-tidy-${kind}]`);
@@ -2325,7 +2497,7 @@ class Playground {
     const carried = this.files[this.activeFile];
     if (!carried) return false;
     this.setEditorText(carried);
-    this.compileNow();
+    void this.compileNow();
     if (this.grow) this.grow();
     return true;
   }
@@ -2404,7 +2576,7 @@ class Playground {
     this.slots.current = null;
     this.drawFiles();
     this.drawSlots();
-    this.compileNow();
+    void this.compileNow();
     this.writeFiles();
     if (this.grow) this.grow();
   }
@@ -2636,7 +2808,7 @@ class Playground {
     this.chips.querySelectorAll('.chip').forEach((chip) => chip.setAttribute('aria-pressed', 'false'));
     this.writeSlots();
     this.drawSlots();
-    this.compileNow();
+    void this.compileNow();
     this.writeFiles();
     this.drawFiles();
     if (this.grow) this.grow();
@@ -2682,7 +2854,7 @@ class Playground {
 
   /* An example opens in its own tab. It can never land in one of the three
    * files, because that is where the visitor's own work is. */
-  load(example: Example): void {
+  async load(example: Example): Promise<void> {
     clearTimeout(this.debounce);
     this.disarmOverwrites();
     if (this.activeFile !== 'example') {
@@ -2692,7 +2864,7 @@ class Playground {
     this.slots.current = null;
     this.openExample = example;
     if (this.versionNote) this.versionNote.textContent = '';
-    this.setEditorText(this.exampleSource(example));
+    this.setEditorText(await this.exampleSource(example));
     // A link may open an example from a group that is not the one on show.
     // Showing everything is not a group to be corrected away from.
     if (this.exampleGroup !== 'all' && example.group !== this.exampleGroup) {
@@ -2705,7 +2877,7 @@ class Playground {
     this.terminal.textContent = '';
     this.drawSlots();
     this.drawFiles();
-    this.compileNow();
+    void this.compileNow();
     this.writeFiles();
     if (this.grow) this.grow();
   }
@@ -2724,7 +2896,11 @@ class Playground {
       this.findText?.select();
       this.runFind(0);
     } else {
-      this.fillJobNames();
+      // Put the caret on a name and press the button: that name is already
+      // chosen. Four hundred names in a list is fine to have and painful to
+      // scroll, and the one you want is nearly always the one you are looking
+      // at. This is what F2 does in an editor.
+      this.fillJobNames(this.nameAtCaret());
       this.renameTo?.focus();
     }
   }
@@ -2784,23 +2960,64 @@ class Playground {
     }
   }
 
-  fillJobNames(): void {
-    if (!this.renameFrom) return;
-    const names = jobNames(this.compiled).sort((a, b) => a.localeCompare(b));
-    const had = this.renameFrom.value;
-    this.renameFrom.textContent = '';
-    for (const name of names) {
-      const option = document.createElement('option');
-      option.value = name;
-      option.textContent = name;
-      this.renameFrom.append(option);
-    }
-    this.renameFrom.disabled = names.length === 0;
-    if (names.includes(had)) this.renameFrom.value = had;
-    if (names.length === 0) this.say(TEXT.renameNoJobs);
+  /* The two kinds are kept apart in the list because they read differently to
+   * whoever is looking for one: a job is something the program does, a value
+   * is something it remembers. Anything the compiler invented that is not
+   * written in the program is dropped — offering a name that cannot be found
+   * in the editor is offering a button that does nothing. */
+  /* The name the caret is sitting in, or inside — Korean writes `회복약회복은`
+   * where the name is `회복약회복`, so the longest name the compiler knows at
+   * that spot is the answer, not the run of letters. */
+  nameAtCaret(): string | null {
+    if (this.compiled === '') return null;
+    const text = this.editor.value;
+    let at = this.editor.selectionStart;
+    while (at > 0 && isNameLetter(text[at - 1])) at -= 1;
+    if (!isNameLetter(text[at])) return null;
+    const word = longestKnownAt(text, at, knownNames(this.compiled));
+    return word === '' ? null : word;
   }
 
-  doRename(): void {
+  fillJobNames(want: string | null = null): void {
+    const box = this.renameFrom;
+    if (!box) return;
+    const found = programNames(this.compiled);
+    // Korean glues its particles onto the end of a name, so `회복약회복` is
+    // written `회복약회복은` half the time. Asking whether the exact word is
+    // in the editor answers "no" for almost every Korean name; the same
+    // longest-known-name walk the rename itself uses answers it properly.
+    const known = knownNames(this.compiled);
+    const source = this.editor.value;
+    const shown = (list: readonly string[]): string[] => list
+      .filter((name) => wholeWordSpots(source, name, known).length > 0)
+      .sort((a, b) => a.localeCompare(b));
+    const jobs = shown(found.jobs);
+    const values = shown(found.values);
+    const had = want ?? box.value;
+    box.textContent = '';
+    const kinds: { readonly label: string; readonly names: readonly string[] }[] = [
+      { label: TEXT.renameJobs, names: jobs },
+      { label: TEXT.renameValues, names: values },
+    ];
+    for (const { label, names } of kinds) {
+      if (names.length === 0) continue;
+      const group = document.createElement('optgroup');
+      group.label = `${label} (${names.length})`;
+      for (const name of names) {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        group.append(option);
+      }
+      box.append(group);
+    }
+    const total = jobs.length + values.length;
+    box.disabled = total === 0;
+    if (jobs.includes(had) || values.includes(had)) box.value = had;
+    if (total === 0) this.say(TEXT.renameNoJobs);
+  }
+
+  async doRename(): Promise<void> {
     if (!this.renameFrom || !this.renameTo) return;
     if (!this.compilerReady) { this.say(TEXT.renameWait); return; }
     const from = this.renameFrom.value;
@@ -2810,27 +3027,45 @@ class Playground {
     if (to === from) { this.say(TEXT.renameNeedName); return; }
     if (/\s/.test(to) || /^[0-9]/.test(to) || !isNameLetter(to[0])) { this.say(TEXT.renameBadName); return; }
     if (wholeWordSpots(this.editor.value, to).length > 0) { this.say(TEXT.renameTaken); return; }
-    const outcome = renameJob(this.editor.value, this.compiled, from, to,
-      (text) => readCompileOutcome(compile(text)));
+    const outcome = await renameJob(this.editor.value, this.compiled, from, to,
+      async (text) => {
+        const json = await this.compiler.compile(text);
+        return json === null ? null : readCompileOutcome(json);
+      });
+    if (outcome === null) return;
     if (outcome.broken) { this.say(TEXT.renameBroken); return; }
     if (outcome.unsafe) { this.say(TEXT.renameUnsafe); return; }
     if (outcome.count === 0) { this.say(TEXT.renameNothing); return; }
     this.setEditorText(outcome.text);
-    this.compileNow();
     this.writeFiles();
     this.drawFiles();
     this.say(TEXT.renameDone(outcome.count, to));
     this.renameTo.value = '';
+    // The list is read out of the Python, so it can only be refilled once the
+    // Python for the renamed program is here.
+    await this.compileNow();
     this.fillJobNames();
   }
 
-  compileNow(): void {
+  /* Ask for Python and put it up when it arrives. Nothing here blocks the
+   * page any more, so two things had to become explicit: the answer can be for
+   * text that has already been typed over — that is the `null` — and the pane
+   * keeps showing the last good Python meanwhile, with the note saying it is
+   * behind rather than pretending it is current. */
+  async compileNow(): Promise<void> {
     this.markHashNote();
     if (!this.compilerReady) {
       this.pythonState.textContent = TEXT.bootCompiler;
       return;
     }
-    const outcome = readCompileOutcome(compile(this.editor.value));
+    const source = this.editor.value;
+    if (this.pythonNote) this.pythonNote.textContent = TEXT.compiling;
+    const started = performance.now();
+    const json = await this.compiler.compile(source);
+    if (json === null) return;
+    this.compileMs = performance.now() - started;
+    this.compiledFrom = source;
+    const outcome = readCompileOutcome(json);
     // A quick pulse on the Python pane whenever it is rebuilt. Compiling as
     // you type is the thing this page is for, and without a flicker the pane
     // looks static even while it is changing.
@@ -2843,7 +3078,7 @@ class Playground {
     if (outcome.ok) {
       this.compiled = outcome.python;
       this.python.dataset.state = 'ok';
-      const echoed = echoedLines(this.editor.value, outcome.python);
+      const echoed = echoedLines(source, outcome.python);
       this.python.innerHTML = byLine(highlightPython(outcome.python), echoed);
       this.markLine();
       // Both kinds in one program is the case worth pointing at; all words or
@@ -2966,7 +3201,7 @@ class Playground {
         COMPILER_BYTES,
         (loaded, total) => this.setProgress(loaded, total),
       );
-      await init({ module_or_path: source });
+      await this.compiler.start(await source.arrayBuffer());
     } catch (error) {
       this.hideProgress();
       this.note.textContent = '';
@@ -2974,7 +3209,7 @@ class Playground {
       return;
     }
     this.compilerReady = true;
-    this.compileNow();
+    void this.compileNow();
     this.startEngine();
   }
 
@@ -3139,10 +3374,22 @@ class Playground {
     }
   }
 
-  run(): void {
+  async run(): Promise<void> {
     if (!this.compilerReady) {
       this.showAlert(TEXT.compilerLate, () => { void this.start(); });
       return;
+    }
+    // Pressing Run inside the wait after a keystroke used to run the Python
+    // for the program as it was before that keystroke. The wait is longer now
+    // — it follows what compiling really costs — so this asks first whether
+    // the Python beside the editor is the Python for what is in the editor.
+    if (this.editor.value !== this.compiledFrom) {
+      clearTimeout(this.debounce);
+      this.note.textContent = TEXT.compiling;
+      await this.compileNow();
+      this.writeFiles();
+      this.drawFiles();
+      this.note.textContent = '';
     }
     if (!this.compiled) {
       // Not an alert any more: the band under the editor already says which
@@ -3212,7 +3459,7 @@ class Playground {
         this.setStatus('ready');
         if (this.pendingRun) {
           this.pendingRun = false;
-          this.run();
+          void this.run();
         } else if (!this.running) {
           this.note.textContent = TEXT.engineReady;
         }
@@ -3370,7 +3617,7 @@ if (playgroundRoot) {
   window.addEventListener('hashchange', () => {
     if (playground.loadFromHash()) {
       playground.drawFiles();
-      playground.compileNow();
+      void playground.compileNow();
     }
   });
 }

@@ -420,6 +420,37 @@ if (!/실행/.test(blocked.note)) errors.push('왜 정리할 수 없는지 말�
 if (blocked.nme !== '안녕하세요 말해줘\n끝\n') errors.push('정리할 수 없는데 글자를 건드림');
 console.log(errors.length ? 'FAIL 정리하기' : '정리하기 — 표기만 바뀌고 파이썬은 그대로, 되돌리기도 됨');
 
+// 이름 바꾸기 목록은 「일」만이 아니라 프로그램이 기억해 둔 값까지 담아야 한다.
+// 4,337줄에 이름이 400개인 프로그램에서 여섯 개만 뜨던 것이 이 검사가 지키는
+// 것이고, 커서가 놓인 이름은 이미 골라져 있어야 한다.
+await page.evaluate(() => { location.hash = '#example=job'; });
+await page.waitForFunction(() => (document.querySelector('#python')?.textContent?.length ?? 0) > 30, null, { timeout: 30000 });
+await page.waitForTimeout(500);
+const renaming = await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  const first = editor.value.split('\n').find((line) => /^\s*\S/.test(line) && !line.startsWith('#')) ?? '';
+  const word = (first.match(/[\wÀ-\uffff]{2,}/g) ?? []).pop() ?? '';
+  const at = editor.value.indexOf(word);
+  editor.focus();
+  editor.setSelectionRange(at + 1, at + 1);
+  document.querySelector('[data-rename-open]').click();
+  const box = document.querySelector('#rename-from');
+  return {
+    groups: [...box.querySelectorAll('optgroup')].map((g) => g.label),
+    count: box.options.length,
+    caretWord: word,
+    picked: box.value,
+  };
+});
+if (renaming.count < 2) errors.push(`이름 바꾸기 목록에 ${renaming.count}개뿐 — 일과 값이 다 있어야 함`);
+if (renaming.groups.length < 2) errors.push(`이름 갈래가 ${renaming.groups.join('/') || '없음'} — 「일」과 「값」이 다 있어야 함`);
+console.log(renaming.groups.length >= 2
+  ? `이름 바꾸기 목록에 일과 값이 함께 나옴  ${renaming.groups.join(' / ')}`
+  : 'FAIL 이름 바꾸기 목록');
+if (renaming.picked !== '' && renaming.caretWord !== '' && !renaming.caretWord.startsWith(renaming.picked)) {
+  errors.push(`커서가 「${renaming.caretWord}」에 있는데 목록은 「${renaming.picked}」를 골랐음`);
+}
+
 // 건너뛰기 링크는 「쓰는 칸으로」라고 말한다. 좁은 화면에서 파이썬 칸을 켜 두면
 // 쓰는 칸이 display:none이 되어 포커스를 받지 못한다 — 그러면 링크는 아무 데도
 // 데려가지 못하고, 머리글을 지나가려던 사람은 문서 맨 위로 되돌아간다.
