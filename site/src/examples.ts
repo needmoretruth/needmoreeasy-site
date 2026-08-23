@@ -29,9 +29,9 @@
  * among the small ones. They are the longest programs on the site — `peace` is
  * 4,337 lines — and someone who came to see how far the sentence syntax goes
  * is looking for exactly these. */
-export type ExampleGroup = 'start' | 'choose' | 'data' | 'game' | 'rpg' | 'levels' | 'big';
+export type ExampleGroup = 'start' | 'choose' | 'data' | 'game' | 'rpg' | 'big' | 'ways';
 
-export const GROUPS: readonly ExampleGroup[] = ['start', 'choose', 'data', 'game', 'rpg', 'levels', 'big'];
+export const GROUPS: readonly ExampleGroup[] = ['start', 'choose', 'data', 'game', 'rpg', 'big', 'ways'];
 
 /* The shape every entry has.
  *
@@ -58,21 +58,21 @@ export type ExampleLanguage = 'en' | 'ko';
 export const GROUP_LABELS: Readonly<Record<ExampleLanguage, Readonly<Record<ExampleGroup, string>>>> = {
   en: {
     start: 'Start here',
-    choose: 'Choosing, repeating, jobs',
-    data: 'Lists, tables and text',
-    game: 'Making games',
-    rpg: 'Role-playing games',
-    levels: 'Three levels, two languages',
+    choose: 'Choosing and repeating',
+    data: 'Lists and text',
+    game: 'Games',
+    rpg: 'RPG',
     big: 'Bigger programs',
+    ways: 'Ways of writing it',
   },
   ko: {
     start: '처음 해 보기',
-    choose: '고르기 · 되풀이 · 일 나누기',
-    data: '목록 · 표 · 글',
-    game: '게임 만들기',
-    rpg: '역할을 맡는 게임(RPG)',
-    levels: '세 가지 문법, 두 나라 말',
+    choose: '고르기와 되풀이',
+    data: '목록과 글',
+    game: '게임',
+    rpg: 'RPG',
     big: '큰 프로그램',
+    ways: '쓰는 방법 견주기',
   },
 };
 
@@ -81,7 +81,7 @@ export const GROUP_LABELS: Readonly<Record<ExampleLanguage, Readonly<Record<Exam
  * this shows the whole shelf, in the order the file is written. */
 export const ALL_LABEL: Readonly<Record<ExampleLanguage, string>> = {
   en: 'Everything',
-  ko: '전부 보기',
+  ko: '전부',
 };
 
 export const EXAMPLES: Readonly<Record<ExampleLanguage, readonly Example[]>> = {
@@ -522,7 +522,7 @@ show The door swings open.`,
     {
       id: 'six',
       label: 'All six at once',
-      group: 'levels',
+      group: 'ways',
       fixed: true,
       answers: [],
       expect: 'advanced English',
@@ -540,7 +540,7 @@ print(인사)`,
     {
       id: 'levels',
       label: 'Three levels at once',
-      group: 'levels',
+      group: 'ways',
       fixed: true,
       answers: [],
       expect: 'sentence syntax',
@@ -560,7 +560,7 @@ for person in people:                     # advanced again
     {
       id: 'mix',
       label: 'English + Korean',
-      group: 'levels',
+      group: 'ways',
       fixed: true,
       answers: [],
       expect: 'friend',
@@ -571,8 +571,8 @@ set animal to pick from cat or dog
     },
     {
       id: 'typo',
-      label: 'It reads your mistakes',
-      group: 'start',
+      label: 'Reading past a typo',
+      group: 'ways',
       fixed: true,
       answers: [],
       expect: 'and once more',
@@ -590,7 +590,7 @@ show score
     {
       id: 'error',
       label: 'What an error looks like',
-      group: 'start',
+      group: 'ways',
       fixed: true,
       answers: [],
       fails: true,
@@ -650,7 +650,7 @@ end`,
     {
       id: 'grow',
       label: 'Growing into Python',
-      group: 'levels',
+      group: 'ways',
       fixed: true,
       answers: [],
       expect: 'three',
@@ -6746,7 +6746,7 @@ draw a line`,
     {
       id: 'six',
       label: '여섯 가지 한 파일에',
-      group: 'levels',
+      group: 'ways',
       fixed: true,
       answers: [],
       expect: '고급 한국어',
@@ -6764,7 +6764,7 @@ print(greeting)`,
     {
       id: 'levels',
       label: '세 문법 한 번에',
-      group: 'levels',
+      group: 'ways',
       fixed: true,
       answers: [],
       expect: '문장형 문법',
@@ -6784,7 +6784,7 @@ for 사람 in 사람들:                        # 다시 고급
     {
       id: 'mix',
       label: '한국어 + 영어',
-      group: 'levels',
+      group: 'ways',
       fixed: true,
       answers: [],
       expect: '친구',
@@ -6795,8 +6795,8 @@ for 사람 in 사람들:                        # 다시 고급
     },
     {
       id: 'typo',
-      label: '실수를 알아서 읽습니다',
-      group: 'start',
+      label: '오타가 있어도 읽기',
+      group: 'ways',
       fixed: true,
       answers: [],
       expect: '또',
@@ -6812,8 +6812,8 @@ for 사람 in 사람들:                        # 다시 고급
     },
     {
       id: 'error',
-      label: '오류는 이렇게 보입니다',
-      group: 'start',
+      label: '오류가 났을 때',
+      group: 'ways',
       fixed: true,
       answers: [],
       fails: true,
@@ -6873,7 +6873,7 @@ while True
     {
       id: 'grow',
       label: '한 줄씩 Python으로',
-      group: 'levels',
+      group: 'ways',
       fixed: true,
       answers: [],
       expect: '셋',

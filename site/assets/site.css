@@ -752,28 +752,45 @@ pre code {
  *
  * The strip of examples used to be every example there is. The names above it
  * cut it into six, and the row under it shows whichever one is open written
- * another way. Both rows are the same pill shapes the page already uses, so
- * nothing new has to be learnt to read them. */
+ * another way. */
 .example-groups {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.75rem;
+  gap: 0.15rem 0.4rem;
+  margin-bottom: var(--s4);
 }
-/* The group names and the examples under them are two different questions —
- * which shelf, then which book — and two rows of identical pills read as one
- * long list. The names are plain text until one is chosen, so the row above
- * looks like tabs and the row below like the things they hold. */
+
+/* Which shelf, then which book: two questions, and they were being asked in
+ * the same voice. Both rows were pills, and the chosen one in each row was the
+ * same filled black pill, so the eye could not tell the row that filters from
+ * the row that opens. The black fill now means one thing only — this is the
+ * program in the box — and a chosen group name is the name itself, dark and
+ * heavier with a rule under it. Underline and weight both carry it, so it does
+ * not rest on colour alone. */
 .group-chip {
   font-size: var(--t-ms);
+  color: var(--ink-faint);
   background: transparent;
   border-color: transparent;
+  border-radius: var(--r-sm);
+  padding: 0.3rem 0.55rem;
+  min-height: 34px;
 }
-.group-chip:hover { background: var(--surface-2); }
+.group-chip:hover { background: var(--surface-2); color: var(--ink); }
 .group-chip[aria-pressed="true"] {
-  color: var(--bg);
-  background: var(--ink);
-  border-color: var(--ink);
+  color: var(--ink);
+  background: transparent;
+  border-color: transparent;
+  font-weight: 620;
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+.group-chip[aria-pressed="true"]:hover { background: var(--surface-2); }
+/* How many are in there. Quiet, and never the thing you read first. */
+.group-count {
+  margin-left: 0.35em;
+  color: var(--ink-faint);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
 }
 
 .version-bar {

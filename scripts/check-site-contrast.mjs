@@ -151,6 +151,7 @@ for (const theme of ['light', 'dark']) {
          * the edge rule, and pays for the exemption below. */
         const GROUPS = [
           { sel: '.seg', child: 'button', on: '[aria-pressed="true"]' },
+  { sel: '.example-groups', child: 'button', on: '[aria-pressed="true"]' },
           { sel: '.file-tabs', child: 'button', on: '[aria-selected="true"]' },
           { sel: '.play-tabs', child: 'button', on: '[aria-selected="true"]' },
           { sel: '.theme-toggle', child: 'button', on: '[aria-pressed="true"]' },

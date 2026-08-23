@@ -1761,11 +1761,21 @@ class Playground {
    * can drift away from the sentence one. */
   buildGroups(): void {
     if (!this.groupBar) return;
-    for (const group of ['all', ...GROUPS] as readonly GroupChoice[]) {
+    const groups: readonly GroupChoice[] = ['all', ...GROUPS];
+    for (const group of groups) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'chip group-chip';
       button.textContent = group === 'all' ? ALL_LABEL[LANG] : GROUP_LABELS[LANG][group];
+      // How many are behind each name. Without it the row is seven doors with
+      // nothing written on them, and "everything" does not say how much that
+      // is — which is the first thing anyone wants to know.
+      const many = document.createElement('span');
+      many.className = 'group-count';
+      many.textContent = String(group === 'all'
+        ? EXAMPLES[LANG].length
+        : EXAMPLES[LANG].filter((example) => example.group === group).length);
+      button.append(many);
       button.setAttribute('aria-pressed', String(group === this.exampleGroup));
       button.dataset.group = group;
       button.addEventListener('click', () => this.showGroup(group));
