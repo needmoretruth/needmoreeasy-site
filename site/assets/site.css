@@ -903,6 +903,12 @@ pre code {
 }
 .editor-select { flex: 0 1 10rem; }
 .editor-input:focus-visible, .editor-select:focus-visible { outline-offset: 1px; }
+/* The grey a browser gives a placeholder by itself is #757575, which is
+ * 4.27:1 on the dark page — under the floor, and it does not follow
+ * --ink-faint when that is corrected, because nothing here was ever telling
+ * it to. The opacity is not decoration: Firefox fades a placeholder on its
+ * own, so setting only the colour leaves it faint again. */
+::placeholder { color: var(--ink-faint); opacity: 1; }
 .editor-count {
   font-size: var(--t-xs);
   color: var(--ink-faint);

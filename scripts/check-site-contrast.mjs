@@ -93,9 +93,14 @@ for (const theme of ['light', 'dark']) {
   const rows = await page.evaluate(() => {
     const { over, ratio, hex, token } = window.measuring;
     const SURFACES = ['--bg', '--surface', '--surface-2', '--surface-hover', '--sunk'];
+    /* --sunk-deep is the terminal's face and it is translucent, so it is
+     * measured as it lands: on the pane behind it. It passes today; it is in
+     * the list so that the next person to touch it finds out if it stops. */
+    const OVER_SURFACE = ['--sunk-deep'];
     const out = [];
-    for (const surface of SURFACES) {
-      const face = token(surface);
+    for (const surface of [...SURFACES, ...OVER_SURFACE]) {
+      const raw = token(surface);
+      const face = OVER_SURFACE.includes(surface) ? over(raw, token('--surface')) : raw;
       /* Text tiers. --ink-faint is the floor and it is used for small text,
        * so it is held to 4.5 like the rest. */
       for (const ink of ['--ink', '--ink-soft', '--ink-faint']) {
@@ -208,6 +213,48 @@ for (const theme of ['light', 'dark']) {
             bad.push(`테두리 ${label(el)} ${hex(edge)} — 안쪽 ${inside.toFixed(2)}:1 · 바깥 ${out.toFixed(2)}:1 (3:1 필요)`);
           }
         }
+        /* Text a stylesheet draws rather than the document: a placeholder, and
+         * the ::before/::after that carry the empty-terminal note, the list
+         * numbers, the running caret and the alert mark. `getComputedStyle`
+         * with no second argument cannot see any of it, so a sweep over child
+         * text nodes misses every one — which is how a placeholder sat at
+         * 4.27:1 on the dark page with the check green. */
+        const drawn = (el, part) => {
+          const style = getComputedStyle(el, part);
+          const ink = parse(style.color);
+          if (!ink || ink.a === 0) return;
+          const face = backdrop(el);
+          const shown = ink.a < 1 ? over(ink, face) : ink;
+          const size = parseFloat(style.fontSize);
+          const weight = Number(style.fontWeight) || 400;
+          const need = size >= 24 || (size >= 18.66 && weight >= 700) ? 3 : 4.5;
+          const got = ratio(shown, face);
+          seen += 1;
+          if (got + 0.005 < need) {
+            bad.push(`${part} ${label(el)} ${hex(shown)} / ${hex(face)}`
+              + ` — ${got.toFixed(2)}:1 (${need}:1 필요)`);
+          }
+        };
+        for (const el of document.querySelectorAll('[placeholder]')) {
+          const rect = el.getBoundingClientRect();
+          if (rect.width < 2 || rect.height < 2) continue;
+          drawn(el, '::placeholder');
+        }
+        for (const el of document.querySelectorAll('body *')) {
+          const rect = el.getBoundingClientRect();
+          if (rect.width < 2 || rect.height < 2) continue;
+          if (getComputedStyle(el).visibility === 'hidden') continue;
+          for (const part of ['::before', '::after']) {
+            const content = getComputedStyle(el, part).content;
+            // Only the ones that draw letters. A shape drawn with an empty
+            // string is a graphic, and a graphic is not held to the text floor.
+            const letters = /^attr\(/.test(content)
+              || /["'][^"']*[^"'\s][^"']*["']/.test(content);
+            if (!letters) continue;
+            drawn(el, part);
+          }
+        }
+
         /* The exemption, made to earn itself. */
         for (const group of GROUPS) {
           for (const box of document.querySelectorAll(group.sel)) {
