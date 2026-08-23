@@ -92,3 +92,13 @@ tests a different code path than production.
 - **The reveal animation has a failsafe.** Anything still hidden four seconds
   after load is shown anyway, so a reader who never scrolls — or a tool that
   renders the whole page at once — never sees an empty section.
+
+## Licence
+
+Apache-2.0, in `LICENSE`.
+
+The two WebAssembly files the site serves are linked from other people's code as
+well as ours — RustPython under MIT, the frozen CPython standard library under
+the PSF licence, and malachite under LGPL-3.0. `THIRD-PARTY-NOTICES.md` lists
+all 171 crates and explains how to rebuild the engine against your own malachite,
+which is what the LGPL asks for. Licence texts are in `licenses/`.
