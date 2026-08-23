@@ -94,6 +94,11 @@ curl -fsS -o /dev/null --max-time 10 http://127.0.0.1:8788/ || {
   exit 1
 }
 node scripts/check-site-layout.mjs http://127.0.0.1:8788
+# Colour is measured rather than eyeballed. Both tiers: the tokens on every
+# surface they can land on, and every element on the page against the backdrop
+# it really has. A comment in the stylesheet once claimed a control's edge
+# cleared 3:1 while the value it named gave 1.93:1, and nothing caught it.
+node scripts/check-site-contrast.mjs http://127.0.0.1:8788
 node scripts/check-site-playground.mjs http://127.0.0.1:8788
 node scripts/check-site-structure.mjs http://127.0.0.1:8788
 # What a visitor sees when a download never arrives, and when the engine is

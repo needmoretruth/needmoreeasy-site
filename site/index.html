@@ -155,8 +155,11 @@ Welcome</pre>
           <span class="editor-msg" id="editor-msg" aria-live="polite"></span>
           <button class="copy-btn editor-close" type="button" id="editor-bar-close" aria-label="Close the find box">close</button>
         </div>
-        <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
-                  autocorrect="off" aria-label="Your program"></textarea>
+        <div class="editor-stack" id="editor-stack">
+          <pre class="editor-ink" id="editor-ink" aria-hidden="true"></pre>
+          <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
+                    autocorrect="off" aria-label="Your program"></textarea>
+        </div>
         <p class="hash-note" id="hash-note" hidden>A line starting with <b>#</b> <strong>does nothing at all</strong>. It is a note left for a person to read — delete it and the program runs exactly the same.</p>
       </div>
       <div class="pane pane-python">

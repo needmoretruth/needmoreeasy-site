@@ -155,8 +155,11 @@
           <span class="editor-msg" id="editor-msg" aria-live="polite"></span>
           <button class="copy-btn editor-close" type="button" id="editor-bar-close" aria-label="찾기 칸 닫기">닫기</button>
         </div>
-        <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
-                  autocorrect="off" aria-label="내가 쓴 프로그램"></textarea>
+        <div class="editor-stack" id="editor-stack">
+          <pre class="editor-ink" id="editor-ink" aria-hidden="true"></pre>
+          <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off"
+                    autocorrect="off" aria-label="내가 쓴 프로그램"></textarea>
+        </div>
         <p class="hash-note" id="hash-note" hidden>앞에 <b>#</b>이 붙은 줄은 <strong>아무 일도 하지 않습니다</strong>. 사람이 읽으라고 적어 둔 쪽지라서, 지워도 프로그램은 똑같이 돌아갑니다.</p>
       </div>
       <div class="pane pane-python">

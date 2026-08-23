@@ -22,8 +22,11 @@
  * There is now one exception, and it is deliberate: a comment inside code is
  * green (`--tok-com`), the green every editor in the world gives it. It is
  * outside the rule rather than a hole in it — it never appears in the page's
- * own furniture, only inside a code pane, where the reader is already looking
- * at code and reading that green as "this line is a note".
+ * own furniture, only inside code, where the reader is already looking at
+ * code and reading that green as "this line is a note". That is true of the
+ * box a person writes in as well as of the panes they read: the editor keeps
+ * a coloured copy of its own text underneath itself so that a comment is
+ * green while it is being typed and not only after it has been compiled.
  *
  * MOTION. Three things move, and each one reports something true: the reveal
  * as a section arrives, the status dot while the engine is working, and the
@@ -90,9 +93,17 @@
   /* LINES do all the separating. Depth used to come from blur, a lit edge and
    * three sizes of shadow; it now comes from a hairline and from space. A
    * boundary that a finger can act on gets --line-strong, which clears the
-   * 3:1 that WCAG 1.4.11 asks of a control's edge; --line is for the rest. */
+   * 3:1 that WCAG 1.4.11 asks of a control's edge; --line is for the rest.
+   *
+   * The alpha is read off the composite, not off the page. A translucent
+   * border paints over the element's OWN background — background-clip is
+   * border-box — so the light edge lands on #f4f4f4, not on white, and it has
+   * to clear 3:1 against the fill inside it as well as the page outside it.
+   * Measured: 0.45 -> #868686, 3.64:1 on white and 3.31:1 on the fill. The
+   * 0.27 it started at was 2.12:1 and 1.93:1, so the floor this comment
+   * claimed was never actually met. Dark 0.40 -> #737373, 4.43:1 and 3.85:1. */
   --line: rgba(0, 0, 0, 0.11);
-  --line-strong: rgba(0, 0, 0, 0.27);
+  --line-strong: rgba(0, 0, 0, 0.45);
   /* One shadow survives, for the one job a line cannot do: saying that a thing
    * is above the page rather than in it. Menus and the floating Run bar. */
   --lift: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px -12px rgba(0, 0, 0, 0.22);
@@ -180,18 +191,23 @@
     --bg: #000000;
     --surface: #0b0b0b;
     --surface-2: #151515;
-    --surface-hover: #202020;
+    --surface-hover: #1e1e1e;
     --sunk: #060606;
     --sunk-deep: rgba(0, 0, 0, 0.55);
     --surface-float: rgba(10, 10, 10, 0.97);
     --grain: 0.026;
 
+    /* The dark faint grey was #7d7d7d, which is 5.10:1 on the page but only
+     * 4.44:1 on the sunken face it actually sits on — .pane-head's subtitle,
+     * .run-note and .tidy-note are all there. #868686 is 5.02:1 there. The
+     * hover face came down a step for the same reason: faint text rides it
+     * inside .guide-list and .doc-turn, and #202020 left it at 4.48:1. */
     --ink: #ffffff;
     --ink-soft: #a6a6a6;
-    --ink-faint: #7d7d7d;
+    --ink-faint: #868686;
 
     --line: rgba(255, 255, 255, 0.13);
-    --line-strong: rgba(255, 255, 255, 0.30);
+    --line-strong: rgba(255, 255, 255, 0.40);
     --lift: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
 
     --ok: #4ec98a;
@@ -212,7 +228,7 @@
   --bg: #000000;
   --surface: #0b0b0b;
   --surface-2: #151515;
-  --surface-hover: #202020;
+  --surface-hover: #1e1e1e;
   --sunk: #060606;
   --sunk-deep: rgba(0, 0, 0, 0.55);
   --surface-float: rgba(10, 10, 10, 0.97);
@@ -220,10 +236,10 @@
 
   --ink: #ffffff;
   --ink-soft: #a6a6a6;
-  --ink-faint: #7d7d7d;
+  --ink-faint: #868686;
 
   --line: rgba(255, 255, 255, 0.13);
-  --line-strong: rgba(255, 255, 255, 0.30);
+  --line-strong: rgba(255, 255, 255, 0.40);
   --lift: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
 
   --ok: #4ec98a;
@@ -501,10 +517,15 @@ pre code {
 
 /* The quiet button. It keeps an edge — without one it reads as a sentence
  * rather than as something to press, and on a phone the way into the coding
- * screen was exactly that. The edge is the quiet line, so the filled button
- * and the outlined one still rank in that order. */
-.btn-ghost { background: transparent; border-color: var(--line); }
-.btn-ghost:hover { background: var(--surface-2); border-color: var(--line-strong); }
+ * screen was exactly that.
+ *
+ * That last sentence is the reason this edge cannot be the quiet line. An
+ * edge that is the only thing saying "press me" is exactly what WCAG 1.4.11
+ * is about, and the quiet line is 1.28:1. The three ranks are carried by
+ * fill and label instead: ink filled, grey filled with a black label, and
+ * outlined with a grey label. */
+.btn-ghost { background: transparent; color: var(--ink-soft); }
+.btn-ghost:hover { background: var(--surface-2); color: var(--ink); }
 
 .chip {
   font: inherit;
@@ -513,7 +534,7 @@ pre code {
   padding: 0.34rem 0.85rem;
   color: var(--ink-soft);
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   cursor: pointer;
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
@@ -779,10 +800,15 @@ pre code {
   color: var(--ink-faint);
   border-top: 1px solid var(--line);
 }
+/* The note that explains what a comment is, so the # it quotes is painted the
+ * comment colour — the same green the editor gives it two inches above. It
+ * used to take --tok-dim, which is 3.47:1 on the pane and is not a colour
+ * anything in the editor is actually painted with. */
 .hash-note b {
   font-family: var(--mono, ui-monospace, monospace);
   font-weight: 700;
-  color: var(--tok-dim);
+  color: var(--tok-com);
+  font-style: normal;
 }
 .hash-note strong { color: var(--ink-soft); font-weight: 600; }
 
@@ -894,6 +920,77 @@ pre code {
 
 .editor { font-family: var(--mono); width: 100%; display: block; }
 .editor:focus-visible { outline-offset: -3px; }
+
+/* --- colour in the box a person writes in --------------------------------
+ *
+ * A textarea cannot paint one word differently from another, so the editor is
+ * two layers: the box itself, and under it a copy of the same text that is
+ * allowed to have colour. The box's own glyphs are made transparent and its
+ * caret is not, so what a person sees is the copy underneath and their own
+ * caret on top of it.
+ *
+ * Two things make that safe rather than clever:
+ *
+ *   The transparency is switched on by script, never by the stylesheet. If
+ *   the script never arrives, `data-ink` is never set, and the box is an
+ *   ordinary black-on-white textarea. A stylesheet that hid the text on its
+ *   own would turn one failed download into an empty editor.
+ *
+ *   While an input method is composing — which is every Korean syllable —
+ *   the layer steps aside and the box paints its own text. A composing
+ *   syllable lives in the box and not yet in its value, so the layer cannot
+ *   know about it; with the box transparent it would be invisible until the
+ *   syllable was finished. Measured in Chromium: the composition shows as a
+ *   yellow underlay with no letter in it at all. */
+.editor-stack {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 210px;
+  max-height: min(68vh, 820px);
+}
+.editor-stack > .editor { flex: 1; min-height: 0; max-height: none; }
+.editor-stack[data-ink="on"] > .editor {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  caret-color: var(--ink);
+}
+/* The one place the box's own text has to come back. */
+.editor-stack[data-ink="on"][data-composing="true"] > .editor {
+  color: var(--ink);
+  -webkit-text-fill-color: var(--ink);
+}
+.editor-stack[data-composing="true"] > .editor-ink { visibility: hidden; }
+.editor-ink {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--ink);
+  /* Everything that decides where a glyph lands — the font, the padding, the
+   * width — is copied from the textarea by script, because the box changes
+   * all three at different widths and on the coding screen. */
+}
+.editor-stack:not([data-ink="on"]) > .editor-ink { display: none; }
+/* A line of the copy. One block per line so that a keystroke repaints one
+ * line instead of the whole program; a 4,300-line program is otherwise a
+ * tenth of a second of layout per character. */
+.ink-line { display: block; }
+/* The copy has to keep the box's glyph widths exactly, or the caret drifts
+ * away from the letters on any line that has colour in it. Everything that
+ * can change an advance width is switched off here — a real italic face, a
+ * proportional-digit setting, a heavier weight — while the colour, which
+ * cannot move anything, stays. On this machine's font none of the three
+ * changes a width; on somebody else's it might, and the caret is not a thing
+ * to leave to a font. */
+.editor-ink .tok-com { font-style: normal; }
+.editor-ink .tok-num { font-variant-numeric: inherit; }
+.editor-ink .tok-kw { font-weight: inherit; }
+/* The selection the textarea paints sits between the copy and the caret, and
+ * the page's ::selection is translucent, so a selected line still shows its
+ * colour through the wash. Nothing extra is needed here. */
 
 .readout { white-space: pre; }
 
@@ -1148,7 +1245,7 @@ pre code {
   font-size: var(--t-base);
   color: var(--ink);
   background: var(--sunk);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: var(--r-md);
 }
 
@@ -1269,6 +1366,8 @@ pre code {
 .copy-wrap pre.code { padding-top: 2.6rem; }
 .copy-wrap > .copy-btn { position: absolute; top: 0.6rem; right: 0.6rem; z-index: 2; }
 
+/* The tools on a pane's head. Their fill stands 1.05:1 off the pane behind
+ * them, so the edge is the whole of what marks them as things to press. */
 .copy-btn {
   font: inherit;
   font-size: var(--t-xs);
@@ -1276,7 +1375,7 @@ pre code {
   min-height: 30px;
   color: var(--ink-faint);
   background: var(--surface-2);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   cursor: pointer;
   transition: color 0.2s var(--ease), background 0.2s var(--ease);
@@ -1581,7 +1680,7 @@ pre code {
   align-items: center;
   color: var(--ink-faint);
   background: var(--surface-2);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   cursor: pointer;
   text-decoration: none;
@@ -1592,6 +1691,10 @@ pre code {
 /* --- guide list and prompts ---------------------------------------------- */
 
 .filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; margin-bottom: 1.5rem; }
+/* The two boxes a person types into — the answer a running program waits for,
+ * and the guide filter. A field whose edge is the only thing saying "type
+ * here" is the plainest 1.4.11 failure there is, so both take the strong
+ * line, the same as the editor's own inputs. */
 .filter-input {
   flex: 1 1 240px;
   min-height: 44px;
@@ -1599,7 +1702,7 @@ pre code {
   font: inherit;
   color: var(--ink);
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
 }
 .filter-count { font-size: var(--t-ms); color: var(--ink-faint); }
@@ -1970,8 +2073,12 @@ table.syntax tr:last-child td { border-bottom: 0; }
 @media (max-width: 819px) {
   .panes[data-view="nme"] .pane-python,
   .panes[data-view="python"] .pane-nme { display: none; }
-  /* The editor sets its own height from the program on a narrow screen. */
-  .pane-nme .editor { flex: none; }
+  /* The editor sets its own height from the program on a narrow screen. The
+   * box that holds it and its coloured copy has to give up the same stretch,
+   * or the copy's clipping box keeps a pane's worth of height the box below
+   * it no longer has. */
+  .pane-nme .editor,
+  .pane-nme .editor-stack { flex: none; }
   /* These three used to be squeezed to 30px tall so that the label, the file
    * suffix and all three tools fitted one line at 320px. A 30px target is
    * half a fingertip, and one of the three is the link-copying button. They
@@ -2370,7 +2477,8 @@ main > section + section::before {
     box-shadow: none;
   }
   :root[data-focus="true"] #playground[data-tall="true"] .pane-nme .editor { padding-bottom: 1rem; }
-  :root[data-focus="true"] .pane-nme .editor { flex: 1 1 auto; }
+  :root[data-focus="true"] .pane-nme .editor,
+  :root[data-focus="true"] .pane-nme .editor-stack { flex: 1 1 auto; }
 }
 
 /* ── 핸드폰에서 읽고 누를 수 있게 ─────────────────────────────────────────

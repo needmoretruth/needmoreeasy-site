@@ -569,6 +569,42 @@ function highlightPython(source: string): string {
   return result + escapeHtml(source.slice(last));
 }
 
+/* Colour for the box a person writes in.
+ *
+ * Deliberately smaller than the Python pane's. A comment is a `#` and what
+ * follows it, exactly as in Python, and it takes the green every editor in
+ * the world gives a comment. Quoted text and numbers take the quiet tokens.
+ *
+ * Nothing else is touched, and that is the point rather than an omission: in
+ * NME an ordinary word is ordinary text, so painting words as keywords would
+ * be claiming a meaning the compiler may not have given them. The one thing
+ * the reader is promised here — a `#` line does nothing — is the one thing
+ * this paints.
+ *
+ * One line at a time, so that a keystroke repaints one line. A triple-quoted
+ * Python string that runs over several lines is therefore not tracked across
+ * them; each of its lines is read on its own. That costs a fragment of colour
+ * inside the rare embedded block and buys typing that does not slow down as
+ * the program grows. */
+const NME_PATTERN =
+  /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#.*$|\b\d+(?:\.\d+)?\b)/g;
+
+function highlightNmeLine(line: string): string {
+  let result = '';
+  let last = 0;
+  for (const match of line.matchAll(NME_PATTERN)) {
+    const piece = match[0];
+    result += escapeHtml(line.slice(last, match.index));
+    last = match.index + piece.length;
+    const kind = piece.startsWith('#') ? 'tok-com' : /^["']/.test(piece) ? 'tok-str' : 'tok-num';
+    result += `<span class="${kind}">${escapeHtml(piece)}</span>`;
+  }
+  result += escapeHtml(line.slice(last));
+  // An empty block has no height, and a line of the copy has to be exactly as
+  // tall as the line of the box above it.
+  return result === '' ? '<br>' : result;
+}
+
 /* One NME statement becomes exactly one physical Python line — `transpile.rs`
  * fails the build if an edit ever changes the newline count — so line 4 of what
  * you wrote is line 4 of the Python beside it, blank lines and comments
@@ -1231,14 +1267,30 @@ function whatWentWrong(error: string): string | null {
 
 class Playground {
   readonly editor: HTMLTextAreaElement;
+  /* The coloured copy under the editor, and the box that holds the two
+   * layers. Both optional: the documentation pages run this same file and
+   * have no playground, and an older page may not have the layer at all. */
+  readonly inkStack: HTMLElement | null;
+  readonly inkLayer: HTMLElement | null;
+  /* What the copy is currently showing, line by line, so that a keystroke can
+   * be turned into "which lines changed" without reading the DOM. */
+  private inkLines: string[] = [];
+  private inkPainted = false;
+  /* Nothing hides the box's own text until the listener that keeps the copy
+   * up to date is attached. If anything above this in the wiring throws, the
+   * editor is left as a plain black-on-white textarea rather than as an empty
+   * box with an invisible program in it. */
+  private inkReady = false;
   readonly python: HTMLElement;
   readonly pythonState: HTMLElement;
   readonly pythonNote: HTMLElement | null;
   readonly echoNote: HTMLElement | null;
   /* The line under the editor that says a `#` line does nothing. A beginner
    * reads the comments in an example as part of the program — the owner said
-   * so — and there is nowhere in a plain text box to mark them, so the page
-   * says it in words, and only while the program actually has one. */
+   * so. The box now paints them green, which shows that they are a different
+   * kind of thing but not what kind, so the sentence stays: colour is the
+   * mark and this is the explanation of it. Shown only while the program
+   * actually has a comment in it. */
   readonly hashNote: HTMLElement | null;
   readonly terminal: HTMLElement;
   /* Where the program's own names are listed once it stops. Optional: the
@@ -1351,6 +1403,8 @@ class Playground {
     // the document rather than searched inside.
     this.root = queryOne(document, '#playground', HTMLElement);
     this.editor = queryOne(root, '#editor', HTMLTextAreaElement);
+    this.inkStack = queryMaybe(root, '#editor-stack', HTMLElement);
+    this.inkLayer = queryMaybe(root, '#editor-ink', HTMLElement);
     this.python = queryOne(root, '#python', HTMLElement);
     this.pythonState = queryOne(root, '#python-state', HTMLElement);
     this.pythonNote = queryMaybe(root, '#python-note', HTMLElement);
@@ -1460,7 +1514,7 @@ class Playground {
       // examples open, so it cannot overwrite one of your three files.
       this.activeFile = 'example';
       this.files.example = new TextDecoder().decode(bytes);
-      this.editor.value = this.files.example;
+      this.setEditorText(this.files.example);
       this.terminal.textContent = '';
       return true;
     } catch {
@@ -1659,7 +1713,7 @@ class Playground {
       return;
     }
     if (this.versionNote) this.versionNote.textContent = '';
-    this.editor.value = this.exampleSource(example);
+    this.setEditorText(this.exampleSource(example));
     this.terminal.textContent = '';
     this.drawVersions();
     this.compileNow();
@@ -1760,6 +1814,7 @@ class Playground {
       this.writeFiles();
     });
     this.wireEditorHeight();
+    this.wireEditorInk();
     this.wireChipStrip();
     this.wireVersions();
     this.wireFocus();
@@ -1877,7 +1932,7 @@ class Playground {
       return;
     }
     this.beforeTidy = before;
-    this.editor.value = outcome.nme;
+    this.setEditorText(outcome.nme);
     this.sayTidy(TEXT.tidyDone(outcome.changed));
     if (this.tidyUndoButton) this.tidyUndoButton.hidden = false;
     this.compileNow();
@@ -1888,7 +1943,7 @@ class Playground {
 
   undoTidy(): void {
     if (this.beforeTidy === null) return;
-    this.editor.value = this.beforeTidy;
+    this.setEditorText(this.beforeTidy);
     this.beforeTidy = null;
     if (this.tidyUndoButton) this.tidyUndoButton.hidden = true;
     this.sayTidy(TEXT.tidyUndone);
@@ -1935,6 +1990,138 @@ class Playground {
       this.setFocus(false);
     });
     if (asked()) this.setFocus(true);
+  }
+
+  /* --- the coloured copy under the editor --------------------------------
+   *
+   * Why there is a copy at all, and why the box's own text is hidden by
+   * script rather than by the stylesheet, is written where the CSS is. This
+   * is the machinery: keep the copy the same shape as the box, the same
+   * text as the box, and scrolled to the same place as the box. */
+
+  /* Everything that decides where a glyph lands. The box changes its padding
+   * on a narrow screen, its font size on the coding screen, and its width
+   * whenever a scrollbar appears, so none of it can be written once in CSS
+   * and left alone. `clientWidth` is used rather than the border box because
+   * it is the one measurement that already has the scrollbar taken out of
+   * it — get that wrong and the copy wraps a line the box does not. */
+  syncInkBox(): void {
+    const layer = this.inkLayer;
+    if (!layer) return;
+    const box = getComputedStyle(this.editor);
+    layer.style.width = `${this.editor.clientWidth}px`;
+    layer.style.height = `${this.editor.clientHeight}px`;
+    layer.style.font = box.font;
+    layer.style.fontFamily = box.fontFamily;
+    layer.style.fontSize = box.fontSize;
+    /* Both layers are pinned to a whole number of pixels. A textarea keeps
+     * all of its lines inside one block and a stack of blocks does not, so a
+     * fractional line height rounds differently in the two and the difference
+     * piles up: measured on the 4,343-line game, 27.2px put the copy 75px
+     * below the box by the end of the program. At 27px the two agree to the
+     * pixel over the whole file. */
+    const step = Math.round(parseFloat(box.lineHeight));
+    if (Number.isFinite(step) && step > 0) {
+      this.editor.style.lineHeight = `${step}px`;
+      layer.style.lineHeight = `${step}px`;
+    } else {
+      layer.style.lineHeight = box.lineHeight;
+    }
+    layer.style.letterSpacing = box.letterSpacing;
+    layer.style.wordSpacing = box.wordSpacing;
+    layer.style.tabSize = box.tabSize;
+    layer.style.padding = box.padding;
+    layer.style.whiteSpace = box.whiteSpace === 'normal' ? 'pre-wrap' : box.whiteSpace;
+    layer.style.overflowWrap = box.overflowWrap;
+    layer.style.wordBreak = box.wordBreak;
+    layer.style.textIndent = box.textIndent;
+    layer.scrollTop = this.editor.scrollTop;
+    layer.scrollLeft = this.editor.scrollLeft;
+  }
+
+  /* Repaint the copy from the box.
+   *
+   * A keystroke changes one line, so only that line is rebuilt. Pressing
+   * Enter, pasting or loading an example changes a run of them, and the run
+   * is found by walking in from both ends. Without this a 4,300-line program
+   * costs a tenth of a second of layout per character; with it, the cost is
+   * the size of the edit and not the size of the program. */
+  paintInk(rebuild = false): void {
+    const layer = this.inkLayer;
+    const stack = this.inkStack;
+    if (!layer || !stack) return;
+    if (!this.inkReady) return;
+    const lines = this.editor.value.split('\n');
+    if (!this.inkPainted || rebuild || this.inkLines.length !== lines.length) {
+      const fresh = lines.map((line) => {
+        const row = document.createElement('div');
+        row.className = 'ink-line';
+        row.innerHTML = highlightNmeLine(line);
+        return row;
+      });
+      layer.replaceChildren(...fresh);
+      this.inkLines = lines;
+      this.inkPainted = true;
+      stack.dataset.ink = 'on';
+      this.syncInkBox();
+      return;
+    }
+    let head = 0;
+    while (head < lines.length && lines[head] === this.inkLines[head]) head += 1;
+    if (head === lines.length) return;
+    let tail = lines.length - 1;
+    while (tail > head && lines[tail] === this.inkLines[tail]) tail -= 1;
+    const rows = layer.children;
+    for (let at = head; at <= tail; at += 1) {
+      const row = rows[at];
+      const line = lines[at];
+      if (row instanceof HTMLElement && line !== undefined) row.innerHTML = highlightNmeLine(line);
+    }
+    this.inkLines = lines;
+  }
+
+  wireEditorInk(): void {
+    const stack = this.inkStack;
+    const layer = this.inkLayer;
+    if (!stack || !layer) return;
+
+    this.editor.addEventListener('input', () => this.paintInk());
+    this.editor.addEventListener('scroll', () => {
+      layer.scrollTop = this.editor.scrollTop;
+      layer.scrollLeft = this.editor.scrollLeft;
+    });
+
+    /* While an input method is composing, the box paints its own text and the
+     * copy steps aside. Coming back is held for a moment: in Korean one
+     * syllable is one composition, so a sentence is a string of them, and
+     * swapping back between each pair would be a flicker on every letter. */
+    let settle = 0;
+    this.editor.addEventListener('compositionstart', () => {
+      clearTimeout(settle);
+      stack.dataset.composing = 'true';
+    });
+    this.editor.addEventListener('compositionend', () => {
+      clearTimeout(settle);
+      settle = setTimeout(() => {
+        this.paintInk();
+        delete stack.dataset.composing;
+      }, 220);
+    });
+
+    const watch = new ResizeObserver(() => this.syncInkBox());
+    watch.observe(this.editor);
+    addEventListener('resize', () => this.syncInkBox());
+
+    this.inkReady = true;
+    this.paintInk(true);
+  }
+
+  /* Every path that puts a program into the box goes through here, so that
+   * the copy underneath can never be showing something else. Typing does not:
+   * it fires `input`, which the wiring above listens for. */
+  setEditorText(text: string): void {
+    this.editor.value = text;
+    this.paintInk(true);
   }
 
   /* On a phone the editor is the whole screen's worth of space there is, so
@@ -2113,7 +2300,7 @@ class Playground {
   showActiveFile(): boolean {
     const carried = this.files[this.activeFile];
     if (!carried) return false;
-    this.editor.value = carried;
+    this.setEditorText(carried);
     this.compileNow();
     if (this.grow) this.grow();
     return true;
@@ -2188,7 +2375,7 @@ class Playground {
     this.writeFiles();
     this.activeFile = id;
     if (id !== 'example') this.openExample = null;
-    this.editor.value = this.files[id];
+    this.setEditorText(this.files[id]);
     this.terminal.textContent = '';
     this.slots.current = null;
     this.drawFiles();
@@ -2243,7 +2430,7 @@ class Playground {
     }
     this.files[id] = source;
     this.activeFile = id;
-    this.editor.value = source;
+    this.setEditorText(source);
     this.drawFiles();
     this.writeFiles();
     this.flashSaved();
@@ -2420,7 +2607,7 @@ class Playground {
     this.slots.current = id;
     this.files.example = slot.source;
     this.openExample = null;
-    this.editor.value = slot.source;
+    this.setEditorText(slot.source);
     this.terminal.textContent = '';
     this.chips.querySelectorAll('.chip').forEach((chip) => chip.setAttribute('aria-pressed', 'false'));
     this.writeSlots();
@@ -2481,7 +2668,7 @@ class Playground {
     this.slots.current = null;
     this.openExample = example;
     if (this.versionNote) this.versionNote.textContent = '';
-    this.editor.value = this.exampleSource(example);
+    this.setEditorText(this.exampleSource(example));
     // A link may open an example from a group that is not the one on show.
     // Showing everything is not a group to be corrected away from.
     if (this.exampleGroup !== 'all' && example.group !== this.exampleGroup) {
@@ -2604,7 +2791,7 @@ class Playground {
     if (outcome.broken) { this.say(TEXT.renameBroken); return; }
     if (outcome.unsafe) { this.say(TEXT.renameUnsafe); return; }
     if (outcome.count === 0) { this.say(TEXT.renameNothing); return; }
-    this.editor.value = outcome.text;
+    this.setEditorText(outcome.text);
     this.compileNow();
     this.writeFiles();
     this.drawFiles();
