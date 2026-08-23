@@ -25,7 +25,7 @@ const PORT = Number(process.argv[2] || 8787);
  * from, and left alone otherwise — `scripts/deploy.sh` has already built them
  * by the time it starts this server, and it expects the port to be listening
  * about a second later. */
-const BUILT = ['theme.js', 'site.js', 'examples.js', 'play-worker.js']
+const BUILT = ['theme.js', 'site.js', 'examples.js', 'play-worker.js', 'compile-worker.js']
   .map((name) => join(ROOT, 'assets', name));
 
 const SOURCES = [

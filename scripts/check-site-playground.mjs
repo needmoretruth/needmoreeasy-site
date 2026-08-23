@@ -194,8 +194,9 @@ const paired = await page.evaluate(() => {
   editor.focus();
   editor.setSelectionRange(upto, upto);
   editor.dispatchEvent(new Event('keyup'));
-  const at = document.querySelector('#python .pyline[data-at="true"]');
-  return at ? { line: at.dataset.line, text: at.textContent } : null;
+  const all = [...document.querySelectorAll('#python .pyline')];
+  const at = all.find((row) => row.dataset.at === 'true');
+  return at ? { line: String(all.indexOf(at)), text: at.textContent } : null;
 });
 if (!paired || paired.line !== '5' || !paired.text.includes('len(')) {
   errors.push('편집기 줄과 파이썬 줄이 짝지어지지 않음: ' + JSON.stringify(paired));
@@ -457,21 +458,181 @@ const renaming = await page.evaluate(() => {
   editor.setSelectionRange(at + 1, at + 1);
   document.querySelector('[data-rename-open]').click();
   const box = document.querySelector('#rename-from');
+  const list = document.querySelector('#rename-names');
   return {
-    groups: [...box.querySelectorAll('optgroup')].map((g) => g.label),
-    count: box.options.length,
+    kinds: [...new Set([...list.options].map((o) => (o.label.split(' — ')[1] ?? '')))].filter(Boolean),
+    count: list.options.length,
     caretWord: word,
     picked: box.value,
+    spots: document.querySelector('#rename-count').textContent,
   };
 });
 if (renaming.count < 2) errors.push(`이름 바꾸기 목록에 ${renaming.count}개뿐 — 일과 값이 다 있어야 함`);
-if (renaming.groups.length < 2) errors.push(`이름 갈래가 ${renaming.groups.join('/') || '없음'} — 「일」과 「값」이 다 있어야 함`);
-console.log(renaming.groups.length >= 2
-  ? `이름 바꾸기 목록에 일과 값이 함께 나옴  ${renaming.groups.join(' / ')}`
+if (renaming.kinds.length < 2) errors.push(`이름 갈래가 ${renaming.kinds.join('/') || '없음'} — 「일」과 「값」이 다 있어야 함`);
+console.log(renaming.kinds.length >= 2
+  ? `이름 바꾸기 목록에 일과 값이 함께 나옴  ${renaming.kinds.join(' / ')}`
   : 'FAIL 이름 바꾸기 목록');
 if (renaming.picked !== '' && renaming.caretWord !== '' && !renaming.caretWord.startsWith(renaming.picked)) {
-  errors.push(`커서가 「${renaming.caretWord}」에 있는데 목록은 「${renaming.picked}」를 골랐음`);
+  errors.push(`커서가 「${renaming.caretWord}」에 있는데 칸에는 「${renaming.picked}」가 들어감`);
 }
+if (renaming.picked !== '' && !/\d/.test(renaming.spots)) {
+  errors.push(`이름을 골랐는데 몇 곳인지 말해 주지 않음: 「${renaming.spots}」`);
+}
+
+// ⭐고친 직후에 이름 바꾸기를 누른다.
+//
+// 이름 바꾸기는 프로그램과 그 프로그램의 파이썬을 줄줄이 견주어 안전을 판정한다.
+// 그런데 방금 고친 줄은 아직 컴파일되지 않았으므로, 견주는 기준이 한 판 낡은
+// 상태다. 그러면 멀쩡한 이름도 「그 낱말은 화면에 내보내는 글에도 들어 있어서」로
+// 거절당한다 — 오너가 2026-08-23에 "이름 바꾸기 기능이 모든 변수를 찾지 못하고"
+// 라고 한 것이 이것이다. 이름이 틀린 것이 아니라 기준이 낡았던 것이다.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '__첫이름은 3\n__첫이름 말해줘\n';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForFunction(() => document.querySelector('#python').dataset.state === 'ok'
+  && document.querySelector('#python').textContent.includes('__첫이름'), null, { timeout: 20000 });
+await page.evaluate(() => document.querySelector('[data-rename-open]').click());
+await page.fill('#rename-from', '__첫이름');
+await page.fill('#rename-to', '__둘째이름');
+await page.evaluate(() => {
+  // 한 줄을 더 쓰고, 컴파일이 걸리기도 전에 바꾸기를 누른다.
+  const editor = document.querySelector('#editor');
+  document.querySelector('#editor-msg').textContent = '';
+  editor.value = '__첫이름은 3\n__첫이름 말해줘\n__첫이름 말해줘\n';
+  editor.dispatchEvent(new Event('input'));
+  document.querySelector('#rename-go').click();
+});
+await page.waitForFunction(() => document.querySelector('#editor-msg').textContent !== ''
+  && !document.querySelector('#rename-go').disabled, null, { timeout: 30000 }).catch(() => {});
+const freshBase = await page.evaluate(() => ({
+  msg: document.querySelector('#editor-msg').textContent,
+  nme: document.querySelector('#editor').value,
+}));
+const renamedAll = (freshBase.nme.match(/__둘째이름/g) ?? []).length;
+if (renamedAll !== 3) {
+  errors.push(`고친 직후에 누른 이름 바꾸기가 ${renamedAll}곳만 바꿈 — 낡은 기준으로 견줬다: ${freshBase.msg}`);
+}
+console.log(renamedAll === 3
+  ? '고치자마자 눌러도 이름 바꾸기가 세 곳 다 바꿈'
+  : 'FAIL 고친 직후 이름 바꾸기');
+
+// 이어서 한 번 더. 첫 번째가 끝나자마자 두 번째를 눌러도 되어야 한다.
+await page.fill('#rename-from', '__둘째이름');
+await page.fill('#rename-to', '__셋째이름');
+await page.evaluate(() => { document.querySelector('#editor-msg').textContent = ''; });
+await page.click('#rename-go');
+await page.waitForFunction(() => document.querySelector('#editor-msg').textContent !== ''
+  && !document.querySelector('#rename-go').disabled, null, { timeout: 30000 }).catch(() => {});
+const again = await page.evaluate(() => ({
+  msg: document.querySelector('#editor-msg').textContent,
+  nme: document.querySelector('#editor').value,
+}));
+if (!again.nme.includes('__셋째이름')) errors.push('연달아 두 번째 이름 바꾸기가 거절당함: ' + again.msg);
+console.log(again.nme.includes('__셋째이름')
+  ? '이름 바꾸기를 연달아 두 번 해도 둘 다 적용됨'
+  : 'FAIL 연달아 이름 바꾸기');
+
+// ⛔찾기 칸에 한 글자를 치면 초점이 편집 칸으로 넘어가, 다음 글자가 프로그램
+// 안에 박히던 자리다(오너 2026-08-23: "한글자씩만 입력할수있고 코드수정으로
+// 넘어가서 이상하게 써져"). 세 글자를 이어 칠 수 있어야 하고, 초점은 찾기 칸에
+// 그대로 있어야 한다.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '가나다 말해줘\n가나다 말해줘\n';
+  editor.dispatchEvent(new Event('input'));
+  document.querySelector('#editor-bar-close').click();
+  document.querySelector('[data-find-open]').click();
+});
+await page.waitForTimeout(200);
+await page.keyboard.type('가나다', { delay: 80 });
+await page.waitForTimeout(200);
+const finding = await page.evaluate(() => ({
+  where: document.activeElement ? document.activeElement.id : '',
+  typed: document.querySelector('#find-text').value,
+  nme: document.querySelector('#editor').value,
+  count: document.querySelector('#find-count').textContent,
+}));
+if (finding.where !== 'find-text') errors.push(`찾기 칸에 치는 동안 초점이 「${finding.where}」로 넘어감`);
+if (finding.typed !== '가나다') errors.push(`찾기 칸에 「${finding.typed}」만 들어감 — 이어 칠 수 없음`);
+if (finding.nme !== '가나다 말해줘\n가나다 말해줘\n') errors.push('찾기에 친 글자가 프로그램 안으로 들어감: ' + finding.nme);
+console.log(finding.where === 'find-text' && finding.typed === '가나다'
+  ? `찾기 칸은 초점을 뺏지 않고 이어 칠 수 있음  (${finding.count})`
+  : 'FAIL 찾기 칸');
+await page.evaluate(() => document.querySelector('#editor-bar-close').click());
+
+// ⛔한글은 한 글자가 두세 번의 입력으로 온다 — `ㄲ`, `끄`, `끝`. 그 사이의
+// 것은 아무도 쓴 적 없는 반쪽짜리 글자다. 컴파일이 시작될 때마다 파이썬 칸의
+// 부제가 「파이썬으로 바꾸는 중입니다」로 바뀌므로, 그것을 세면 조합하는 동안
+// 몇 번 컴파일했는지 알 수 있다. 답은 0이어야 하고, 글자가 끝나면 1이어야 한다.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '안녕 말해줘\n';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForFunction(() => document.querySelector('#python').dataset.state === 'ok'
+  && document.querySelector('#python').textContent.includes('안녕'), null, { timeout: 20000 });
+await page.evaluate(() => {
+  const note = document.querySelector('#python-note');
+  globalThis.nmeCompiles = 0;
+  new MutationObserver(() => {
+    if (note.textContent.includes('바꾸는 중')) globalThis.nmeCompiles += 1;
+  }).observe(note, { childList: true, characterData: true, subtree: true });
+  const editor = document.querySelector('#editor');
+  editor.focus();
+  editor.setSelectionRange(editor.value.length, editor.value.length);
+  editor.dispatchEvent(new CompositionEvent('compositionstart'));
+  for (const half of ['ㄲ', '끄']) {
+    editor.value = editor.value.replace(/[ㄲ끄]?$/, half);
+    editor.dispatchEvent(new Event('input'));
+  }
+});
+await page.waitForTimeout(1200);
+const whileComposing = await page.evaluate(() => globalThis.nmeCompiles);
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = editor.value.replace(/끄$/, '끝');
+  editor.dispatchEvent(new CompositionEvent('compositionend'));
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(1200);
+const afterLetter = await page.evaluate(() => globalThis.nmeCompiles);
+if (whileComposing !== 0) errors.push(`한글 한 글자를 만드는 동안 ${whileComposing}번 컴파일함 — 반쪽짜리 글자를 컴파일한다`);
+if (afterLetter < 1) errors.push('글자를 다 만들었는데도 컴파일하지 않음');
+console.log(whileComposing === 0 && afterLetter >= 1
+  ? '한글을 만드는 동안에는 컴파일하지 않고, 글자가 끝나면 한다'
+  : 'FAIL 한글 조합 중 컴파일');
+
+// ⛔한 글자 때문에 프로그램이 깨졌다고 파이썬 판을 통째로 비우면, 판이 400px
+// 접히면서 아래에 있던 것이 전부 위로 올라온다 — 읽던 자리를 잃는다.
+// (오너 2026-08-23: "화면이 위로 넘어가버려서 흐름이 끊겨")
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '하나 말해줘\n둘 말해줘\n셋 말해줘\n';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForFunction(() => document.querySelector('#python').dataset.state === 'ok'
+  && document.querySelectorAll('#python .pyline').length === 4, null, { timeout: 20000 });
+const tall = await page.evaluate(() => document.querySelectorAll('#python .pyline').length);
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '하나 말해줘\n둘 말해줘\n셋 말해줘\n끝\n';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForFunction(() => document.querySelector('#python').dataset.state !== 'ok', null, { timeout: 20000 });
+const kept = await page.evaluate(() => ({
+  rows: document.querySelectorAll('#python .pyline').length,
+  state: document.querySelector('#python').dataset.state,
+  behind: document.querySelector('.pane-python').dataset.behind ?? '',
+  band: !document.querySelector('#problem').hidden,
+}));
+if (kept.rows < tall) errors.push(`깨진 순간 파이썬 판이 ${tall}줄에서 ${kept.rows}줄로 접힘 — 화면이 위로 올라간다`);
+if (kept.behind !== 'true') errors.push('조금 전 파이썬을 그대로 두면서 뒤처졌다는 표시를 하지 않음');
+if (!kept.band) errors.push('깨졌는데 아래 띠가 무엇이 걸렸는지 말해 주지 않음');
+console.log(kept.rows >= tall && kept.behind === 'true'
+  ? '깨져도 파이썬 판은 접히지 않고, 뒤처졌다고만 말함'
+  : 'FAIL 깨졌을 때 판 접힘');
 
 // 건너뛰기 링크는 「쓰는 칸으로」라고 말한다. 좁은 화면에서 파이썬 칸을 켜 두면
 // 쓰는 칸이 display:none이 되어 포커스를 받지 못한다 — 그러면 링크는 아무 데도

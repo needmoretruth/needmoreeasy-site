@@ -148,7 +148,9 @@ Welcome</pre>
             <button class="copy-btn" type="button" id="find-next" aria-label="Next one">next</button>
           </span>
           <span class="editor-row" id="rename-row" hidden>
-            <select class="editor-select" id="rename-from" aria-label="The name to change"></select>
+            <input class="editor-input editor-name" id="rename-from" list="rename-names" type="text" autocomplete="off" spellcheck="false" placeholder="which name" aria-label="The name to change">
+            <datalist id="rename-names"></datalist>
+            <span class="editor-count" id="rename-count" aria-live="polite"></span>
             <input class="editor-input" id="rename-to" type="text" autocomplete="off" spellcheck="false" placeholder="new name" aria-label="New name">
             <button class="copy-btn" type="button" id="rename-go">rename</button>
           </span>

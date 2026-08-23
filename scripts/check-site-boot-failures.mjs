@@ -70,6 +70,46 @@ const browser = await chromium.launch();
   await page.close();
 }
 
+/* 4) the two halves of the engine come from different builds.
+ *
+ * The engine is a WebAssembly file plus the small script that binds it to this
+ * page, and they only work as a pair — the binding is by name, and the names
+ * carry a hash of the build. A browser holding an old copy of either half
+ * pairs them wrongly, and the visitor gets
+ *
+ *   LinkError: WebAssembly.instantiate(): Import #0 "./nmerun_bg.js"
+ *   "__wbg_readLine_…": function import requires a callable
+ *
+ * which the owner ran into on 2026-08-23. Nothing they can do clears it: every
+ * reload finds the same stale copy. So the page fetches both halves past the
+ * cache and starts a new worker, once. Here the first request for the script
+ * is answered with one from "another build", and the page has to come back
+ * from it on its own.
+ */
+{
+  const page = await (await browser.newContext()).newPage();
+  let served = 0;
+  await page.route('**/wasm-run/nmerun.js', async (route) => {
+    served += 1;
+    const response = await route.fetch();
+    const real = await response.text();
+    const body = served === 1
+      ? real.replace(/__wbg_readLine_[0-9a-f]+/g, '__wbg_readLine_0000000000000000')
+      : real;
+    await route.fulfill({ response, body });
+  });
+  await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+  let healed = true;
+  await page.waitForFunction(
+    () => document.querySelector('#engine-dot')?.dataset.state === 'ready',
+    null,
+    { timeout: 120000 },
+  ).catch(() => { healed = false; });
+  ok('실행기의 두 짝이 다른 판이어도 스스로 다시 받아 준비됨', healed, `요청 ${served}번`);
+  ok('  고치는 동안 알림을 띄우지 않음', await page.locator('#boot-alert').isHidden());
+  await page.close();
+}
+
 await browser.close();
-console.log(bad === 0 ? '내려받기 실패 세 갈래 모두 정상' : `내려받기 실패 처리에서 ${bad}가지가 잘못되었습니다`);
+console.log(bad === 0 ? '내려받기 실패 네 갈래 모두 정상' : `내려받기 실패 처리에서 ${bad}가지가 잘못되었습니다`);
 process.exit(bad === 0 ? 0 : 1);

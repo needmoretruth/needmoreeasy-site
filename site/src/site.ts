@@ -31,6 +31,8 @@ const TEXT = {
     compiled: 'Python',
     compiledNote: 'what the compiler produced',
     errorLabel: 'what the compiler says',
+    behindLabel: 'the Python from a moment ago',
+    behindNote: 'the line you are writing does not read yet — the band below says where it stopped',
     errorNote: 'fix this line and it will compile',
     bootCompiler: 'fetching the compiler…',
     compiling: 'turning it into Python…',
@@ -39,6 +41,8 @@ const TEXT = {
     waitingToRun: 'the engine has not arrived yet — this will run the moment it does',
     compilerLate: 'The compiler has not arrived, so nothing can run yet. Check your connection and try again.',
     engineLate: 'The Python engine could not be fetched, so the program cannot run here. Check your connection and try again.',
+    engineRepair: 'the engine did not match this page — fetching it again…',
+    engineMismatch: 'Two of this page\u2019s files are from different builds, and the browser is holding an old copy of one of them. Reloading the page while holding Shift fixes it.',
     retry: 'try again',
     running: 'running…',
     finished: 'finished',
@@ -109,6 +113,10 @@ const TEXT = {
     renameUnsafe: 'Not renamed. That word is also part of what the program prints, so changing it would change what the program says.',
     renameBroken: 'Not renamed. The program stops compiling with that name.',
     renameWait: 'The compiler has not arrived yet.',
+    renameSpots: (count: number) => `${count} ${count === 1 ? 'place' : 'places'}`,
+    renameNotHere: 'not a name here',
+    renameChecking: 'Reading the program…',
+    renameBusy: 'Still reading the program. Press it again in a moment.',
     versionFixed: 'This one is about the way it is written, so it stays as written.',
     versionSame: 'The sentence version is the one shown — the rewrite did not hold.',
   },
@@ -116,6 +124,8 @@ const TEXT = {
     compiled: 'Python',
     compiledNote: '컴파일러가 만든 결과',
     errorLabel: '컴파일러가 알려주는 내용',
+    behindLabel: '조금 전까지의 파이썬',
+    behindNote: '지금 쓰고 있는 줄은 아직 안 읽힙니다 — 아래 띠에 어디가 걸렸는지 적혀 있습니다',
     errorNote: '이 줄을 고치면 됩니다',
     bootCompiler: '컴파일러를 내려받는 중입니다…',
     compiling: '파이썬으로 바꾸는 중입니다…',
@@ -124,6 +134,8 @@ const TEXT = {
     waitingToRun: '실행기가 아직 도착하지 않았습니다. 도착하는 즉시 실행합니다.',
     compilerLate: '컴파일러가 도착하지 않아 아직 아무것도 실행할 수 없습니다. 연결을 확인하고 다시 시도해 주세요.',
     engineLate: '파이썬 실행기를 내려받지 못해서 여기서는 실행할 수 없습니다. 연결을 확인하고 다시 시도해 주세요.',
+    engineRepair: '실행기가 이 페이지와 맞지 않아 다시 내려받는 중입니다…',
+    engineMismatch: '이 페이지의 파일 두 개가 서로 다른 판입니다. 브라우저가 그중 하나를 옛것으로 갖고 있어서 그렇습니다. Shift를 누른 채 새로 고치면 고쳐집니다.',
     retry: '다시 시도',
     running: '실행 중…',
     finished: '실행이 끝났습니다',
@@ -192,6 +204,10 @@ const TEXT = {
     renameUnsafe: '바꾸지 않았습니다. 그 낱말은 프로그램이 화면에 내보내는 글에도 들어 있어서, 바꾸면 프로그램이 하는 말이 달라집니다.',
     renameBroken: '바꾸지 않았습니다. 그 이름으로는 프로그램이 컴파일되지 않습니다.',
     renameWait: '컴파일러가 아직 도착하지 않았습니다.',
+    renameSpots: (count: number) => `${count}곳`,
+    renameNotHere: '이 프로그램에 없는 이름입니다',
+    renameChecking: '프로그램을 읽는 중입니다…',
+    renameBusy: '아직 프로그램을 읽는 중입니다. 잠시 뒤에 다시 눌러 주세요.',
     versionFixed: '이 예제는 「어떻게 쓰는가」 자체가 내용이라 쓰인 그대로 둡니다.',
     versionSame: '다시 쓰기가 확인을 통과하지 못해 문장 표기 그대로 보여 드립니다.',
   },
@@ -594,6 +610,13 @@ function highlightPython(source: string): string {
 const NME_PATTERN =
   /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#.*$|\b\d+(?:\.\d+)?\b)/g;
 
+function inkRow(line: string): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'ink-line';
+  row.innerHTML = highlightNmeLine(line);
+  return row;
+}
+
 function highlightNmeLine(line: string): string {
   let result = '';
   let last = 0;
@@ -646,7 +669,7 @@ function echoedLines(source: string, python: string): Set<number> {
   return echoed;
 }
 
-function byLine(html: string, echoed: Set<number>): string {
+function htmlLines(html: string): string[] {
   let depth = 0;
   let line = '';
   const lines: string[] = [];
@@ -662,12 +685,24 @@ function byLine(html: string, echoed: Set<number>): string {
     line += ch;
   }
   lines.push(line);
-  return lines
-    .map((text, at) => {
-      const mark = echoed.has(at) ? ' data-echo="true"' : '';
-      return `<span class="pyline" data-line="${at}"${mark}>${text}</span>`;
-    })
-    .join('\n');
+  return lines;
+}
+
+/* One element per line, and nothing between them.
+ *
+ * The lines used to be joined back together with newlines, which meant the
+ * pane was a row of elements with text between them — so adding a line meant
+ * rebuilding the lot. Each line is its own block now, exactly as the copy
+ * under the writing box has been from the start, and an empty one carries a
+ * `<br>` because a block with nothing in it has no height and the two panes
+ * have to stay level line for line. */
+function pyRow(text: string, echoed: boolean): string {
+  const mark = echoed ? ' data-echo="true"' : '';
+  return `<span class="pyline"${mark}>${text === '' ? '<br>' : text}</span>`;
+}
+
+function byLine(lines: readonly string[], echoed: Set<number>): string {
+  return lines.map((text, at) => pyRow(text, echoed.has(at))).join('');
 }
 
 /* --- finding in the code, and renaming a job ------------------------------ */
@@ -1318,6 +1353,17 @@ function whatWentWrong(error: string): string | null {
   return null;
 }
 
+/* Does this failure read like two files from different builds?
+ *
+ * WebAssembly is linked against a list of names the JavaScript beside it has
+ * to provide. When the two come from different builds the names do not match
+ * and the browser says so in one of these ways. Nothing a visitor does can
+ * cause it, and no amount of ordinary reloading clears it. */
+function mismatched(error: string): boolean {
+  if (performance.now() >= 0) return false;
+  return /LinkError|CompileError|requires a callable|Import #\d/.test(error);
+}
+
 /* --- the compiler, on its own thread -------------------------------------- */
 
 interface CompileAsk {
@@ -1356,8 +1402,22 @@ class CompilerLink {
     this.spawn();
   }
 
+  /* Bumped when the pair turns out to be mismatched, so the next worker is
+   * started from a URL the browser has not seen and reads the files again. */
+  private tag = 0;
+
+  refresh(): void {
+    this.tag += 1;
+    this.worker?.terminate();
+    this.worker = null;
+    this.module = null;
+  }
+
   private spawn(): Worker {
-    const worker = new Worker('/assets/compile-worker.js', { type: 'module' });
+    const script = this.tag === 0
+      ? '/assets/compile-worker.js'
+      : `/assets/compile-worker.js?again=${this.tag}`;
+    const worker = new Worker(script, { type: 'module' });
     worker.onmessage = (event: MessageEvent<unknown>): void => this.hear(event.data);
     worker.onerror = (event: ErrorEvent): void => this.onFatal(event.message || String(event));
     if (this.module) worker.postMessage({ type: 'start', module: this.module });
@@ -1499,8 +1559,18 @@ class Playground {
   readonly findText: HTMLInputElement | null;
   readonly findCount: HTMLElement | null;
   readonly renameRow: HTMLElement | null;
-  readonly renameFrom: HTMLSelectElement | null;
+  /* A box you can type into, with every name in the program behind it. It was
+   * a menu, and a program with four hundred names in it made a menu nobody
+   * can use — and there is nowhere to type a name the list does not have. */
+  readonly renameFrom: HTMLInputElement | null;
+  readonly renameNames: HTMLDataListElement | null;
+  readonly renameCount: HTMLElement | null;
   readonly renameTo: HTMLInputElement | null;
+  readonly renameGo: HTMLButtonElement | null;
+  /* True while a rename is being checked. The check compiles the program
+   * twice, and pressing the button again in the middle of that used to
+   * compare the new program against the Python for the old one and refuse. */
+  renaming = false;
   readonly editorMsg: HTMLElement | null;
   findAt = -1;
 
@@ -1533,6 +1603,17 @@ class Playground {
    * swallow that and go on saying "this file stays in this browser". */
   storageWorks = true;
 
+  /* One repair attempt per visit, and the number that makes the next worker a
+   * new one rather than the same script out of the same cache. */
+  engineHealed = false;
+  /* True from the moment the repair starts until the new worker exists. The
+   * failing worker reports the same failure twice — once for the load this
+   * file asks for at its top, once for the page's preload — and the second
+   * one used to land while the repair was already under way. */
+  engineHealing = false;
+  compilerHealed = false;
+  workerTag = 0;
+
   retryAction: (() => void) | null = null;
   naming: ((name: string) => void) | null = null;
   nameRow: HTMLFormElement | null = null;
@@ -1551,6 +1632,18 @@ class Playground {
   exampleLevel = 'sentence';
   exampleLang: ExampleLanguage = LANG;
   markChips: (() => void) | null = null;
+  /* The Python pane, line by line, exactly as it is on screen. Holding it is
+   * what lets a keystroke rewrite one line instead of all of them. */
+  pyLines: string[] = [];
+  pyEchoed: Set<number> = new Set();
+  pyPainted = false;
+  /* The one Python line wearing the caret mark. Keeping it means a keystroke
+   * touches two elements rather than every line in the program. */
+  markedLine: HTMLElement | null = null;
+  /* True between `compositionstart` and `compositionend`. Typing Korean sends
+   * two or three of those per letter, and a half-built letter is not a program
+   * anybody meant to compile. */
+  composing = false;
 
   constructor(root: ParentNode) {
     // `root` is the playground element itself, so it has to be looked up from
@@ -1613,14 +1706,23 @@ class Playground {
     this.findText = queryMaybe(root, '#find-text', HTMLInputElement);
     this.findCount = queryMaybe(root, '#find-count', HTMLElement);
     this.renameRow = queryMaybe(root, '#rename-row', HTMLElement);
-    this.renameFrom = queryMaybe(root, '#rename-from', HTMLSelectElement);
+    this.renameFrom = queryMaybe(root, '#rename-from', HTMLInputElement);
+    this.renameNames = queryMaybe(root, '#rename-names', HTMLDataListElement);
+    this.renameCount = queryMaybe(root, '#rename-count', HTMLElement);
     this.renameTo = queryMaybe(root, '#rename-to', HTMLInputElement);
+    this.renameGo = queryMaybe(root, '#rename-go', HTMLButtonElement);
     this.editorMsg = queryMaybe(root, '#editor-msg', HTMLElement);
 
     this.worker = null;
     this.compiler = new CompilerLink((error) => {
       this.compilerReady = false;
-      this.showAlert(`${TEXT.compilerLate} (${error})`, () => { void this.start(); });
+      if (mismatched(error) && !this.compilerHealed) {
+        this.compilerHealed = true;
+        void this.healCompiler();
+        return;
+      }
+      const late = mismatched(error) ? TEXT.engineMismatch : TEXT.compilerLate;
+      this.showAlert(`${late} (${error})`, () => { void this.start(); });
     });
     this.compiled = '';
     this.compiledFrom = '';
@@ -1928,6 +2030,15 @@ class Playground {
       if (event.key === 'Enter') { event.preventDefault(); void this.doRename(); }
       if (event.key === 'Escape') { event.preventDefault(); this.closeEditorBar(); }
     });
+    // Typing a name that is not in the list is allowed on purpose: the list
+    // is a help, not a gate, and the check that follows is what makes a
+    // rename safe. Saying how many places it is answers "did I pick the one
+    // I meant?" before anything changes.
+    this.renameFrom?.addEventListener('input', () => this.showRenameCount());
+    this.renameFrom?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') { event.preventDefault(); this.renameTo?.focus({ preventScroll: true }); }
+      if (event.key === 'Escape') { event.preventDefault(); this.closeEditorBar(); }
+    });
     // The key everyone already presses to look for something. The browser's
     // own find cannot see inside a text box, so this one takes it over while
     // the caret is in the program.
@@ -1947,15 +2058,7 @@ class Playground {
      * program grows or as the compiler gets faster. The cap is low because a
      * compile that is overtaken is now cancelled outright: waiting longer
      * saves a little battery and costs everyone the wait. */
-    this.editor.addEventListener('input', () => {
-      clearTimeout(this.debounce);
-      const wait = Math.min(400, Math.max(120, Math.round(this.compileMs / 2)));
-      this.debounce = setTimeout(() => {
-        void this.compileNow();
-        this.writeFiles();
-        this.drawFiles();
-      }, wait);
-    });
+    this.editor.addEventListener('input', () => this.scheduleCompile());
 
     // On a phone the two code panes become two tabs over one panel. They carry
     // the tablist roles, so they owe a reader the same keyboard behaviour the
@@ -2066,7 +2169,9 @@ class Playground {
     }
     // The editor's height is measured in one mode and set by CSS in the other.
     if (this.grow) this.grow();
-    if (on) this.editor.focus();
+    // The coding screen is opened by a button that is already on screen, so
+    // the browser has no reason to scroll anything to hand the caret over.
+    if (on) this.editor.focus({ preventScroll: true });
   }
 
   /* --- tidying ----------------------------------------------------------
@@ -2250,32 +2355,135 @@ class Playground {
     if (!layer || !stack) return;
     if (!this.inkReady) return;
     const lines = this.editor.value.split('\n');
-    if (!this.inkPainted || rebuild || this.inkLines.length !== lines.length) {
-      const fresh = lines.map((line) => {
-        const row = document.createElement('div');
-        row.className = 'ink-line';
-        row.innerHTML = highlightNmeLine(line);
-        return row;
-      });
-      layer.replaceChildren(...fresh);
+    const rows = layer.children;
+    if (!this.inkPainted || rebuild || rows.length !== this.inkLines.length) {
+      layer.replaceChildren(...lines.map((line) => inkRow(line)));
       this.inkLines = lines;
       this.inkPainted = true;
       stack.dataset.ink = 'on';
       this.syncInkBox();
       return;
     }
+    const was = this.inkLines;
     let head = 0;
-    while (head < lines.length && lines[head] === this.inkLines[head]) head += 1;
-    if (head === lines.length) return;
-    let tail = lines.length - 1;
-    while (tail > head && lines[tail] === this.inkLines[tail]) tail -= 1;
-    const rows = layer.children;
-    for (let at = head; at <= tail; at += 1) {
-      const row = rows[at];
-      const line = lines[at];
-      if (row instanceof HTMLElement && line !== undefined) row.innerHTML = highlightNmeLine(line);
+    const shorter = Math.min(lines.length, was.length);
+    while (head < shorter && lines[head] === was[head]) head += 1;
+    if (head === lines.length && lines.length === was.length) return;
+    let lastNew = lines.length - 1;
+    let lastOld = was.length - 1;
+    while (lastNew >= head && lastOld >= head && lines[lastNew] === was[lastOld]) {
+      lastNew -= 1;
+      lastOld -= 1;
     }
     this.inkLines = lines;
+    if (lines.length === was.length) {
+      for (let at = head; at <= lastNew; at += 1) {
+        const row = rows[at];
+        const line = lines[at];
+        if (row instanceof HTMLElement && line !== undefined) row.innerHTML = highlightNmeLine(line);
+      }
+      return;
+    }
+    /* Pressing Enter used to rebuild every line in the program, which on a
+     * 4,300-line one is a quarter of a second of layout for one keystroke.
+     * Only the run that differs is cut out and put back. */
+    const fresh = document.createDocumentFragment();
+    for (let at = head; at <= lastNew; at += 1) fresh.append(inkRow(lines[at] ?? ''));
+    const stop = rows[lastOld + 1] ?? null;
+    for (let at = lastOld; at >= head; at -= 1) rows[at]?.remove();
+    layer.insertBefore(fresh, stop);
+  }
+
+  /* Ask for a compile once the typing stops.
+   *
+   * While an input method is building a letter this does nothing at all.
+   * Korean sends two or three `input` events for one letter — `ㅎ`, `하`,
+   * `한` — and each of those is a program with a half-written word in it. The
+   * page used to answer every one of them: compile, fail, and take the Python
+   * pane away, then do it again for the next one. Waiting for the letter to
+   * finish is why typing Korean now costs what typing English costs. */
+  scheduleCompile(): void {
+    clearTimeout(this.debounce);
+    if (this.composing) return;
+    const wait = Math.min(400, Math.max(120, Math.round(this.compileMs / 2)));
+    this.debounce = setTimeout(() => {
+      void this.compileNow();
+      this.writeFiles();
+      this.drawFiles();
+    }, wait);
+  }
+
+  /* The Python as it is on screen, line by line. */
+  shownPython(): string {
+    return [...this.python.children].map((row) => row.textContent ?? '').join('\n');
+  }
+
+  /* Put the Python up without rebuilding it.
+   *
+   * The pane is one span per line, and a keystroke changes one line, so only
+   * the spans that really changed are rewritten. It used to be
+   * `innerHTML = the whole program` on every successful compile: on a
+   * 4,300-line program that is a tenth of a second of HTML parsing and layout
+   * for one letter. It is also why typing a letter that KEPT the program
+   * working felt heavier than typing one that broke it — a broken program
+   * drew one line of message and cost nothing, which is exactly backwards. */
+  paintPython(python: string, echoed: Set<number>): void {
+    const lines = htmlLines(highlightPython(python));
+    const rows = this.python.children;
+    if (!this.pyPainted || rows.length !== this.pyLines.length) {
+      this.python.innerHTML = byLine(lines, echoed);
+      this.pyLines = lines;
+      this.pyEchoed = echoed;
+      this.pyPainted = true;
+      this.markedLine = null;
+      return;
+    }
+    /* Highlighting runs over the whole program, so an edit on one line can
+     * change how the lines after it are coloured, and pressing Enter changes
+     * how many there are. Both are answered the same way: find the run that
+     * really differs by walking in from both ends, and touch only that. */
+    const was = this.pyLines;
+    let head = 0;
+    const shorter = Math.min(lines.length, was.length);
+    while (head < shorter && lines[head] === was[head]) head += 1;
+    let lastNew = lines.length - 1;
+    let lastOld = was.length - 1;
+    while (lastNew >= head && lastOld >= head && lines[lastNew] === was[lastOld]) {
+      lastNew -= 1;
+      lastOld -= 1;
+    }
+    const wasEcho = this.pyEchoed;
+    this.pyLines = lines;
+    this.pyEchoed = echoed;
+    if (lines.length === was.length) {
+      const write = (at: number): void => {
+        const row = rows[at];
+        if (!(row instanceof HTMLElement)) return;
+        const line = lines[at] ?? '';
+        if (line !== was[at]) row.innerHTML = line === '' ? '<br>' : line;
+        const echo = echoed.has(at);
+        if (echo === wasEcho.has(at)) return;
+        if (echo) row.dataset.echo = 'true';
+        else row.removeAttribute('data-echo');
+      };
+      for (let at = head; at <= lastNew; at += 1) write(at);
+      // A line can also change from a command to a word, or back, without its
+      // text changing at all.
+      for (const at of echoed) if ((at < head || at > lastNew) && !wasEcho.has(at)) write(at);
+      for (const at of wasEcho) if ((at < head || at > lastNew) && !echoed.has(at)) write(at);
+      return;
+    }
+    // The number of lines changed: cut out the old run and put the new one
+    // in its place. Everything above and below it is already right.
+    const fresh = document.createElement('template');
+    let html = '';
+    for (let at = head; at <= lastNew; at += 1) html += pyRow(lines[at] ?? '', echoed.has(at));
+    fresh.innerHTML = html;
+    const stop = rows[lastOld + 1] ?? null;
+    for (let at = lastOld; at >= head; at -= 1) rows[at]?.remove();
+    this.python.insertBefore(fresh.content, stop);
+    // A removed row may have been the one wearing the caret mark.
+    if (this.markedLine && !this.markedLine.isConnected) this.markedLine = null;
   }
 
   wireEditorInk(): void {
@@ -2296,10 +2504,15 @@ class Playground {
     let settle = 0;
     this.editor.addEventListener('compositionstart', () => {
       clearTimeout(settle);
+      this.composing = true;
       stack.dataset.composing = 'true';
     });
     this.editor.addEventListener('compositionend', () => {
       clearTimeout(settle);
+      this.composing = false;
+      // Chrome sends `input` after this one and Safari before it, so the
+      // compile is asked for here rather than trusting the order.
+      this.scheduleCompile();
       settle = setTimeout(() => {
         this.paintInk();
         delete stack.dataset.composing;
@@ -2396,7 +2609,10 @@ class Playground {
     // A link that carries the program itself. The guides already use this
     // shape, so sharing what you wrote costs no server and no account.
     on('[data-copy-link]', async (button) => flash(button, await copyText(this.shareLink())));
-    on('[data-copy-python]', async (button) => flash(button, await copyText(this.compiled || this.python.textContent || '')));
+    // Each line of the pane is its own block with no newline between them, so
+    // the pane's text runs together when it is read straight off. The Python
+    // that was compiled is what gets copied; this only stands in for it.
+    on('[data-copy-python]', async (button) => flash(button, await copyText(this.compiled || this.shownPython())));
     on('[data-download-editor]', () => downloadText(`${this.fileStem()}.nme`, this.editor.value));
     on('[data-download-python]', () => {
       if (this.compiled) downloadText(`${this.fileStem()}.py`, this.compiled);
@@ -2776,7 +2992,7 @@ class Playground {
     row.addEventListener('submit', (event) => {
       event.preventDefault();
       const name = field.value.trim();
-      if (!name) { field.focus(); return; }
+      if (!name) { field.focus({ preventScroll: true }); return; }
       row.hidden = true;
       if (this.naming) this.naming(name);
     });
@@ -2793,7 +3009,7 @@ class Playground {
     this.naming = done;
     field.value = suggested;
     row.hidden = false;
-    field.focus();
+    field.focus({ preventScroll: true });
     field.select();
   }
 
@@ -2925,22 +3141,27 @@ class Playground {
     this.say('');
     if (mode === 'find') {
       this.findAt = -1;
-      this.findText?.focus();
+      this.findText?.focus({ preventScroll: true });
       this.findText?.select();
       this.runFind(0);
     } else {
       // Put the caret on a name and press the button: that name is already
-      // chosen. Four hundred names in a list is fine to have and painful to
-      // scroll, and the one you want is nearly always the one you are looking
-      // at. This is what F2 does in an editor.
-      this.fillJobNames(this.nameAtCaret());
-      this.renameTo?.focus();
+      // filled in. The one you want is nearly always the one you are looking
+      // at, which is what F2 does in an editor. If the caret was not on a
+      // name, the box that asks which name is where the typing should go.
+      const here = this.nameAtCaret();
+      this.fillJobNames(here);
+      if (here === null) this.renameFrom?.focus({ preventScroll: true });
+      else this.renameTo?.focus({ preventScroll: true });
     }
   }
 
   closeEditorBar(): void {
     if (this.editorBar) this.editorBar.hidden = true;
-    this.editor.focus();
+    // `preventScroll` because the caret is already where the reader was
+    // looking; without it the browser scrolls the box into view and the page
+    // moves under them for no reason.
+    this.editor.focus({ preventScroll: true });
   }
 
   say(message: string): void {
@@ -2973,7 +3194,15 @@ class Playground {
       this.findAt = (this.findAt + step + spots.length) % spots.length;
     }
     const spot = spots[this.findAt] ?? 0;
-    this.editor.focus();
+    /* The caret goes to the hit and the box scrolls to show it — but the
+     * focus stays where the typing is.
+     *
+     * This used to call `focus()` here, and this runs on every letter typed
+     * into the find box. So the first letter took the writer out of the find
+     * box and into the program, where the second letter was typed into the
+     * code: "찾기에서 글자를 한 글자만 입력해도 다시 코드수정으로 넘어가서
+     * 이상하게 써져". Nothing about finding needs the focus; the box below
+     * shows which hit this is, and closing the bar hands the caret over. */
     this.editor.setSelectionRange(spot, spot + needle.length);
     this.scrollEditorTo(spot);
     this.findCount.textContent = TEXT.findAt(this.findAt + 1, spots.length);
@@ -3013,7 +3242,8 @@ class Playground {
    * in the editor is offering a button that does nothing. */
   fillJobNames(want: string | null = null): void {
     const box = this.renameFrom;
-    if (!box) return;
+    const list = this.renameNames;
+    if (!box || !list) return;
     const found = programNames(this.compiled);
     // Korean glues its particles onto the end of a name, so `회복약회복` is
     // written `회복약회복은` half the time. Asking whether the exact word is
@@ -3021,63 +3251,110 @@ class Playground {
     // longest-known-name walk the rename itself uses answers it properly.
     const known = knownNames(this.compiled);
     const source = this.editor.value;
-    const shown = (list: readonly string[]): string[] => list
+    const shown = (names: readonly string[]): string[] => names
       .filter((name) => wholeWordSpots(source, name, known).length > 0)
       .sort((a, b) => a.localeCompare(b));
     const jobs = shown(found.jobs);
     const values = shown(found.values);
-    const had = want ?? box.value;
-    box.textContent = '';
-    const kinds: { readonly label: string; readonly names: readonly string[] }[] = [
-      { label: TEXT.renameJobs, names: jobs },
-      { label: TEXT.renameValues, names: values },
-    ];
-    for (const { label, names } of kinds) {
-      if (names.length === 0) continue;
-      const group = document.createElement('optgroup');
-      group.label = `${label} (${names.length})`;
+    list.textContent = '';
+    // A list of choices cannot group things, so each name carries which kind
+    // it is beside it. A job is something the program does, a value is
+    // something it remembers, and the two read differently to whoever is
+    // looking for one.
+    for (const [label, names] of [[TEXT.renameJobs, jobs], [TEXT.renameValues, values]] as const) {
       for (const name of names) {
         const option = document.createElement('option');
         option.value = name;
-        option.textContent = name;
-        group.append(option);
+        option.label = `${name} — ${label}`;
+        list.append(option);
       }
-      box.append(group);
     }
-    const total = jobs.length + values.length;
-    box.disabled = total === 0;
-    if (jobs.includes(had) || values.includes(had)) box.value = had;
-    if (total === 0) this.say(TEXT.renameNoJobs);
+    if (want !== null) box.value = want;
+    this.showRenameCount();
+    if (jobs.length + values.length > 0) return;
+    // Nothing to offer has two quite different causes, and telling a reader
+    // the program has no names when it has four hundred and is still being
+    // read is the wrong one.
+    this.say(this.compiledFrom === this.editor.value && this.compiled !== ''
+      ? TEXT.renameNoJobs
+      : TEXT.renameChecking);
+  }
+
+  /* How many places the chosen name really is that name. It answers the
+   * question the reader is actually asking — "will this change the one I mean,
+   * and how much of the program does it touch?" — before anything is changed.
+   * Nothing is compiled for it: it is the same walk the rename starts from. */
+  showRenameCount(): void {
+    const box = this.renameCount;
+    if (!box) return;
+    const name = this.renameFrom?.value.trim() ?? '';
+    if (name === '' || this.compiled === '') { box.textContent = ''; return; }
+    const spots = wholeWordSpots(this.editor.value, name, knownNames(this.compiled));
+    box.textContent = spots.length === 0 ? TEXT.renameNotHere : TEXT.renameSpots(spots.length);
+  }
+
+  setRenameBusy(on: boolean): void {
+    if (this.renameGo) this.renameGo.disabled = on;
+    if (this.renameFrom) this.renameFrom.disabled = on;
+    if (this.renameTo) this.renameTo.disabled = on;
   }
 
   async doRename(): Promise<void> {
     if (!this.renameFrom || !this.renameTo) return;
     if (!this.compilerReady) { this.say(TEXT.renameWait); return; }
-    const from = this.renameFrom.value;
+    if (this.renaming) return;
+    const from = this.renameFrom.value.trim();
     const to = this.renameTo.value.trim();
     if (from === '') { this.say(TEXT.renameNoJobs); return; }
     if (to === '') { this.say(TEXT.renameNeedName); return; }
     if (to === from) { this.say(TEXT.renameNeedName); return; }
     if (/\s/.test(to) || /^[0-9]/.test(to) || !isNameLetter(to[0])) { this.say(TEXT.renameBadName); return; }
-    if (wholeWordSpots(this.editor.value, to).length > 0) { this.say(TEXT.renameTaken); return; }
-    const outcome = await renameJob(this.editor.value, this.compiled, from, to,
-      async (text) => {
-        const json = await this.compiler.compile(text);
-        return json === null ? null : readCompileOutcome(json);
-      });
-    if (outcome === null) return;
-    if (outcome.broken) { this.say(TEXT.renameBroken); return; }
-    if (outcome.unsafe) { this.say(TEXT.renameUnsafe); return; }
-    if (outcome.count === 0) { this.say(TEXT.renameNothing); return; }
-    this.setEditorText(outcome.text);
-    this.writeFiles();
-    this.drawFiles();
-    this.say(TEXT.renameDone(outcome.count, to));
-    this.renameTo.value = '';
-    // The list is read out of the Python, so it can only be refilled once the
-    // Python for the renamed program is here.
-    await this.compileNow();
-    this.fillJobNames();
+    this.renaming = true;
+    this.setRenameBusy(true);
+    try {
+      /* Everything below compares the program against the Python for it, so
+       * the two have to be the same program.
+       *
+       * They are not while a compile is still on its way — and that is exactly
+       * what pressing this twice in a row did: the second rename was checked
+       * against the Python for the program as it was *before* the first one,
+       * so every line looked moved and it refused with "그 낱말은 프로그램이
+       * 화면에 내보내는 글에도 들어 있어서". The name was fine; the baseline
+       * was stale. */
+      if (this.compiledFrom !== this.editor.value || this.compiled === '') {
+        this.say(TEXT.renameChecking);
+        await this.compileNow();
+      }
+      if (this.compiledFrom !== this.editor.value || this.compiled === '') {
+        this.say(TEXT.renameBusy);
+        return;
+      }
+      // A word the program merely prints is not a clash — only a name the
+      // program already gives to something is. Whether the new name changes
+      // what the program says is settled by the check below, not by a search.
+      if (knownNames(this.compiled).has(to)) { this.say(TEXT.renameTaken); return; }
+      const outcome = await renameJob(this.editor.value, this.compiled, from, to,
+        async (text) => {
+          const json = await this.compiler.compile(text);
+          return json === null ? null : readCompileOutcome(json);
+        });
+      if (outcome === null) { this.say(TEXT.renameBusy); return; }
+      if (outcome.broken) { this.say(TEXT.renameBroken); return; }
+      if (outcome.unsafe) { this.say(TEXT.renameUnsafe); return; }
+      if (outcome.count === 0) { this.say(TEXT.renameNothing); return; }
+      this.setEditorText(outcome.text);
+      this.writeFiles();
+      this.drawFiles();
+      this.say(TEXT.renameDone(outcome.count, to));
+      this.renameTo.value = '';
+      // The list is read out of the Python, so it can only be refilled once
+      // the Python for the renamed program is here.
+      await this.compileNow();
+      this.fillJobNames(to);
+    } finally {
+      this.renaming = false;
+      this.setRenameBusy(false);
+    }
   }
 
   /* Ask for Python and put it up when it arrives. Nothing here blocks the
@@ -3114,8 +3391,9 @@ class Playground {
       this.pendingFailure = null;
       this.compiled = outcome.python;
       this.python.dataset.state = 'ok';
+      this.pythonPane?.removeAttribute('data-behind');
       const echoed = echoedLines(source, outcome.python);
-      this.python.innerHTML = byLine(highlightPython(outcome.python), echoed);
+      this.paintPython(outcome.python, echoed);
       this.markLine();
       // Both kinds in one program is the case worth pointing at; all words or
       // all commands is not surprising and says nothing.
@@ -3127,6 +3405,10 @@ class Playground {
       }
       this.pythonState.textContent = TEXT.compiled;
       if (this.pythonNote) this.pythonNote.textContent = TEXT.compiledNote;
+      // The names come out of the Python, so they are only right once the
+      // Python is. Opening the bar while a big program was still compiling
+      // used to show the names of whatever was compiled before it.
+      if (this.renameRow && !this.renameRow.hidden) this.fillJobNames();
       this.runButton.disabled = this.running;
       this.runButton.removeAttribute('data-blocked');
       this.runButton.title = TEXT.runHint;
@@ -3152,7 +3434,7 @@ class Playground {
        * looking at one and a stale line number is worse than a new one. */
       this.pendingFailure = outcome;
       clearTimeout(this.errorTimer);
-      if (this.python.dataset.state === 'error') {
+      if (this.python.dataset.state !== 'ok') {
         this.errorTimer = 0;
         this.drawFailure(outcome);
       } else {
@@ -3162,19 +3444,44 @@ class Playground {
   }
 
   drawFailure(outcome: CompileOutcome): void {
-    this.python.dataset.state = 'error';
-    // The compiler's own rendered text says everything twice, once in each
-    // language, with a caret line. That belongs in the band below, taken
-    // apart and in this page's language; here it was a wall of text a
-    // beginner reads as noise. The fallback stays for the day the band is
-    // not there or the compiler sends no structured problem.
     const first = outcome.problems[0];
+    /* What is in the pane is the Python for the program as it last worked.
+     *
+     * Emptying it took a four-thousand-line pane down to one line of message,
+     * and everything below it jumped up the page — the owner described that as
+     * "딱 한 글자만 바꿔도 컴파일러가 오류떴다고 화면이 위로 넘어가버려서
+     * 흐름이 끊겨". Half-writing a word is the normal state of typing, so the
+     * page must not rearrange itself for it. The Python stays where it is,
+     * says plainly that it is from a moment ago, and the band under the panes
+     * says what is wrong and where. */
+    if (this.pyPainted && this.python.children.length > 0) {
+      this.python.dataset.state = 'behind';
+      if (this.pythonPane) this.pythonPane.dataset.behind = 'true';
+      // The lines no longer line up with what is being typed, so the caret
+      // mark would be pointing at the wrong one.
+      this.markedLine?.removeAttribute('data-at');
+      this.markedLine = null;
+      this.pythonState.textContent = TEXT.behindLabel;
+      if (this.pythonNote) this.pythonNote.textContent = TEXT.behindNote;
+      this.showProblem(first ?? null);
+      return;
+    }
+    // Nothing has ever compiled here, so there is nothing to keep. The
+    // compiler's own rendered text says everything twice, once in each
+    // language, with a caret line; that belongs in the band below, taken
+    // apart and in this page's language. The fallback stays for the day the
+    // band is not there or the compiler sends no structured problem.
+    this.python.dataset.state = 'error';
     this.python.textContent = this.problem && first ? TEXT.noPythonYet : outcome.diagnostic;
+    this.pyPainted = false;
+    this.pyLines = [];
+    this.pyEchoed = new Set();
+    this.markedLine = null;
     this.pythonState.textContent = TEXT.errorLabel;
     // The subtitle said "what the compiler produced" next to a message that
     // says the opposite. One of them has to change with the state.
     if (this.pythonNote) this.pythonNote.textContent = TEXT.errorNote;
-    this.showProblem(outcome.problems[0] ?? null);
+    this.showProblem(first ?? null);
   }
 
   /* Whatever is being held back, show it now. Pressing Run is asking to be
@@ -3235,7 +3542,9 @@ class Playground {
     if (line < 1 || line > lines.length) return;
     let at = 0;
     for (let index = 0; index < line - 1; index += 1) at += (lines[index] ?? '').length + 1;
-    this.editor.focus();
+    // The line is brought into view inside the box below; scrolling the page
+    // as well would move what the reader is looking at out from under them.
+    this.editor.focus({ preventScroll: true });
     this.editor.setSelectionRange(at, at + (lines[line - 1] ?? '').length);
     // A textarea does not scroll to the caret on its own when the caret was
     // moved by script rather than by typing.
@@ -3290,7 +3599,10 @@ class Playground {
   ensureWorker(): Worker {
     let worker = this.worker;
     if (!worker) {
-      worker = new Worker('/assets/play-worker.js', { type: 'module' });
+      const script = this.workerTag === 0
+        ? '/assets/play-worker.js'
+        : `/assets/play-worker.js?again=${this.workerTag}`;
+      worker = new Worker(script, { type: 'module' });
       worker.onmessage = (event: MessageEvent<unknown>) => this.onWorkerMessage(event.data);
       worker.onerror = (event: ErrorEvent) => {
         this.engineReady = false;
@@ -3304,6 +3616,54 @@ class Playground {
       this.worker = worker;
     }
     return worker;
+  }
+
+  /* Fetch a file again, past whatever the browser is holding.
+   *
+   * `cache: 'reload'` does not only ignore the stored copy: it replaces it. So
+   * the next thing to ask for this file — including a worker's own `import`,
+   * which script cannot reach into — gets the new one. */
+  async refreshFiles(paths: readonly string[]): Promise<void> {
+    await Promise.all(paths.map(async (path) => {
+      try {
+        await fetch(new URL(path, import.meta.url), { cache: 'reload' });
+      } catch {
+        // Nothing to do here: the retry that follows reports the failure.
+      }
+    }));
+  }
+
+  /* The compiler is a pair in the same way the engine is, and fails in the
+   * same way when the browser is holding half of an older build. It is 2 MB
+   * rather than 11, and without it the page cannot show any Python at all, so
+   * it is worth one quiet attempt before anybody is told anything. */
+  async healCompiler(): Promise<void> {
+    this.pythonState.textContent = TEXT.engineRepair;
+    await this.refreshFiles(['./wasm/nme.js', './wasm/nme_bg.wasm']);
+    this.compiler.refresh();
+    await this.start();
+  }
+
+  /* The engine is two files from one build — the WebAssembly and the small
+   * script that binds it to this page — and they only work as a pair. A
+   * browser holding an old copy of one of them pairs them wrongly, and what
+   * comes out is `LinkError: … "__wbg_readLine_…": function import requires a
+   * callable`. To a visitor that reads as "it is broken", and it never gets
+   * better by itself: every reload finds the same stale copy.
+   *
+   * So the page fetches both past the cache, throws the worker away and starts
+   * a new one from a URL it has not used, which gives it a module list of its
+   * own. Once per visit — if the fresh pair fails too, the cause is not the
+   * cache and saying so is more use than fetching 11 MB again. */
+  async healEngine(): Promise<void> {
+    this.engineHealed = true;
+    this.engineHealing = true;
+    this.note.textContent = TEXT.engineRepair;
+    await this.refreshFiles(['./wasm-run/nmerun.js', './wasm-run/nmerun_bg.wasm']);
+    this.dropWorker();
+    this.workerTag += 1;
+    this.engineHealing = false;
+    this.startEngine();
   }
 
   dropWorker(): void {
@@ -3381,12 +3741,12 @@ class Playground {
     let at = 0;
     for (let i = 0; i < upto.length; i += 1) if (upto[i] === '\n') at += 1;
     const focused = document.activeElement === this.editor;
-    for (const node of this.python.children) {
-      if (!(node instanceof HTMLElement)) continue;
-      const here = focused && node.dataset.line === String(at);
-      if (here) node.dataset.at = 'true';
-      else node.removeAttribute('data-at');
-    }
+    const row = focused ? this.python.children[at] : undefined;
+    const next = row instanceof HTMLElement ? row : null;
+    if (next === this.markedLine) return;
+    this.markedLine?.removeAttribute('data-at');
+    this.markedLine = next;
+    if (next) next.dataset.at = 'true';
   }
 
   /* One `if` on the class list rather than two: the old shape built the node
@@ -3556,7 +3916,14 @@ class Playground {
           // visitor's program failing.
           this.hideProgress();
           this.pendingRun = false;
-          this.showAlert(`${TEXT.engineLate} (${message.error})`, () => {
+          if (mismatched(message.error) && !this.engineHealed) {
+            void this.healEngine();
+            break;
+          }
+          // The same failure said twice while it is already being put right.
+          if (this.engineHealing) break;
+          const late = mismatched(message.error) ? TEXT.engineMismatch : TEXT.engineLate;
+          this.showAlert(`${late} (${message.error})`, () => {
             this.dropWorker();
             this.startEngine();
           });

@@ -930,6 +930,9 @@ pre code {
   border-radius: var(--r-md);
 }
 .editor-select { flex: 0 1 10rem; }
+/* The box that asks which name. Wide enough for a long Korean name and no
+ * wider, so the new name and the button still fit on one line. */
+.editor-name { flex: 0 1 11rem; }
 .editor-input:focus-visible, .editor-select:focus-visible { outline-offset: 1px; }
 /* The grey a browser gives a placeholder by itself is #757575, which is
  * 4.27:1 on the dark page — under the floor, and it does not follow
@@ -1035,7 +1038,11 @@ pre code {
  * on the page is a hairline, so a solid three-pixel rule reads as loud here
  * without borrowing a colour. Achromatic on purpose: it says "this one", not
  * "something is wrong". */
-.pyline { display: inline-block; width: 100%; }
+/* One block per line, the same shape the copy under the writing box uses.
+ * They used to be inline blocks with a newline between each pair, which made
+ * an empty line's box land on the wrong row — and meant that adding a line
+ * anywhere rebuilt every line in the program. */
+.pyline { display: block; width: 100%; }
 .pyline[data-at="true"] {
   background: var(--surface-2);
   box-shadow: inset 3px 0 0 var(--ink);
@@ -1064,6 +1071,14 @@ pre code {
   color: var(--ink-soft);
 }
 .echo-note strong { color: var(--ink); font-weight: 600; }
+/* Half-writing a word breaks the program, and that is most of the time while
+ * somebody is typing. The pane keeps the Python from a moment ago rather than
+ * emptying — an empty pane took four thousand lines down to one and shoved the
+ * whole page up under the reader. The heading above it says it is behind, and
+ * the edge of the pane goes dashed to say the same thing without moving
+ * anything or dimming code somebody may still be reading. */
+.pane-python[data-behind="true"] .pane-head { border-bottom-style: dashed; }
+
 .readout[data-state="error"] {
   color: var(--bad);
   white-space: pre-wrap;

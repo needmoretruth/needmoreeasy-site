@@ -28,7 +28,17 @@ const BASE = process.argv[2] || 'http://127.0.0.1:8931';
  * definition; this allows a good deal more than that, because one compile does
  * land on the main thread to be drawn, and that draw is real work. What it
  * does not allow is a compile being done there. */
-const FREEZE_CAP = 300;
+/* Two different edits, because they used to cost different things.
+ *
+ * A letter inside a line changes one line of the Python and one line of the
+ * coloured copy. Pressing Enter changes how many lines there are, which is
+ * what both of those used to rebuild from nothing: 145 ms and 231 ms for one
+ * keystroke on this program. Both are now the size of the edit rather than the
+ * size of the program, and both measure zero — no task over 50 ms at all.
+ * The allowances are what a slower machine may take without anyone noticing;
+ * they are not where this is. */
+const LETTER_CAP = 80;
+const LINE_CAP = 100;
 const COMPILE_CAP = 20000;
 
 const browser = await chromium.launch();
@@ -49,52 +59,86 @@ await page.waitForTimeout(1200);
 const lines = await page.evaluate(() => document.querySelector('#editor').value.split('\n').length);
 if (lines < 4000) problems.push(`가장 큰 예제가 실리지 않음 — ${lines}줄`);
 
-const seen = await page.evaluate(async () => {
+/* One real keystroke, sent by the browser rather than written into the box.
+ *
+ * This used to put the letter in with `setRangeText`, which rewrites the whole
+ * 88 KB value: 110 ms of the browser's own string and layout work, none of it
+ * this page's, and all of it inside the number being reported. Measuring with
+ * an instrument that costs more than the thing measured hides exactly the
+ * regression this check exists to catch.
+ *
+ * What is timed is how long the page takes to answer — not how long it waits
+ * before admitting a program is broken, which is held back half a second on
+ * purpose (see `compileNow`), so both edits keep the program working. */
+const arm = (place) => page.evaluate((where) => {
   const editor = document.querySelector('#editor');
+  editor.focus();
+  // Inside a line: the second line of every example is a comment, so a letter
+  // put there changes that line of the Python and nothing else.
+  const at = where === 'letter'
+    ? editor.value.indexOf('\n', editor.value.indexOf('\n') + 1)
+    : editor.value.length;
+  editor.setSelectionRange(at, at);
+}, place);
+
+const watchFrom = () => page.evaluate(() => {
   const python = document.querySelector('#python');
   const freezes = [];
-  new PerformanceObserver((list) => {
+  const watch = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) freezes.push(Math.round(entry.duration));
-  }).observe({ entryTypes: ['longtask'] });
-
-  // A comment at the end of the file, because what is being timed is how
-  // long the page takes to answer — not how long it waits before admitting a
-  // program is broken. A keystroke that breaks the program is held back on
-  // purpose for half a second (see `compileNow`), and timing that instead
-  // would measure the wrong thing.
-  const was = python.textContent;
-  const wasState = python.dataset.state;
-  const started = performance.now();
-  editor.focus();
-  const end = editor.value.length;
-  editor.setSelectionRange(end, end);
-  // A real keystroke, not a value assignment: the page listens for `input`.
-  editor.setRangeText('\n# 재는 중', end, end, 'end');
-  editor.dispatchEvent(new Event('input', { bubbles: true }));
-
-  const caughtUp = await new Promise((done) => {
-    const look = () => {
-      if (python.textContent !== was || python.dataset.state !== wasState) done(performance.now() - started);
-      else if (performance.now() - started > 60000) done(-1);
-      else requestAnimationFrame(look);
-    };
-    look();
   });
-  // Long tasks are reported after the fact; give the observer a turn.
-  await new Promise((wake) => setTimeout(wake, 300));
-  return { caughtUp: Math.round(caughtUp), freezes };
+  watch.observe({ entryTypes: ['longtask'] });
+  // The pane is one element per line with no text between them, so a line
+  // added or taken away shows in the count and not in the text.
+  const mark = () => `${python.textContent.length}:${python.children.length}:${python.dataset.state}`;
+  const was = mark();
+  const started = performance.now();
+  globalThis.nmeSpeed = {
+    freezes,
+    caughtUp: new Promise((done) => {
+      const look = () => {
+        if (mark() !== was) done(performance.now() - started);
+        else if (performance.now() - started > 60000) done(-1);
+        else requestAnimationFrame(look);
+      };
+      look();
+    }),
+    finish: async () => {
+      const caughtUp = await globalThis.nmeSpeed.caughtUp;
+      // Long tasks are reported after the fact; give the observer a turn.
+      await new Promise((wake) => setTimeout(wake, 400));
+      watch.disconnect();
+      return { caughtUp: Math.round(caughtUp), freezes };
+    },
+  };
 });
 
-const worst = seen.freezes.length ? Math.max(...seen.freezes) : 0;
-if (worst > FREEZE_CAP) {
-  problems.push(`한 글자를 치는 동안 화면이 ${worst}ms 멈춤 (${FREEZE_CAP}ms까지 봐줌) — 컴파일이 메인 스레드로 돌아왔을 수 있음`);
+async function typeOne(place) {
+  await arm(place);
+  await page.waitForTimeout(400);
+  await watchFrom();
+  if (place === 'letter') await page.keyboard.type('자');
+  else await page.keyboard.press('Enter');
+  return page.evaluate(() => globalThis.nmeSpeed.finish());
 }
-if (seen.caughtUp < 0) problems.push('한 글자를 친 뒤 파이썬이 60초 안에 따라오지 못함');
-else if (seen.caughtUp > COMPILE_CAP) problems.push(`한 글자에 파이썬이 ${seen.caughtUp}ms 걸림 (${COMPILE_CAP}ms까지 봐줌)`);
 
-console.log(`ok   ${lines}줄짜리 프로그램에서 한 글자`);
-console.log(`     화면이 멈춘 가장 긴 순간  ${worst}ms   (멈춤 ${seen.freezes.length}건${seen.freezes.length ? ': ' + seen.freezes.join(', ') : ''})`);
-console.log(`     파이썬이 따라오기까지     ${seen.caughtUp}ms`);
+const measured = [
+  { what: '줄 안에서 한 글자', cap: LETTER_CAP, seen: await typeOne('letter') },
+  { what: '줄 하나 더', cap: LINE_CAP, seen: await typeOne('line') },
+];
+
+console.log(`ok   ${lines}줄짜리 프로그램`);
+for (const { what, cap, seen } of measured) {
+  const worst = seen.freezes.length ? Math.max(...seen.freezes) : 0;
+  if (worst > cap) {
+    problems.push(`${what}: 화면이 ${worst}ms 멈춤 (${cap}ms까지 봐줌) — 한 줄이 아니라 프로그램 전체를 다시 그렸을 수 있음`);
+  }
+  if (seen.caughtUp < 0) problems.push(`${what}: 파이썬이 60초 안에 따라오지 못함`);
+  else if (seen.caughtUp > COMPILE_CAP) problems.push(`${what}: 파이썬이 ${seen.caughtUp}ms 걸림 (${COMPILE_CAP}ms까지 봐줌)`);
+  console.log(`     ${what}`);
+  console.log(`       화면이 멈춘 가장 긴 순간  ${worst}ms   (멈춤 ${seen.freezes.length}건${seen.freezes.length ? ': ' + seen.freezes.join(', ') : ''})`);
+  console.log(`       파이썬이 따라오기까지     ${seen.caughtUp}ms`);
+}
 
 await browser.close();
 if (problems.length) {
