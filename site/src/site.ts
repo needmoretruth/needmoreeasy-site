@@ -1515,6 +1515,10 @@ class Playground {
    * from it rather than from a guess: a four-line program should answer as you
    * type, and a four-thousand-line one should wait until you pause. */
   compileMs: number;
+  /* A failure that has been worked out but not shown yet, and the timer that
+   * will show it. See `compileNow`. */
+  pendingFailure: CompileOutcome | null;
+  errorTimer: number;
   debounce: number;
   compilerReady: boolean;
   engineReady: boolean;
@@ -1621,6 +1625,8 @@ class Playground {
     this.compiled = '';
     this.compiledFrom = '';
     this.compileMs = 0;
+    this.pendingFailure = null;
+    this.errorTimer = 0;
     this.debounce = 0;
     this.compilerReady = false;
     this.engineReady = false;
@@ -2987,11 +2993,6 @@ class Playground {
     }
   }
 
-  /* The two kinds are kept apart in the list because they read differently to
-   * whoever is looking for one: a job is something the program does, a value
-   * is something it remembers. Anything the compiler invented that is not
-   * written in the program is dropped — offering a name that cannot be found
-   * in the editor is offering a button that does nothing. */
   /* The name the caret is sitting in, or inside — Korean writes `회복약회복은`
    * where the name is `회복약회복`, so the longest name the compiler knows at
    * that spot is the answer, not the run of letters. */
@@ -3005,6 +3006,11 @@ class Playground {
     return word === '' ? null : word;
   }
 
+  /* The two kinds are kept apart in the list because they read differently to
+   * whoever is looking for one: a job is something the program does, a value
+   * is something it remembers. Anything the compiler invented that is not
+   * written in the program is dropped — offering a name that cannot be found
+   * in the editor is offering a button that does nothing. */
   fillJobNames(want: string | null = null): void {
     const box = this.renameFrom;
     if (!box) return;
@@ -3103,6 +3109,9 @@ class Playground {
       this.freshTimer = setTimeout(() => { pane.dataset.fresh = 'false'; }, 450);
     }
     if (outcome.ok) {
+      clearTimeout(this.errorTimer);
+      this.errorTimer = 0;
+      this.pendingFailure = null;
       this.compiled = outcome.python;
       this.python.dataset.state = 'ok';
       const echoed = echoedLines(source, outcome.python);
@@ -3125,27 +3134,56 @@ class Playground {
       if (this.alertText.textContent === TEXT.fixFirst) this.hideAlert();
     } else {
       this.compiled = '';
-      this.python.dataset.state = 'error';
       if (this.echoNote) this.echoNote.hidden = true;
-      // The compiler's own rendered text says everything twice, once in each
-      // language, with a caret line. That belongs in the band below, taken
-      // apart and in this page's language; here it was a wall of text a
-      // beginner reads as noise. The fallback stays for the day the band is
-      // not there or the compiler sends no structured problem.
-      const first = outcome.problems[0];
-      this.python.textContent = this.problem && first ? TEXT.noPythonYet : outcome.diagnostic;
-      this.pythonState.textContent = TEXT.errorLabel;
-      // The subtitle said "what the compiler produced" next to a message that
-      // says the opposite. One of them has to change with the state.
-      if (this.pythonNote) this.pythonNote.textContent = TEXT.errorNote;
       // The button stays alive on purpose. A dead button is not information:
       // it says "no" without saying why, and that is exactly what a beginner
-      // cannot get past. Pressing it now takes you to the line.
+      // cannot get past. Pressing it now takes you to the line. This part is
+      // never held back: it is what the button will do if it is pressed.
       this.runButton.disabled = this.running;
       this.runButton.dataset.blocked = 'true';
       this.runButton.title = TEXT.blockedHint;
-      this.showProblem(outcome.problems[0] ?? null);
+      /* Typing in the middle of a word breaks the program for as long as the
+       * word is half-written, and the page used to answer every one of those
+       * keystrokes with a red band that vanished again a moment later — the
+       * owner described it as "오류떴다가 고쳐지고 막 이래". So the first
+       * failure after a program that worked is held for half a second: if a
+       * later compile succeeds first, nothing is ever shown. A failure that
+       * follows another failure is not held, because the reader is already
+       * looking at one and a stale line number is worse than a new one. */
+      this.pendingFailure = outcome;
+      clearTimeout(this.errorTimer);
+      if (this.python.dataset.state === 'error') {
+        this.errorTimer = 0;
+        this.drawFailure(outcome);
+      } else {
+        this.errorTimer = setTimeout(() => { this.errorTimer = 0; this.drawFailure(outcome); }, 500);
+      }
     }
+  }
+
+  drawFailure(outcome: CompileOutcome): void {
+    this.python.dataset.state = 'error';
+    // The compiler's own rendered text says everything twice, once in each
+    // language, with a caret line. That belongs in the band below, taken
+    // apart and in this page's language; here it was a wall of text a
+    // beginner reads as noise. The fallback stays for the day the band is
+    // not there or the compiler sends no structured problem.
+    const first = outcome.problems[0];
+    this.python.textContent = this.problem && first ? TEXT.noPythonYet : outcome.diagnostic;
+    this.pythonState.textContent = TEXT.errorLabel;
+    // The subtitle said "what the compiler produced" next to a message that
+    // says the opposite. One of them has to change with the state.
+    if (this.pythonNote) this.pythonNote.textContent = TEXT.errorNote;
+    this.showProblem(outcome.problems[0] ?? null);
+  }
+
+  /* Whatever is being held back, show it now. Pressing Run is asking to be
+   * told, and so is asking the page to tidy a program it cannot compile. */
+  showFailureNow(): void {
+    if (this.errorTimer === 0) return;
+    clearTimeout(this.errorTimer);
+    this.errorTimer = 0;
+    if (this.pendingFailure) this.drawFailure(this.pendingFailure);
   }
 
   /* --- what is wrong, where, and what to try ----------------------------- */
@@ -3422,6 +3460,7 @@ class Playground {
       // Not an alert any more: the band under the editor already says which
       // line and why, so the press takes you there instead of adding a second
       // message that says less.
+      this.showFailureNow();
       this.flashProblem();
       const line = this.problemLine?.textContent?.match(/\d+/)?.[0];
       if (line) this.goToLine(Number(line));

@@ -249,12 +249,34 @@ if (quietBand.height !== 0) errors.push('숨긴 오류 띠가 자리를 차지�
 // editor saw a button that did nothing. The band under the editor has to say
 // which line, quote it, say what is wrong and what to try, and pressing Run
 // has to take the caret to that line.
+// 낱말을 반쯤 썼을 뿐인데 빨간 띠가 떴다가 사라지면 그것은 알림이 아니라
+// 깜빡임이다. 되던 프로그램이 처음 깨질 때는 반 초 붙들었다가 보여 준다.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '안녕하세요 말해줘\n';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForFunction(() => document.querySelector('#python').dataset.state === 'ok'
+  && document.querySelector('#problem').hidden, null, { timeout: 15000 });
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '안녕하세요 말해줘\n끝\n';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(430);
+const heldBack = await page.evaluate(() => document.querySelector('#problem').hidden);
+await page.waitForTimeout(1400);
+const shownLater = await page.evaluate(() => document.querySelector('#problem').hidden);
+if (!heldBack) errors.push('프로그램이 깨지자마자 오류 띠가 떴음 — 치는 동안 깜빡인다');
+if (shownLater) errors.push('손을 멈췄는데도 오류 띠가 끝내 나오지 않음');
+console.log(errors.length ? 'FAIL 오류 띠 붙들기' : '치는 동안에는 오류가 깜빡이지 않고, 멈추면 나옴');
+
 await page.evaluate(() => {
   const editor = document.querySelector('#editor');
   editor.value = '안녕하세요 말해줘\n끝\n세 번째 줄';
   editor.dispatchEvent(new Event('input'));
 });
-await page.waitForTimeout(700);
+await page.waitForTimeout(1500);
 const band = await page.evaluate(() => ({
   hidden: document.querySelector('#problem').hidden,
   line: document.querySelector('#problem-line').textContent,

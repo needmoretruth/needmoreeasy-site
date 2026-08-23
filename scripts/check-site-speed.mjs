@@ -57,17 +57,19 @@ const seen = await page.evaluate(async () => {
     for (const entry of list.getEntries()) freezes.push(Math.round(entry.duration));
   }).observe({ entryTypes: ['longtask'] });
 
-  // Typing 'x' in front of the first line usually breaks that line, and that
-  // is fine — a keystroke mid-word breaks the program all the time and the
-  // page has to keep up with it either way. So what is waited for is the pane
-  // answering at all, not the pane being happy.
+  // A comment at the end of the file, because what is being timed is how
+  // long the page takes to answer — not how long it waits before admitting a
+  // program is broken. A keystroke that breaks the program is held back on
+  // purpose for half a second (see `compileNow`), and timing that instead
+  // would measure the wrong thing.
   const was = python.textContent;
   const wasState = python.dataset.state;
   const started = performance.now();
   editor.focus();
-  editor.setSelectionRange(0, 0);
+  const end = editor.value.length;
+  editor.setSelectionRange(end, end);
   // A real keystroke, not a value assignment: the page listens for `input`.
-  editor.setRangeText('x', 0, 0, 'end');
+  editor.setRangeText('\n# 재는 중', end, end, 'end');
   editor.dispatchEvent(new Event('input', { bubbles: true }));
 
   const caughtUp = await new Promise((done) => {
