@@ -1013,6 +1013,9 @@ set venomBite to 2              # life the venom takes each turn
 set markFull to █               # the character a life bar is drawn with
 set markEmpty to ░              # and the character for what is gone
 set lifePerMark to 4            # life one mark on the bar is worth
+if lifePerMark is less than 1
+  set lifePerMark to 1          # at 0 the bar would never finish drawing
+end
 set barMax to 20                # how long a full bar is. The job below
                                 # reads this, and a job can only read a
                                 # name that already exists above it.
@@ -1038,17 +1041,27 @@ to sign someone:
 end
 
 to lifebar amount:
+  set fullMarks to 0
   set barLeft to amount
-  set barText to markFull repeated 0 times
   while barLeft is greater than 0
-    add markFull to barText
+    add 1 to fullMarks
     subtract lifePerMark from barLeft
   end
+  set allMarks to 0
   set barLeft to barMax
-  subtract amount from barLeft
   while barLeft is greater than 0
-    add markEmpty to barText
+    add 1 to allMarks
     subtract lifePerMark from barLeft
+  end
+  set barText to markFull repeated 0 times
+  set drawn to 0
+  while drawn is less than fullMarks
+    add markFull to barText
+    add 1 to drawn
+  end
+  while drawn is less than allMarks
+    add markEmpty to barText
+    add 1 to drawn
   end
   show barText
 end
@@ -1077,13 +1090,15 @@ end
 
 draw a line
 show A knight takes a hit and keeps standing.
-show A mage hits hardest and has the least life to spare.
+show A mage lands one big hit a thief strikes twice and a warrior lasts longest.
 show A thief is hard to catch and strikes twice.
 show A ranger leaves a wound that keeps working.
 ask heroClass knight, mage, thief or ranger — which will you be?
 
 # Four kinds of hero, and one block that sets all of them up. Copy any
-# one of these branches to invent a fifth.
+# one of these branches, change its name and its numbers, and add a
+# branch to the skill block below as well. Without that branch the new
+# kind quietly uses the warrior skill.
 if heroClass equals mage
   set heroKind to mage
   set heroMax to 32
@@ -1123,7 +1138,7 @@ else
 end
 
 draw a line
-show On easy every enemy has less life. On hard they have more.
+show On easy every enemy has less life. On hard they have more and hit harder.
 ask hardness easy, normal or hard?
 
 if hardness equals easy
@@ -1170,7 +1185,7 @@ repeat forever
   set banner to the sunken keep
   do header with banner
 
-  # What is on this floor. Every branch sets the same eight names, so
+  # What is on this floor. Every branch sets the same seven names, so
   # a new floor is a copy of one of these with different numbers.
   if floorNumber is greater than floorsToClear
     set foeName to the Keeper of the Keep
@@ -1303,7 +1318,7 @@ repeat forever
           if heroLife is greater than heroMax
             set heroLife to heroMax
           end
-          show The shield takes dealt and you steady yourself.
+          show The shield pushes it back for dealt and you steady yourself.
         end
       end
 
@@ -1361,7 +1376,7 @@ repeat forever
       else
         set roll to random number from 1 to 100
         set gotAway to false
-        if roll is less than fleeChance
+        if roll is less than or equal to fleeChance
           set gotAway to true
         end
         if gotAway exists
@@ -1379,7 +1394,7 @@ repeat forever
       set dealt to random number from 3 to 8
       add heroHit to dealt
       set roll to random number from 1 to 100
-      if roll is less than critChance
+      if roll is less than or equal to critChance
         multiply dealt by 2
         show Straight through the gap.
       end
@@ -1415,7 +1430,7 @@ repeat forever
     # Being quick is being somewhere else when it arrives.
     set roll to random number from 1 to 100
     set dodged to false
-    if roll is less than heroSpeed
+    if roll is less than or equal to heroSpeed
       set dodged to true
     end
 
@@ -1470,7 +1485,7 @@ repeat forever
     put foeName at 1 in logBook
   end
 
-  while heroXp is greater than heroNext
+  while heroXp is greater than or equal to heroNext
     subtract heroNext from heroXp
     add 1 to heroLevel
     add 4 to heroNext
@@ -1529,7 +1544,7 @@ repeat forever
     ask bought flask, ether, bomb, sharpen or nothing?
 
     if bought equals flask
-      if heroPurse is greater than flaskPrice
+      if heroPurse is greater than or equal to flaskPrice
         subtract flaskPrice from heroPurse
         add 1 to heroFlask
         show One bottle into the bag.
@@ -1537,7 +1552,7 @@ repeat forever
         show Not enough for that.
       end
     else if bought equals ether
-      if heroPurse is greater than etherPrice
+      if heroPurse is greater than or equal to etherPrice
         subtract etherPrice from heroPurse
         add 1 to heroEther
         show One ether into the bag.
@@ -1545,7 +1560,7 @@ repeat forever
         show Not enough for that.
       end
     else if bought equals bomb
-      if heroPurse is greater than bombPrice
+      if heroPurse is greater than or equal to bombPrice
         subtract bombPrice from heroPurse
         add 1 to heroBomb
         show One bomb into the bag. Carefully.
@@ -1553,7 +1568,7 @@ repeat forever
         show Not enough for that.
       end
     else if bought equals sharpen
-      if heroPurse is greater than forgePrice
+      if heroPurse is greater than or equal to forgePrice
         subtract forgePrice from heroPurse
         add 2 to heroHit
         set heroWeapon to a sharpened blade
@@ -1673,7 +1688,7 @@ draw a line`,
       expect: 'Number baseball',
       source: `# Number baseball. The computer thinks of three digits and you have to
 # find them. A strike is a right digit in the right place; a ball is a
-# right digit in the wrong place.
+# digit that is in the answer somewhere.
 #
 # Lines that start with # do nothing at all — they are notes for you.
 
@@ -1687,7 +1702,7 @@ draw a line
 say in the middle Number baseball
 draw a line
 show Three digits, each from 1 to 9. They may repeat.
-show A strike is right and in place. A ball is right, out of place.
+show A strike is a digit in its place. A ball is a digit that is in the answer somewhere.
 
 repeat forever
 
@@ -1752,7 +1767,8 @@ end`,
 # goes with it. Three tries.
 #
 # The two lists line up: word 1 goes with hint 1, and so on. Add a
-# fifth word and a fifth hint and the game gets bigger.
+# fifth word and a fifth hint and the game gets bigger. Change the 4
+# in "from 1 to 4" below to 5 at the same time.
 
 set words to list of piano, harbour, penguin, umbrella
 set clues to list of it has black keys, boats sleep here, a bird that swims, it opens when it rains
@@ -1839,7 +1855,9 @@ repeat forever
     draw a line
     show Not quite. The row was:
     show shown joined by space
-    show You held turn of them.
+    set heldCount to turn
+    subtract 1 from heldCount
+    show You held heldCount of them.
     break
   end
 
@@ -1931,16 +1949,16 @@ set maximumSupply to 21000000
 set halvingHeight to 210000
 set retargetInterval to 2016
 set maturityBlocks to 100
-set maturedFromHeight to 101
 set paymentHeight to 170
 set workTarget to 7237005577332262213973186563042994240829374041602535252466099000494570602496
-set genesisHeadline to Times 3 January 2009 Chancellor on brink of second bailout for banks
+set genesisHeadline to The Times 3 January 2009 Chancellor on brink of second bailout for banks
 set allPassed to 1
 
 show What this program builds
 show Address derivation double hashing proof of work merkle root and the link back to the previous hash
 show Transaction signing inputs outputs change fees coinbase maturity and double spend protection
 show Difficulty retargeting the halving the supply cap replay checking and three layers of tamper detection
+show Only the mining target differs from the real one it is set far lower so this finishes in a browser in minutes
 
 set satoshiSecret to zero knowledge secret make
 set satoshiPublic to satoshiSecret zero knowledge public make
@@ -1966,7 +1984,6 @@ set halBalance to 0
 set coinsIssued to 0
 set satoshiUsedNumber to 0
 set inputSpent to 0
-set genesisNeverSpendable to 1
 
 show The release date is releaseDate
 show The block reward is blockReward bitcoin
@@ -2024,7 +2041,9 @@ end
 end
 add blockReward to satoshiLocked
 add blockReward to coinsIssued
-if currentHeight is greater than or equal to maturedFromHeight
+set maturedHeight to currentHeight
+subtract maturityBlocks from maturedHeight
+if maturedHeight is greater than or equal to 1
 add blockReward to satoshiSpendable
 subtract blockReward from satoshiLocked
 end
@@ -2060,7 +2079,8 @@ else
 show The input has not matured yet so it is refused
 set allPassed to 0
 end
-set transactionMessage to satoshiAddress pays halAddress halOutput change satoshiAddress changeOutput input one fee computedFee number transactionNumber
+set changeAddress to satoshiAddress
+set transactionMessage to satoshiAddress pays halAddress halOutput change changeAddress changeOutput input one fee computedFee number transactionNumber
 set transactionSeed to zero knowledge nonce make
 set transactionCommitment to transactionSeed zero knowledge commitment make
 set transactionHash to satoshiAddress transactionCommitment transactionMessage zero knowledge challenge make
@@ -2110,7 +2130,9 @@ set lastCoinbaseCommitment to lastCoinbaseSeed zero knowledge commitment make
 set lastCoinbaseHash to satoshiAddress lastCoinbaseCommitment lastCoinbaseContext zero knowledge challenge make
 add blockReward to satoshiLocked
 add blockReward to coinsIssued
-if paymentHeight is greater than or equal to maturedFromHeight
+set paymentMaturedHeight to paymentHeight
+subtract maturityBlocks from paymentMaturedHeight
+if paymentMaturedHeight is greater than or equal to 1
 add blockReward to satoshiSpendable
 subtract blockReward from satoshiLocked
 end
@@ -2152,33 +2174,18 @@ show Total coins issued is coinsIssued
 show Difficulty retarget rule checked every time retargetInterval blocks go by
 set idealDays to 14
 set actualDays to 28
-set raiseFactor to the whole number of actualDays divided by idealDays
+set slowFactor to the whole number of actualDays divided by idealDays
 set adjustedTarget to workTarget
-set adjustCount to 0
-set adjusting to 1
-while adjusting exists
-if adjustCount is greater than or equal to raiseFactor
-set adjusting to 0
-else
-set adjustedTarget to the whole number of adjustedTarget divided by 2
-add 1 to adjustCount
-end
-end
-show Mining was fast so the target is cut in half which raises the difficulty
+multiply adjustedTarget by slowFactor
+show Mining took actualDays days instead of idealDays days
+show Mining was slow so the target grows by a factor of slowFactor which lowers the difficulty
+show The bigger target is adjustedTarget
 set actualDays to 7
-set lowerFactor to the whole number of idealDays divided by actualDays
-set adjustedTargetTwo to workTarget
-set adjustCountTwo to 0
-set adjustingTwo to 1
-while adjustingTwo exists
-if adjustCountTwo is greater than or equal to lowerFactor
-set adjustingTwo to 0
-else
-add adjustedTargetTwo to adjustedTargetTwo
-add 1 to adjustCountTwo
-end
-end
-show Mining was slow so the target is made bigger which lowers the difficulty
+set fastFactor to the whole number of idealDays divided by actualDays
+set adjustedTargetTwo to the whole number of workTarget divided by fastFactor
+show This time it took only actualDays days
+show Mining was fast so the target is divided by fastFactor which raises the difficulty
+show The smaller target is adjustedTargetTwo
 
 show Halving demonstration the turning point where the reward is cut in half
 set askedHeight to 209999
@@ -2210,18 +2217,26 @@ end
 end
 show From height 210000 the reward is demoReward bitcoin
 
-show Replay check starting everything is worked out again from the beginning
-set replayGenesisTransactionHash to satoshiAddress genesisTransactionCommitment genesisTransactionContext zero knowledge challenge make
-set replayGenesisMiddle to satoshiAddress genesisNonceCommitment genesisFirstContext zero knowledge challenge make
+show Replay check starting the genesis block and block 170 are built again from their values
+show The blocks in between are not replayed because their nonces were not kept
+set replayGenesisTransactionContext to coinName coinbase height 0 satoshiAddress receives blockReward genesisHeadline
+set replayGenesisTransactionHash to satoshiAddress genesisTransactionCommitment replayGenesisTransactionContext zero knowledge challenge make
+set replayGenesisMerkle to replayGenesisTransactionHash
+set replayGenesisFirstContext to coinName header version one previous none merkle replayGenesisMerkle height 0
+set replayGenesisMiddle to satoshiAddress genesisNonceCommitment replayGenesisFirstContext zero knowledge challenge make
 set replayGenesisSecondContext to coinName header double hash middle replayGenesisMiddle
 set replayGenesisHeader to satoshiAddress genesisNonceCommitment replayGenesisSecondContext zero knowledge challenge make
-set replayTransactionHash to satoshiAddress transactionCommitment transactionMessage zero knowledge challenge make
-set replayJoinContext to coinName merkle left lastCoinbaseHash right replayTransactionHash
+set replayTransactionMessage to satoshiAddress pays halAddress halOutput change changeAddress changeOutput input one fee computedFee number transactionNumber
+set replayTransactionHash to satoshiAddress transactionCommitment replayTransactionMessage zero knowledge challenge make
+set replayLastCoinbaseContext to coinName coinbase height paymentHeight satoshiAddress receives blockReward
+set replayLastCoinbaseHash to satoshiAddress lastCoinbaseCommitment replayLastCoinbaseContext zero knowledge challenge make
+set replayJoinContext to coinName merkle left replayLastCoinbaseHash right replayTransactionHash
 set replayMerkle to satoshiAddress merkleJoinCommitment replayJoinContext zero knowledge challenge make
-set replayMiddle to satoshiAddress blockNonceCommitment headerFirstContext zero knowledge challenge make
+set replayHeaderFirstContext to coinName header version one previous previousHeader merkle replayMerkle height paymentHeight
+set replayMiddle to satoshiAddress blockNonceCommitment replayHeaderFirstContext zero knowledge challenge make
 set replaySecondContext to coinName header double hash middle replayMiddle
 set replayHeader to satoshiAddress blockNonceCommitment replaySecondContext zero knowledge challenge make
-set replaySignatureValid to satoshiPublic transactionSignature transactionMessage zero knowledge verify
+set replaySignatureValid to satoshiPublic transactionSignature replayTransactionMessage zero knowledge verify
 set replaySatoshiSpendable to 0
 set replaySatoshiChange to 0
 set replaySatoshiLocked to 0
@@ -2230,7 +2245,9 @@ set replayCount to 1
 set replaying to 1
 while replaying exists
 add blockReward to replaySatoshiLocked
-if replayCount is greater than or equal to maturedFromHeight
+set replayMaturedHeight to replayCount
+subtract maturityBlocks from replayMaturedHeight
+if replayMaturedHeight is greater than or equal to 1
 add blockReward to replaySatoshiSpendable
 subtract blockReward from replaySatoshiLocked
 end
@@ -2279,7 +2296,7 @@ if replayHoldingsTotal equals holdingsTotal
 add 1 to replayScore
 end
 if replayScore equals 9
-show Whole chain replay check passed nine items match
+show Replay check passed all nine items match
 else
 show Replay check failed replayScore items matched
 set allPassed to 0
@@ -2296,7 +2313,7 @@ end
 
 show Tamper test the amount in the transaction is quietly changed
 set tamperedAmount to 11
-set tamperedMessage to satoshiAddress pays halAddress tamperedAmount change satoshiAddress changeOutput input one fee computedFee number transactionNumber
+set tamperedMessage to satoshiAddress pays halAddress tamperedAmount change changeAddress changeOutput input one fee computedFee number transactionNumber
 set tamperedValid to satoshiPublic transactionSignature tamperedMessage zero knowledge verify
 if tamperedValid equals false
 show First layer refused the signature caught the tampering
@@ -2346,11 +2363,22 @@ end`,
 
 set primeOne to 61
 set primeTwo to 53
+if primeOne is less than 2
+set primeOne to 61
+show the first number cannot be below 2 so it went back to 61 primes start at 2
+end
+if primeTwo is less than 2
+set primeTwo to 53
+show the second number cannot be below 2 so it went back to 53 primes start at 2
+end
 set allStepsPassed to 1
 
 set divisor to 2
 set checkingPrimeOne to 1
 set primeOnePassed to 1
+if primeOne is less than 3
+set checkingPrimeOne to 0
+end
 while checkingPrimeOne exists
 if the remainder of primeOne divided by divisor equals 0
 set primeOnePassed to 0
@@ -2359,7 +2387,7 @@ end
 if checkingPrimeOne exists
 set nextDivisor to divisor
 add 1 to nextDivisor
-if nextDivisor equals primeOne
+if nextDivisor is greater than or equal to primeOne
 set checkingPrimeOne to 0
 else
 set divisor to nextDivisor
@@ -2376,6 +2404,9 @@ end
 set divisor to 2
 set checkingPrimeTwo to 1
 set primeTwoPassed to 1
+if primeTwo is less than 3
+set checkingPrimeTwo to 0
+end
 while checkingPrimeTwo exists
 if the remainder of primeTwo divided by divisor equals 0
 set primeTwoPassed to 0
@@ -2384,7 +2415,7 @@ end
 if checkingPrimeTwo exists
 set nextDivisor to divisor
 add 1 to nextDivisor
-if nextDivisor equals primeTwo
+if nextDivisor is greater than or equal to primeTwo
 set checkingPrimeTwo to 0
 else
 set divisor to nextDivisor
@@ -2569,7 +2600,7 @@ show decryption failed the numbers are not the same as the plain text
 set allStepsPassed to 0
 end
 
-show signing starting we sign the message fingerprint with the private key
+show signing starting we sign the message number itself with the private key
 set messageToSign to 777
 
 set signedNumber to 1
@@ -2599,11 +2630,13 @@ set powerBase to the remainder of powerBase divided by modulus
 set powerExponent to the whole number of powerExponent divided by 2
 end
 if signatureCheck equals messageToSign
-show the signature checks out this is the real sender
+show the signature checks out it was made with that private key
 else
 show the signature check failed
 set allStepsPassed to 0
 end
+show this key is teaching sized so it cannot protect anything real
+show real RSA shortens the message with a hash and pads it before signing
 
 show tampering starting we quietly change the message
 set changedMessage to 778
@@ -2695,7 +2728,7 @@ show highest topMark · lowest lowMark
 # dividing is, underneath.
 set average to 0
 set left to pot
-while left is greater than howMany
+while left is greater than or equal to howMany
   subtract howMany from left
   add 1 to average
 end
@@ -2722,7 +2755,7 @@ show ranked joined by space`,
 # Peace
 # A large turn-based role-playing game about felling the Demon Lord and winning the world back
 #
-# This file is written with nothing but the newest English sentence syntax of NeedMoreEasy 0.7.1.
+# This file is written with nothing but English sentence syntax. Not one line of Python.
 # Not one line of Python syntax, and not one Korean command.
 #
 # ── If this is your first time changing a game ─────────────────────
@@ -2732,13 +2765,14 @@ show ranked joined by space`,
 # Start with the numbers under "Dials you can turn" below.
 # Enemy life, how much a potion heals, shop prices — the values worth changing often.
 # After that, change the names and numbers under "Regions and enemies".
-# One enemy is a name, life, hit, guard, speed, reward and trait.
+# One enemy is a name, life, hit, guard, reward and trait.
+# A speed is written down too, but nothing in a fight reads it yet.
 # Copy one branch of the same shape and you have a new region.
 #
 # ── What is in the game ────────────────────────────────────────────
 # Thirteen classes, each with its own skill and its own ultimate
 # Twelve regions, a hidden thirteenth, and thirteen enemies that each fight differently
-# Eleven characters with a history and a choice of their own, and standing with four powers
+# Eleven characters with a history and a choice of their own, and standing with six powers
 # Life and spirit, critical hits, dodging, guarding, burn, bleed and poison
 # Nine consumables, weapons, armour and charms, wear and repair, experience and levelling
 # A Demon Lord fight in three phases, and an ending that follows what you chose
@@ -2764,7 +2798,7 @@ set potionHeal to 30             # life one potion gives back
 set strongPotionHeal to 65
 set tonicRestore to 12             # spirit one tonic gives back
 set bombPower to 24               # a bomb ignores the enemy's guard
-set potionBasePrice to 25           # the real price adds the war and the stock to the base
+set potionBasePrice to 25           # real price = base + war risk + distance − merchant standing
 set strongPotionBasePrice to 58
 set tonicBasePrice to 40
 set antidoteBasePrice to 22
@@ -2777,8 +2811,8 @@ set rationBasePrice to 18
 set potionPrice to potionBasePrice
 set tonicPrice to tonicBasePrice
 set bombPrice to bombBasePrice
-set weaponBoostPrice to 120
-set armourBoostPrice to 120
+set weaponBasePrice to 120
+set armourBasePrice to 130
 set repairBasePrice to 20
 set critChance to 14               # critical hits out of a hundred swings
 set baseFleeChance to 65
@@ -2787,7 +2821,6 @@ set burnDamage to 4
 set bleedDamage to 3
 set fullCell to ■
 set emptyCell to ·
-set lifePerCell to 5
 set barWidth to 20
 set shortWait to 1
 set ultimateFull to 100
@@ -2799,7 +2832,6 @@ set bombOreCost to 2
 set bombDustCost to 1
 set runeOreCost to 2
 set runeDustCost to 2
-set marketMaxStock to 7
 
 # Set quickTest to true and you start far stronger than usual.
 # It is the dial for reaching the end quickly after adding an enemy or a scene.
@@ -2831,10 +2863,10 @@ to drawLifeBar fillAmount:
   # Instead of dividing, both sides are multiplied so whole numbers alone compare the ratio.
   set barText to fullCell repeated 0 times
   set barStep to 0
-  repeat 20 times
+  repeat barWidth times
     add 1 to barStep
     set nowValue to fillAmount
-    multiply nowValue by 20
+    multiply nowValue by barWidth
     set topValue to barMaxAmount
     multiply topValue by barStep
     if nowValue is greater than or equal to topValue
@@ -2848,7 +2880,7 @@ end
 
 # In the kingdom 100 bronze is 10 silver, and 10 silver is 1 gold.
 # The game keeps bronze, which is easy to add up, and splits it three ways to show it.
-# To change the rates, change the 100 and the 10 in the two loops below together.
+# To change the rates, change 99 with 100 and 9 with 10, in pairs, in the two loops below.
 to showMoney coinHeld:
   set shownGold to 0
   set shownSilver to 0
@@ -3414,7 +3446,6 @@ set fatigueLevel to 0
 set moralePoints to 50
 set marketPotionStock to 5
 set marketTonicStock to 4
-set marketBombStock to 2
 set marketRationStock to 6
 set rianelJoined to false
 set brumJoined to false
@@ -3816,7 +3847,7 @@ if newAdventure missing
   else if charmNumber equals 3
     set charmName to the saint's rosary
   else if charmNumber equals 4
-    set charmName to a shard of Nox
+    set charmName to the abyss shard of Nox
   else
     set charmName to a worn peace charm
   end
@@ -3874,11 +3905,14 @@ if newAdventure missing
   end
   if repairCount is greater than 0
     set firstRepairAchievement to true
-    append first repair to achievementList
+    append the sword reforged to achievementList
   end
   if bronzeHeld is greater than 99
     set richAchievement to true
     append first gold to achievementList
+  end
+  if hiddenBossWin exists
+    append conqueror of the abyss to achievementList
   end
 
   if regionNumber is greater than 1
@@ -4003,6 +4037,7 @@ if quickTest exists
   set bombCount to 30
   set holyWaterCount to 30
   set smokeCount to 30
+  set whetstoneCount to 30
   set rationCount to 30
   set herbCount to 30
   set ironCount to 30
@@ -4027,7 +4062,7 @@ wait shortWait
 # ════════════════════════════════════════════════════════════════════
 # The great loop of the adventure
 # One turn around this loop is one region.
-# Pull back from a fight and the same region starts over.
+# Pull back from a fight and the enemy takes all its life back and the same fight goes on.
 # ════════════════════════════════════════════════════════════════════
 
 repeat forever
@@ -4472,7 +4507,7 @@ repeat forever
 
   # ── Regions and enemies ─────────────────────────────────────────
   # To add an enemy, copy one of the branches below exactly as it is.
-  # A trait is one of momentum, plunder, thorns, regrowth, armour, poison, drain, demon lord, abyss.
+  # A trait is one of momentum, plunder, thorns, regrowth, armour, poison, drain, gamble, demon lord, abyss.
   # What a trait actually does is gathered further down, under "The enemy strikes back".
 
   if regionNumber equals 13
@@ -5217,7 +5252,7 @@ repeat forever
               if extraFateFace is greater than fateFace then set fateFace to extraFateFace
             end
           end
-          show 🎲 The dice of fate · rolled fateFace / 6 · each face 16.7 percent
+          show 🎲 The dice of fate · rolled fateFace / 6
           if fateFace equals 1
             set dealtDamage to 1
             subtract 4 from heroLife
@@ -5366,7 +5401,7 @@ repeat forever
           if enemyGuard is less than 0
             set enemyGuard to 0
           end
-          show The golem's stone armour broke along with it.
+          show The stone armour of enemyName broke along with it.
         end
       else
         show There is no bomb left to throw.
@@ -5496,6 +5531,14 @@ repeat forever
         show Its guard is very high. A bomb ignores guard and breaks stone armour too.
       else if enemyTrait equals regrowth
         show It heals every turn. Keep up with burn and bleeding.
+      else if enemyTrait equals poison
+        show Its skill poisons you 40 percent of the time. Carry an antidote.
+      else if enemyTrait equals drain
+        show It turns the wounds it deals back into its own life. Do not drag the fight out.
+      else if enemyTrait equals plunder
+        show Its skill takes bronze from you. Win and you get all of it back.
+      else if enemyTrait equals momentum
+        show Every skill it uses raises its attack by 1. Finish quickly.
       else if enemyTrait equals gamble
         show Lemar's own skill is 1 and 2 backfire, 3 and 4 even, 5 and 6 loaded. Each pair is 33.3 percent.
       else if enemyTrait equals demon lord
@@ -5503,7 +5546,7 @@ repeat forever
       else if enemyTrait equals abyss
         show It breathes in a way that swallows ultimate charge. Poise breaks and the time element are the keys.
       end
-      show 🎲 Open odds · critical 14 percent · dodge battleSpeed percent · ally help allyHelpChance percent
+      show 🎲 Open odds · critical critChance percent · dodge battleSpeed percent · ally help allyHelpChance percent
       show The chaos die · 1 and 2 against you / 3 and 4 healing / 5 and 6 attack · 16.7 percent each
       if className equals gambler
         show The dice of fate · 1 to 6 at 16.7 percent each · after two low rolls the next six is certain
@@ -5529,6 +5572,7 @@ repeat forever
             set enemyLife to enemyMaxLife
             set enemyBurn to 0
             set enemyBleed to 0
+            set enemyPoison to 0
             set enemyPoise to enemyMaxPoise
             show You paid 1 silver and fell back to the guild camp. The enemy healed fully as well.
             skip
@@ -5708,7 +5752,7 @@ repeat forever
       if skillUsed exists
         set thornDamage to 5
         subtract thornDamage from heroLife
-        show Edric's mirror shield throws the skill back for thornDamage.
+        show The mirror shield of enemyName throws the skill back for thornDamage.
       end
     end
 
@@ -5831,7 +5875,7 @@ repeat forever
         end
       end
 
-      # The curse of Morvel the dark wizard stays as poison.
+      # An enemy that curses leaves poison behind instead of a wound.
       if enemyTrait equals poison
         if enemyIntent equals its own skill
           40% chance
@@ -6069,7 +6113,8 @@ repeat forever
 
 
   # ── Material spoils ──────────────────────────────────────────────
-  # Which materials drop depends on the region. They are spent in the camp's crafting menu.
+  # Which materials drop depends on the region. They are spent in the camp's crafting menu —
+  # all but the dragon scale, which no recipe uses and is only worth selling.
 
   set materialCount to random number from 1 to 2
   if regionNumber is less than or equal to 2
@@ -6151,7 +6196,8 @@ repeat forever
 
   # ── A regional economy that moves ───────────────────────────────
   # A real price is the base plus war risk plus freight, less the trader's regard for you.
-  # Goods are cheap where they are made, and every purchase thins the stock and lifts the price a little.
+  # Goods are cheap where they are made. Every purchase thins the stock, and
+  # potions, strong potions, ethers, bombs and rations also cost a little more each time.
 
   set freightCost to regionNumber
   add warRisk to freightCost
@@ -6455,12 +6501,12 @@ repeat forever
       end
 
     else if buyChoice equals forgeweapon
-      set weaponBoostPrice to 120
+      set weaponBoostPrice to weaponBasePrice
       set weaponStepValue to weaponNumber
       multiply weaponStepValue by 45
       add weaponStepValue to weaponBoostPrice
       subtract traderDiscount from weaponBoostPrice
-      show The next weapon costs weaponBoostPrice bronze
+      if weaponNumber is less than or equal to 7 then show The next weapon costs weaponBoostPrice bronze
       if weaponNumber is greater than 7
         show You already carry the finest weapon there is.
       else if bronzeHeld is greater than or equal to weaponBoostPrice
@@ -6491,12 +6537,12 @@ repeat forever
       end
 
     else if buyChoice equals forgearmour
-      set armourBoostPrice to 130
+      set armourBoostPrice to armourBasePrice
       set armourStepValue to armourNumber
       multiply armourStepValue by 55
       add armourStepValue to armourBoostPrice
       subtract traderDiscount from armourBoostPrice
-      show The next armour costs armourBoostPrice bronze
+      if armourNumber is less than or equal to 5 then show The next armour costs armourBoostPrice bronze
       if armourNumber is greater than 5
         show You already wear the finest armour there is.
       else if bronzeHeld is greater than or equal to armourBoostPrice
@@ -6698,7 +6744,7 @@ repeat forever
 
     if craftChoice equals potion
       if herbCount is greater than 1
-        subtract 2 from herbCount
+        subtract potionHerbCost from herbCount
         add 1 to potionCount
         set craftWins to true
       end
@@ -6729,8 +6775,8 @@ repeat forever
     else if craftChoice equals bomb
       if ironCount is greater than 1
         if dustCount is greater than 0
-          subtract 2 from ironCount
-          subtract 1 from dustCount
+          subtract bombOreCost from ironCount
+          subtract bombDustCost from dustCount
           add 1 to bombCount
           set craftWins to true
         end
@@ -6762,8 +6808,8 @@ repeat forever
     else if craftChoice equals rune
       if ironCount is greater than 1
         if dustCount is greater than 1
-          subtract 2 from ironCount
-          subtract 2 from dustCount
+          subtract runeOreCost from ironCount
+          subtract runeDustCost from dustCount
           add 1 to heroHit
           add 1 to heroGuard
           add 4 to maxLife
@@ -6907,154 +6953,156 @@ end
 # The last scene
 # ════════════════════════════════════════════════════════════════════
 
-clear the screen
-draw a line
-
-set peaceReached to false
-if endingKind equals peace
-  set peaceReached to true
-end
-if endingKind equals wholepeace
-  set peaceReached to true
-end
-if endingKind equals sacrifice
-  set peaceReached to true
-end
-
-if peaceReached exists
-  say in a box 🟩 Peace
+if endingKind is not equal to brokensave
+  clear the screen
   draw a line
-  if pacingNumber equals 2
-    say slowly The Demon Lord has fallen. Morning comes back to Arteria.
-  else if pacingNumber equals 3
-    say very slowly At last, peace has come back.
-  else
-    show The Demon Lord has fallen. Morning comes back to Arteria.
+
+  set peaceReached to false
+  if endingKind equals peace
+    set peaceReached to true
   end
-  story:
-
-    heroName raised weaponName and ran it through Morgar's heart.
-    The Demon Lord was dead, and the gate of the demon world fell in with red fire.
-    In the capital Elenoa rang the victory bell and raised the kingdom's flag on every wall.
-    The monster legions fled to the northern mountains, and a peaceful morning came to Arteria again.
-
-  end
-
-  if hopeScore is greater than or equal to 7
-    story:
-
-      A statue of the winning hero rose in the middle of the capital, and the festival ran a week.
-      Rianel the elf took her forest back, and Brum the dwarf opened the fallen mine again.
-      Serin became the kingdom's high wizard, and Adela and Kyle founded a guild for the children the war orphaned.
-      Aurel the gold dragon flew above the new king's crowning, and the alliance of the three peoples held firmer than ever.
-
-    end
-    say in the middle The warmest peace
-  else if hopeScore is greater than or equal to 4
-    story:
-
-      The wounds did not close in a day, but the roads were given their names again.
-      People told each other what heroName chose along the way, and kept the small promises first.
-      A world you can pick a tomorrow in, whole or not — that much peace had begun.
-
-    end
-    say in the middle Peace begun again
-  else
-    story:
-
-      The war was over and people opened their doors.
-      Trusting one another, though, is still something to learn slowly.
-      heroName set the weapon down and began the work that is harder than fighting.
-
-    end
-    say in the middle Peace still being learned
-  end
-
   if endingKind equals wholepeace
-    draw a line
-    story:
-
-      With Nox the abyss dragon fallen, the rift in the world closed for good inside the holy flame of the goddess.
-      Your allies came home to the kingdom and kept the last battle, written down nowhere, in the memory of one another.
-      The peace of Arteria became a whole new age, with not even a trace of the Demon Lord left.
-
-    end
-    say in a box 🟨 A hidden ending · a whole peace
-  else if endingKind equals sacrifice
-    draw a line
-    story:
-
-      The rift in the world closed, and heroName never came back with the others.
-      Every guild in the kingdom set out one empty chair, and each year the princess lit the first flame before it.
-      Because of that, the next generation lived ordinary lives, knowing neither Demon Lord nor abyss.
-
-    end
-    say in a box 🟨 A hidden ending · the last guardian
+    set peaceReached to true
+  end
+  if endingKind equals sacrifice
+    set peaceReached to true
   end
 
-else
-  say in a box 🟥 A road not finished yet
+  if peaceReached exists
+    say in a box 🟩 Peace
+    draw a line
+    if pacingNumber equals 2
+      say slowly The Demon Lord has fallen. Morning comes back to Arteria.
+    else if pacingNumber equals 3
+      say very slowly At last, peace has come back.
+    else
+      show The Demon Lord has fallen. Morning comes back to Arteria.
+    end
+    story:
+
+      heroName raised weaponName and ran it through Morgar's heart.
+      The Demon Lord was dead, and the gate of the demon world fell in with red fire.
+      In the capital Elenoa rang the victory bell and raised the kingdom's flag on every wall.
+      The monster legions fled to the northern mountains, and a peaceful morning came to Arteria again.
+
+    end
+
+    if hopeScore is greater than or equal to 7
+      story:
+
+        A statue of the winning hero rose in the middle of the capital, and the festival ran a week.
+        Rianel the elf took her forest back, and Brum the dwarf opened the fallen mine again.
+        Serin became the kingdom's high wizard, and Adela and Kyle founded a guild for the children the war orphaned.
+        Aurel the gold dragon flew above the new king's crowning, and the alliance of the three peoples held firmer than ever.
+
+      end
+      say in the middle The warmest peace
+    else if hopeScore is greater than or equal to 4
+      story:
+
+        The wounds did not close in a day, but the roads were given their names again.
+        People told each other what heroName chose along the way, and kept the small promises first.
+        A world you can pick a tomorrow in, whole or not — that much peace had begun.
+
+      end
+      say in the middle Peace begun again
+    else
+      story:
+
+        The war was over and people opened their doors.
+        Trusting one another, though, is still something to learn slowly.
+        heroName set the weapon down and began the work that is harder than fighting.
+
+      end
+      say in the middle Peace still being learned
+    end
+
+    if endingKind equals wholepeace
+      draw a line
+      story:
+
+        With Nox the abyss dragon fallen, the rift in the world closed for good inside the holy flame of the goddess.
+        Your allies came home to the kingdom and kept the last battle, written down nowhere, in the memory of one another.
+        The peace of Arteria became a whole new age, with not even a trace of the Demon Lord left.
+
+      end
+      say in a box 🟨 A hidden ending · a whole peace
+    else if endingKind equals sacrifice
+      draw a line
+      story:
+
+        The rift in the world closed, and heroName never came back with the others.
+        Every guild in the kingdom set out one empty chair, and each year the princess lit the first flame before it.
+        Because of that, the next generation lived ordinary lives, knowing neither Demon Lord nor abyss.
+
+      end
+      say in a box 🟨 A hidden ending · the last guardian
+    end
+
+  else
+    say in a box 🟥 A road not finished yet
+    draw a line
+    story:
+
+      The spark of peace fell to the ground, and it did not go out.
+      Princess Elenoa lights the castle torch and waits for the next adventurer.
+      If somebody walks this road again, the failure of today will be a story that keeps them safe.
+
+    end
+  end
+
+
+  # ── The last record ────────────────────────────────────────────────
+
   draw a line
-  story:
-
-    The spark of peace fell to the ground, and it did not go out.
-    Princess Elenoa lights the castle torch and waits for the next adventurer.
-    If somebody walks this road again, the failure of today will be a story that keeps them safe.
-
+  show heroName · className · level heroLevel
+  show weapon weaponName · armour armourName · charm charmName
+  show furthest road deepestRegion · turns traded totalTurns
+  show what you have left
+  do showMoney with bronzeHeld
+  show the spark of peace peaceSpark · hope hopeScore · fame fameLevel
+  set elapsedTime to elapsed
+  show play time elapsedTime seconds · poise breaks poiseBreaks · weakness hits weakHits · crafts craftCount · saves saveCount
+  show survival · day adventureDay · fullness fullnessLevel · fatigue fatigueLevel · morale moralePoints
+  show economy · war risk warRisk · trades tradeCount · repairs repairCount · trader standing traderStanding
+  show fate · seals fateSealCount · shards fateShardCount · draws fateDrawCount · gambles won gambleWins / lost gambleLosses
+  show wear · weapon weaponWear / weaponMaxWear · armour armourWear / armourMaxWear
+  show materials left · herb herbCount · iron ironCount · dust dustCount · scale scaleCount · cloth clothCount · crystal crystalCount · hide hideCount
+  draw a line
+  show who came with you
+  if allyList missing
+    show You recruited nobody.
+  else
+    show allyList joined by comma
   end
-end
-
-
-# ── The last record ────────────────────────────────────────────────
-
-draw a line
-show heroName · className · level heroLevel
-show weapon weaponName · armour armourName · charm charmName
-show furthest road deepestRegion · turns traded totalTurns
-show what you have left
-do showMoney with bronzeHeld
-show the spark of peace peaceSpark · hope hopeScore · fame fameLevel
-set elapsedTime to elapsed
-show play time elapsedTime seconds · poise breaks poiseBreaks · weakness hits weakHits · crafts craftCount · saves saveCount
-show survival · day adventureDay · fullness fullnessLevel · fatigue fatigueLevel · morale moralePoints
-show economy · war risk warRisk · trades tradeCount · repairs repairCount · trader standing traderStanding
-show fate · seals fateSealCount · shards fateShardCount · draws fateDrawCount · gambles won gambleWins / lost gambleLosses
-show wear · weapon weaponWear / weaponMaxWear · armour armourWear / armourMaxWear
-show materials left · herb herbCount · iron ironCount · dust dustCount · scale scaleCount · cloth clothCount · crystal crystalCount · hide hideCount
-draw a line
-show who came with you
-if allyList missing
-  show You recruited nobody.
-else
-  show allyList joined by comma
-end
-draw a line
-show the regions you found
-show regionsFound joined by comma
-draw a line
-show the enemies you felled
-for each recordName in enemiesFelled
-  set recordCount to recordName in enemiesFelled
-  show recordName · recordCount times
-end
-draw a line
-show the quest log
-for each questName in questBoard
-  set questState to questName in questBoard
-  show questName · questState
-end
-draw a line
-show the achievements you earned
-if achievementList missing
-  show You have earned no achievements yet.
-else
-  for each achievementName in achievementList
-    show achievementName
+  draw a line
+  show the regions you found
+  show regionsFound joined by comma
+  draw a line
+  show the enemies you felled
+  for each recordName in enemiesFelled
+    set recordCount to recordName in enemiesFelled
+    show recordName · recordCount times
   end
-end
-draw a line
-say in the middle Thank you for walking it to the end
-draw a line`,
+  draw a line
+  show the quest log
+  for each questName in questBoard
+    set questState to questName in questBoard
+    show questName · questState
+  end
+  draw a line
+  show the achievements you earned
+  if achievementList missing
+    show You have earned no achievements yet.
+  else
+    for each achievementName in achievementList
+      show achievementName
+    end
+  end
+  draw a line
+  say in the middle Thank you for walking it to the end
+  draw a line
+end`,
     },
   ],
 
@@ -7979,6 +8027,9 @@ print(낱말)`,
 찬칸은 █                  # 생명 막대를 그리는 글자
 빈칸은 ░                  # 깎여 나간 자리를 그리는 글자
 칸당생명은 4              # 막대 한 칸이 나타내는 생명
+만약에 칸당생명이 1보다 작으면
+  칸당생명은 1            # 0으로 두면 막대를 그리다 영영 멈추지 않습니다
+끝
 막대폭은 20               # 막대 하나의 길이. 아래 일이 이 이름을 읽는데,
                           # 일은 자기보다 위에 이미 있는 이름만 읽을 수
                           # 있습니다.
@@ -8004,17 +8055,27 @@ print(낱말)`,
 끝
 
 채울양에게 생명막대라는 일:
+  찬칸수는 0
   남은칸은 채울양
-  막대글은 찬칸 0개 붙인 것
   남은칸이 0보다 큰 동안
-    막대글에 찬칸 더해
+    찬칸수에 1 더해
     남은칸에서 칸당생명 빼줘
   끝
+  전체칸수는 0
   남은칸은 막대폭
-  남은칸에서 채울양 빼줘
   남은칸이 0보다 큰 동안
-    막대글에 빈칸 더해
+    전체칸수에 1 더해
     남은칸에서 칸당생명 빼줘
+  끝
+  막대글은 찬칸 0개 붙인 것
+  센칸은 0
+  센칸이 찬칸수보다 작은 동안
+    막대글에 찬칸 더해
+    센칸에 1 더해
+  끝
+  센칸이 전체칸수보다 작은 동안
+    막대글에 빈칸 더해
+    센칸에 1 더해
   끝
   막대글 말해줘
 끝
@@ -8043,13 +8104,15 @@ print(낱말)`,
 
 줄 그어
 전사는 한 대 맞고도 서 있습니다. 말해줘
-마법사는 가장 세게 치고, 버틸 생명은 가장 적습니다. 말해줘
+마법사는 한 방이 크고, 도적은 두 번 치며, 전사는 가장 오래 버팁니다. 말해줘
 도적은 잡히지 않고, 한 판에 두 번 칩니다. 말해줘
 궁수는 아물지 않는 상처를 남깁니다. 말해줘
 직업선택을 물어봐 전사, 마법사, 도적, 궁수 — 무엇이 되시겠습니까?
 
 # 네 가지 직업을 한 덩어리에서 다 정합니다. 다섯 번째를 만들고 싶으면
-# 이 가지 중 하나를 그대로 복사해서 숫자만 바꾸면 됩니다.
+# 이 가지 중 하나를 복사해 이름과 숫자를 바꾸고, 아래 기술
+# 덩어리에도 가지를 하나 더 만들면 됩니다. 기술 가지를 빼먹으면
+# 새 직업은 조용히 전사의 기술을 씁니다.
 만약에 직업선택이 마법사와 같으면
   직업이름은 마법사
   최대생명은 32
@@ -8089,7 +8152,7 @@ print(낱말)`,
 끝
 
 줄 그어
-쉬움에서는 적의 생명이 적고, 어려움에서는 많습니다. 말해줘
+쉬움에서는 적의 생명이 적고, 어려움에서는 많으며 더 세게 칩니다. 말해줘
 난도를 물어봐 쉬움, 보통, 어려움 중에 무엇으로 할까요?
 
 만약에 난도가 쉬움과 같으면
@@ -8136,7 +8199,7 @@ print(낱말)`,
   글귀판은 가라앉은 성
   글귀판에게 머리그리기 해줘
 
-  # 이 층에 있는 것. 어느 가지든 같은 여덟 개의 이름을 정하므로,
+  # 이 층에 있는 것. 어느 가지든 같은 일곱 개의 이름을 정하므로,
   # 새 층을 만드는 일은 이 중 하나를 복사해 숫자를 바꾸는 것입니다.
   만약에 층수가 마지막층보다 크면
     적이름은 성을 지키는 자
@@ -8327,7 +8390,7 @@ print(낱말)`,
       아니면
         주사위는 1부터 100까지 무작위 숫자
         빠져나감은 거짓
-        만약에 주사위가 도망확률보다 작으면
+        만약에 주사위가 도망확률보다 작거나 같으면
           빠져나감은 참
         끝
         만약에 빠져나감이 있으면
@@ -8345,7 +8408,7 @@ print(낱말)`,
       준피해는 3부터 8까지 무작위 숫자
       준피해에 용사공격 더해
       주사위는 1부터 100까지 무작위 숫자
-      만약에 주사위가 치명확률보다 작으면
+      만약에 주사위가 치명확률보다 작거나 같으면
         준피해에 2 곱해
         빈틈으로 그대로 들어갑니다. 말해줘
       끝
@@ -8381,7 +8444,7 @@ print(낱말)`,
     # 빠르다는 것은 그것이 닿는 자리에 없다는 뜻입니다.
     주사위는 1부터 100까지 무작위 숫자
     피함은 거짓
-    만약에 주사위가 용사속도보다 작으면
+    만약에 주사위가 용사속도보다 작거나 같으면
       피함은 참
     끝
 
@@ -8436,7 +8499,7 @@ print(낱말)`,
     잡은것에 적이름을 1로 넣어
   끝
 
-  용사경험이 다음레벨보다 큰 동안
+  용사경험이 다음레벨보다 크거나 같은 동안
     용사경험에서 다음레벨 빼줘
     용사레벨에 1 더해
     다음레벨에 4 더해
@@ -8495,7 +8558,7 @@ print(낱말)`,
     산것을 물어봐 약병, 기운병, 폭탄, 벼림, 없음 중에 무엇을 살까요?
 
     만약에 산것이 약병과 같으면
-      만약에 주머니가 약병값보다 크면
+      만약에 주머니가 약병값보다 크거나 같으면
         주머니에서 약병값 빼줘
         약병수에 1 더해
         병 하나를 가방에 넣습니다. 말해줘
@@ -8503,7 +8566,7 @@ print(낱말)`,
         그것을 살 만큼은 없습니다. 말해줘
       끝
     아니면 만약에 산것이 기운병과 같으면
-      만약에 주머니가 기운병값보다 크면
+      만약에 주머니가 기운병값보다 크거나 같으면
         주머니에서 기운병값 빼줘
         기운병수에 1 더해
         기운병 하나를 가방에 넣습니다. 말해줘
@@ -8511,7 +8574,7 @@ print(낱말)`,
         그것을 살 만큼은 없습니다. 말해줘
       끝
     아니면 만약에 산것이 폭탄과 같으면
-      만약에 주머니가 폭탄값보다 크면
+      만약에 주머니가 폭탄값보다 크거나 같으면
         주머니에서 폭탄값 빼줘
         폭탄수에 1 더해
         폭탄 하나를 조심해서 가방에 넣습니다. 말해줘
@@ -8519,7 +8582,7 @@ print(낱말)`,
         그것을 살 만큼은 없습니다. 말해줘
       끝
     아니면 만약에 산것이 벼림과 같으면
-      만약에 주머니가 벼림값보다 크면
+      만약에 주머니가 벼림값보다 크거나 같으면
         주머니에서 벼림값 빼줘
         용사공격에 2 더해
         무기이름은 잘 벼린 칼
@@ -8638,7 +8701,7 @@ print(낱말)`,
       answers: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '1', '2', '3', '4', '5', '6', '7', '8', '9', '1', '2', '3', '4', '5', '6'],
       expect: '숫자 야구',
       source: `# 숫자 야구. 컴퓨터가 숫자 세 개를 정해 두고, 그것을 맞히는 놀이입니다.
-# 자리까지 맞으면 스트라이크, 숫자만 맞고 자리가 다르면 볼입니다.
+# 자리까지 맞으면 스트라이크, 그 숫자가 답 어딘가에 있으면 볼입니다.
 #
 # 앞에 #이 붙은 줄은 아무 일도 하지 않습니다. 사람이 읽는 쪽지입니다.
 
@@ -8652,7 +8715,7 @@ print(낱말)`,
 가운데 말해줘 숫자 야구
 줄 그어
 1부터 9까지의 숫자 셋입니다. 같은 숫자가 겹칠 수도 있습니다. 말해줘
-자리까지 맞으면 스트라이크, 숫자만 맞으면 볼입니다. 말해줘
+스트라이크는 자리까지 맞은 것이고, 볼은 답 안에 있는 숫자입니다. 말해줘
 
 계속 반복해
 
@@ -8718,6 +8781,7 @@ print(낱말)`,
 #
 # 두 목록은 나란히 놓여 있습니다 — 첫 번째 낱말과 첫 번째 힌트가 짝입니다.
 # 다섯 번째 낱말과 다섯 번째 힌트를 넣으면 놀이가 그만큼 커집니다.
+# 그때는 아래 「1부터 4까지」도 「1부터 5까지」로 함께 고쳐 주세요.
 
 낱말들은 목록 피아노, 항구, 펭귄, 우산
 힌트들은 목록 검은 건반이 있는 것, 배가 쉬어 가는 곳, 헤엄치는 새, 비가 오면 펴는 것
@@ -8768,7 +8832,7 @@ print(낱말)`,
 #
 # 하나라도 틀리면 그 자리에서 끝나고, 어디까지 갔는지 알려 줍니다.
 
-색들은 목록 빨강, 초록, 파랑, 노랑
+색들은 목록 "빨강", "초록", "파랑", "노랑"
 나온줄은 빈 목록
 판수는 0
 
@@ -8804,7 +8868,9 @@ print(낱말)`,
     줄 그어
     아쉽습니다 — 줄은 이랬습니다 말해줘
     나온줄을 빈칸으로 이어 말해줘
-    여기까지 외웠습니다 — 판수 말해줘
+    외운수는 판수
+    외운수에서 1 빼줘
+    여기까지 외웠습니다 — 외운수 말해줘
     멈춰
   끝
 
@@ -8877,7 +8943,7 @@ print(낱말)`,
   물건 말해줘
 끝
 줄 그어
-장바구니 개수 가지 · 쓴돈 냄 · 주머니 남음 말해줘`,
+장바구니 개수 개 · 쓴돈 냄 · 주머니 남음 말해줘`,
     },
     {
       id: 'bitcoin',
@@ -8896,16 +8962,16 @@ print(낱말)`,
 반감기높이는 210000
 재조정간격은 2016
 숙성대기는 100
-숙성시작높이는 101
 송금높이는 170
 작업목표는 7237005577332262213973186563042994240829374041602535252466099000494570602496
-창세헤드라인은 타임스 2009 년 1 월 3 일 칸캘러 은행 구제 금융 직전
+창세헤드라인은 더 타임스 2009 년 1 월 3 일 재무장관 두 번째 은행 구제 금융 직전
 전체성공은 1
 
 구현 시스템 안내 말해줘
 주소 파생 이중 해시 작업 증명 머클 뿌리 이전 해시 연결 말해줘
 거래 서명 입력 출력 잔돈 수수료 코인베이스 숙성 이중 지불 방지 말해줘
 난이도 재조정 반감기 최대 공급량 재생 검증 삼층 변조 감지 말해줘
+캐는 목표값 하나만 실제와 다릅니다 브라우저에서 몇 분 안에 끝나도록 훨씬 낮췄습니다 말해줘
 
 사토시비밀은 영지식 비밀 만들기
 사토시공개는 사토시비밀로 영지식 공개값 만들기
@@ -8931,7 +8997,6 @@ print(낱말)`,
 발행량은 0
 사토시사용번호는 0
 입력사용됨은 0
-창세사용불가는 1
 
 릴리스 날짜는 릴리스날짜 입니다 말해줘
 블록 보상은 블록보상 비트코인입니다 말해줘
@@ -8961,7 +9026,7 @@ print(낱말)`,
 끝
 끝
 창세 블록 채굴 완료 시도 횟수는 창세시도 입니다 말해줘
-창세 코인베이스는 영구 사용 불가 규칙을 적용했습니다 말해줘
+창세 코인베이스는 규칙상 영원히 쓸 수 없습니다 말해줘
 발행량에 블록보상 더해
 
 연속 채굴 시작 높이 하나부터 송금높이 바로 앞까지입니다 말해줘
@@ -8989,7 +9054,9 @@ print(낱말)`,
 끝
 사토시잠금에 블록보상 더해
 발행량에 블록보상 더해
-만약에 현재높이가 숙성시작높이보다 크거나 같으면
+숙성된높이는 현재높이
+숙성된높이에서 숙성대기 빼
+만약에 숙성된높이가 1보다 크거나 같으면
 사토시가용에 블록보상 더해
 사토시잠금에서 블록보상 빼
 끝
@@ -9020,12 +9087,13 @@ print(낱말)`,
 숙성통과는 1
 끝
 만약에 숙성통과가 참이면
-입력 출력은 숙성 대기를 통과했습니다 말해줘
+입력이 숙성 대기를 통과했습니다 말해줘
 아니면
 입력이 아직 숙성되지 않아 거부됩니다 말해줘
 전체성공은 0
 끝
-거래내용은 사토시주소 에서 할피주소 에게 출력할피 전송 잔돈 사토시주소 에게 잔돈출력 입력 하나 수수료 계산수수료 번호 거래번호
+잔돈주소는 사토시주소
+거래내용은 사토시주소 에서 할피주소 에게 출력할피 전송 잔돈 잔돈주소 에게 잔돈출력 입력 하나 수수료 계산수수료 번호 거래번호
 거래약속원본은 영지식 일회값 만들기
 거래약속값은 거래약속원본으로 영지식 약속 만들기
 거래해시는 사토시주소와 거래약속값과 거래내용으로 영지식 비대화 도전 만들기
@@ -9075,7 +9143,9 @@ print(낱말)`,
 마지막코인베이스해시는 사토시주소와 마지막코인베이스약속값과 마지막코인베이스문맥으로 영지식 비대화 도전 만들기
 사토시잠금에 블록보상 더해
 발행량에 블록보상 더해
-만약에 송금높이가 숙성시작높이보다 크거나 같으면
+송금숙성높이는 송금높이
+송금숙성높이에서 숙성대기 빼
+만약에 송금숙성높이가 1보다 크거나 같으면
 사토시가용에 블록보상 더해
 사토시잠금에서 블록보상 빼
 끝
@@ -9117,33 +9187,18 @@ print(낱말)`,
 난이도 재조정 규칙 매 재조정간격 블록마다 확인 말해줘
 이상경과는 14
 실제경과는 28
-배율상향은 실제경과를 이상경과로 나눈 몫
+느린배율은 실제경과를 이상경과로 나눈 몫
 조정목표는 작업목표
-조정카운트는 0
-조정진행중은 1
-동안 조정진행중
-만약에 조정카운트가 배율상향보다 크거나 같으면
-조정진행중은 0
-아니면
-조정목표는 조정목표를 2로 나눈 몫
-조정카운트에 1 더해
-끝
-끝
-채굴이 빨라 목표를 절반으로 줄여 난이도를 올립니다 말해줘
+조정목표에 느린배율을 곱해
+채굴에 걸린 날이 이상경과 일이 아니라 실제경과 일이었습니다 말해줘
+채굴이 느렸으므로 목표를 느린배율 배로 키워 난이도를 내립니다 말해줘
+키운 목표는 조정목표 입니다 말해줘
 실제경과는 7
-배율하향은 이상경과를 실제경과로 나눈 몫
-조정목표둘은 작업목표
-조정카운트둘은 0
-조정진행둘은 1
-동안 조정진행둘
-만약에 조정카운트둘이 배율하향보다 크거나 같으면
-조정진행둘은 0
-아니면
-조정목표둘에 조정목표둘 더해
-조정카운트둘에 1 더해
-끝
-끝
-채굴이 느려 목표를 키워 난이도를 내립니다 말해줘
+빠른배율은 이상경과를 실제경과로 나눈 몫
+조정목표둘은 작업목표를 빠른배율로 나눈 몫
+이번에는 실제경과 일밖에 걸리지 않았습니다 말해줘
+채굴이 빨랐으므로 목표를 빠른배율 로 나눠 난이도를 올립니다 말해줘
+줄인 목표는 조정목표둘 입니다 말해줘
 
 반감기 시연 보상 절반 전환점 말해줘
 물음높이는 209999
@@ -9175,18 +9230,26 @@ print(낱말)`,
 끝
 높이 210000 부터 보상은 시연보상 비트코인입니다 말해줘
 
-재생 검증 시작 처음부터 다시 계산합니다 말해줘
-재생창세거래해시는 사토시주소와 창세거래약속값과 창세거래문맥으로 영지식 비대화 도전 만들기
-재생창세중간은 사토시주소와 창세논스약속과 창세앞문맥으로 영지식 비대화 도전 만들기
+재생 검증 시작 창세 블록과 블록 170을 값에서 다시 만들어 맞춰 봅니다 말해줘
+사이에 있는 블록들은 논스를 보관하지 않아 다시 캘 수 없습니다 말해줘
+재생창세거래문맥은 코인이름 코인베이스 높이 0 사토시주소 에게 블록보상 발행 창세헤드라인
+재생창세거래해시는 사토시주소와 창세거래약속값과 재생창세거래문맥으로 영지식 비대화 도전 만들기
+재생창세머클은 재생창세거래해시
+재생창세앞문맥은 코인이름 헤더 버전 하나 이전 없음 머클 재생창세머클 높이 0
+재생창세중간은 사토시주소와 창세논스약속과 재생창세앞문맥으로 영지식 비대화 도전 만들기
 재생창세뒷문맥은 코인이름 헤더 이중 해시 중간 재생창세중간
 재생창세헤더는 사토시주소와 창세논스약속과 재생창세뒷문맥으로 영지식 비대화 도전 만들기
-재생거래해시는 사토시주소와 거래약속값과 거래내용으로 영지식 비대화 도전 만들기
-재생결합문맥은 코인이름 머클 왼쪽 마지막코인베이스해시 오른쪽 재생거래해시
+재생거래내용은 사토시주소 에서 할피주소 에게 출력할피 전송 잔돈 잔돈주소 에게 잔돈출력 입력 하나 수수료 계산수수료 번호 거래번호
+재생거래해시는 사토시주소와 거래약속값과 재생거래내용으로 영지식 비대화 도전 만들기
+재생마지막코인베이스문맥은 코인이름 코인베이스 높이 송금높이 사토시주소 에게 블록보상 발행
+재생마지막코인베이스해시는 사토시주소와 마지막코인베이스약속값과 재생마지막코인베이스문맥으로 영지식 비대화 도전 만들기
+재생결합문맥은 코인이름 머클 왼쪽 재생마지막코인베이스해시 오른쪽 재생거래해시
 재생머클은 사토시주소와 머클결합약속값과 재생결합문맥으로 영지식 비대화 도전 만들기
-재생중간은 사토시주소와 논스약속과 헤더앞문맥으로 영지식 비대화 도전 만들기
+재생헤더앞문맥은 코인이름 헤더 버전 하나 이전 이전헤더 머클 재생머클 높이 송금높이
+재생중간은 사토시주소와 논스약속과 재생헤더앞문맥으로 영지식 비대화 도전 만들기
 재생뒷문맥은 코인이름 헤더 이중 해시 중간 재생중간
 재생헤더는 사토시주소와 논스약속과 재생뒷문맥으로 영지식 비대화 도전 만들기
-재생서명검증은 사토시공개와 거래서명과 거래내용으로 영지식 비대화 검증
+재생서명검증은 사토시공개와 거래서명과 재생거래내용으로 영지식 비대화 검증
 재생사토시가용은 0
 재생사토시잔돈은 0
 재생사토시잠금은 0
@@ -9195,7 +9258,9 @@ print(낱말)`,
 재생진행중은 1
 동안 재생진행중
 재생사토시잠금에 블록보상 더해
-만약에 재생카운트가 숙성시작높이보다 크거나 같으면
+재생숙성높이는 재생카운트
+재생숙성높이에서 숙성대기 빼
+만약에 재생숙성높이가 1보다 크거나 같으면
 재생사토시가용에 블록보상 더해
 재생사토시잠금에서 블록보상 빼
 끝
@@ -9244,7 +9309,7 @@ print(낱말)`,
 재생점수에 1 더해
 끝
 만약에 재생점수가 9와 같으면
-전체 사슬 재생 검증 성공 아홉 항목 일치 말해줘
+재생 검증 성공 아홉 항목이 모두 일치합니다 말해줘
 아니면
 재생 검증 실패 일치한 항목 수는 재생점수 개입니다 말해줘
 전체성공은 0
@@ -9261,7 +9326,7 @@ print(낱말)`,
 
 변조 시험 거래 금액을 몰래 바꿉니다 말해줘
 변조금액은 11
-변조내용은 사토시주소 에서 할피주소 에게 변조금액 전송 잔돈 사토시주소 에게 잔돈출력 입력 하나 수수료 계산수수료 번호 거래번호
+변조내용은 사토시주소 에서 할피주소 에게 변조금액 전송 잔돈 잔돈주소 에게 잔돈출력 입력 하나 수수료 계산수수료 번호 거래번호
 변조검증은 사토시공개와 거래서명과 변조내용으로 영지식 비대화 검증
 만약에 변조검증이 거짓이면
 일층 거부 서명이 변조를 잡았습니다 말해줘
@@ -9311,11 +9376,22 @@ print(낱말)`,
 
 소수하나는 61
 소수둘은 53
+만약에 소수하나가 2보다 작으면
+소수하나는 61
+첫 수를 61로 되돌렸습니다 소수는 2부터 시작합니다 말해줘
+끝
+만약에 소수둘이 2보다 작으면
+소수둘은 53
+둘째 수를 53으로 되돌렸습니다 소수는 2부터 시작합니다 말해줘
+끝
 전체성공은 1
 
 검사수는 2
 소수하나검사중은 1
 소수하나합격은 1
+만약에 소수하나가 3보다 작으면
+소수하나검사중은 0
+끝
 동안 소수하나검사중
 만약에 소수하나를 검사수로 나눈 나머지가 0과 같으면
 소수하나합격은 0
@@ -9324,7 +9400,7 @@ print(낱말)`,
 만약에 소수하나검사중이 참이면
 다음검사수는 검사수
 다음검사수에 1 더해
-만약에 다음검사수가 소수하나와 같으면
+만약에 다음검사수가 소수하나보다 크거나 같으면
 소수하나검사중은 0
 아니면
 검사수는 다음검사수
@@ -9341,6 +9417,9 @@ print(낱말)`,
 검사수는 2
 소수둘검사중은 1
 소수둘합격은 1
+만약에 소수둘가 3보다 작으면
+소수둘검사중은 0
+끝
 동안 소수둘검사중
 만약에 소수둘을 검사수로 나눈 나머지가 0과 같으면
 소수둘합격은 0
@@ -9349,7 +9428,7 @@ print(낱말)`,
 만약에 소수둘검사중이 참이면
 다음검사수는 검사수
 다음검사수에 1 더해
-만약에 다음검사수가 소수둘과 같으면
+만약에 다음검사수가 소수둘보다 크거나 같으면
 소수둘검사중은 0
 아니면
 검사수는 다음검사수
@@ -9389,7 +9468,7 @@ print(낱말)`,
 공개지수에 1 더해
 끝
 끝
-공개지수는 서로소인 공개 지수 입니다 말해줘
+고른 공개 지수는 공개지수 이고 오일러값과 서로소입니다 말해줘
 
 이전나머지는 오일러값
 현재나머지는 공개지수
@@ -9417,8 +9496,8 @@ print(낱말)`,
 끝
 개인지수는 이전계수를 오일러값으로 나눈 나머지
 역원 계산 완료 개인 키를 만들었습니다 말해줘
-공개키는 공개지수 와 모듈러값 입니다 말해줘
-개인키는 개인지수 와 모듈러값 입니다 말해줘
+공개 키의 지수는 공개지수 이고 모듈러는 모듈러값 입니다 말해줘
+개인 키의 지수는 개인지수 이고 모듈러는 모듈러값 입니다 말해줘
 
 키검증값은 개인지수
 키검증값에 공개지수 곱해
@@ -9534,7 +9613,7 @@ print(낱말)`,
 전체성공은 0
 끝
 
-서명 시작 메시지 지문을 개인 키로 서명합니다 말해줘
+서명 시작 메시지 숫자를 개인 키로 그대로 서명합니다 말해줘
 서명대상은 777
 
 서명값은 1
@@ -9564,11 +9643,13 @@ print(낱말)`,
 거듭지수는 거듭지수를 2로 나눈 몫
 끝
 만약에 검증값이 서명대상과 같으면
-서명 검증 성공 진짜 발신자입니다 말해줘
+서명 검증 성공 이 서명은 저 개인 키로 만든 것입니다 말해줘
 아니면
 서명 검증 실패 말해줘
 전체성공은 0
 끝
+이 키는 배우기 위한 크기라 실제로 무엇을 지키는 데에는 쓸 수 없습니다 말해줘
+진짜 RSA는 서명하기 전에 메시지를 해시로 줄이고 패딩을 넣습니다 말해줘
 
 변조 시작 메시지를 몰래 바꿉니다 말해줘
 변조대상은 778
@@ -9593,7 +9674,7 @@ print(낱말)`,
 전체성공은 0
 끝
 
-잠깐 잘못된 개인 키로도 검증이 깨지는지 확인합니다 말해줘
+잠깐 잘못된 개인 키로는 복호화가 깨지는지 확인합니다 말해줘
 
 거짓복호는 1
 거듭밑은 암호문하나
@@ -9609,7 +9690,7 @@ print(낱말)`,
 거듭지수는 거듭지수를 2로 나눈 몫
 끝
 만약에 거짓복호가 원문하나와 같지않으면
-잘못된 키로는 평문이 깨집니다 복호 결과는 거짓복호 였습니다 말해줘
+잘못된 키로는 평문이 깨집니다 복호 결과는 거짓복호 입니다 말해줘
 끝
 만약에 거짓복호가 원문하나와 같으면
 예상과 다릅니다 말해줘
@@ -9658,7 +9739,7 @@ print(낱말)`,
 # 나눗셈이 속으로 하는 일이 이것입니다.
 평균은 0
 남은수는 합계
-남은수가 사람수보다 큰 동안
+남은수가 사람수보다 크거나 같은 동안
   남은수에서 사람수 빼줘
   평균에 1 더해
 끝
@@ -9685,7 +9766,7 @@ print(낱말)`,
 # 평화
 # 마왕을 쓰러뜨리고 세계의 평화를 되찾는 대형 턴제 롤플레잉 게임
 #
-# 이 파일은 NeedMoreEasy 0.7.1의 최신 한국어 문장문법만으로 썼습니다.
+# 이 파일은 한국어 문장문법만으로 썼습니다. 파이썬 문법은 한 줄도 없습니다.
 # 파이썬 문법과 영어 명령은 한 줄도 사용하지 않았습니다.
 #
 # ── 처음 고쳐 보는 분께 ─────────────────────────────────────────────
@@ -9695,7 +9776,8 @@ print(낱말)`,
 # 가장 먼저 아래 「수정 손잡이」의 숫자를 바꿔 보세요.
 # 적의 생명, 물약의 회복량, 상점 가격처럼 자주 바꿀 값이 모여 있습니다.
 # 그다음에는 「지역과 적」에서 이름과 수치를 바꾸면 됩니다.
-# 적 하나는 이름, 생명, 공격, 방어, 속도, 보상, 특징으로 이루어집니다.
+# 적 하나는 이름, 생명, 공격, 방어, 보상, 특징으로 이루어집니다.
+# 속도도 함께 적어 두지만 아직 싸움에서 읽지 않습니다.
 # 같은 모양의 갈래 하나를 복사하면 새 지역도 쉽게 만들 수 있습니다.
 #
 # ── 게임에 들어 있는 것 ─────────────────────────────────────────────
@@ -9727,7 +9809,7 @@ print(낱말)`,
 고급회복약회복은 65
 기운약회복은 12             # 기운약 하나가 되돌리는 기운
 폭탄위력은 24               # 폭탄은 적의 방어를 무시합니다
-회복약기준값은 25           # 실제 가격은 기준값에 전황과 재고를 더해 정합니다
+회복약기준값은 25           # 실제 가격 = 기준값 + 전쟁 위험 + 운송 거리 − 상인 평판
 고급회복약기준값은 58
 기운약기준값은 40
 해독제기준값은 22
@@ -9740,8 +9822,8 @@ print(낱말)`,
 회복약값은 회복약기준값
 기운약값은 기운약기준값
 폭탄값은 폭탄기준값
-무기강화값은 120
-갑옷강화값은 120
+무기강화기준값은 120
+갑옷강화기준값은 130
 수리기준값은 20
 치명확률은 14               # 백 번 가운데 치명타가 나오는 횟수
 기본도망확률은 65
@@ -9750,7 +9832,6 @@ print(낱말)`,
 출혈피해는 3
 찬칸은 ■
 빈칸은 ·
-칸당생명은 5
 막대폭은 20
 짧은기다림은 1
 궁극기최대는 100
@@ -9762,7 +9843,6 @@ print(낱말)`,
 폭탄가루비용은 1
 룬광석비용은 2
 룬가루비용은 2
-시장최대재고는 7
 
 # 빠른시험을 참으로 바꾸면 시작 능력이 크게 올라갑니다.
 # 새 적이나 장면을 만든 뒤 끝까지 빨리 확인할 때 쓰는 손잡이입니다.
@@ -9794,10 +9874,10 @@ print(낱말)`,
   # 나눗셈 대신 양쪽에 같은 수를 곱해 정수만으로 비율을 비교합니다.
   막대글은 찬칸 0개 붙인 것
   막대차례는 0
-  20번 반복해
+  막대폭번 반복해
     막대차례에 1 더해
     현재비교값은 채울양
-    현재비교값에 20 곱해
+    현재비교값에 막대폭 곱해
     최대비교값은 막대최대양
     최대비교값에 막대차례 곱해
     만약에 현재비교값이 최대비교값보다 크거나 같으면
@@ -9811,7 +9891,7 @@ print(낱말)`,
 
 # 왕국의 화폐는 100 브론즈가 10 실버이고, 10 실버가 1 골드입니다.
 # 게임 안에서는 계산이 쉬운 브론즈로 저장하고 보여 줄 때 세 화폐로 나눕니다.
-# 화폐 비율을 바꾸고 싶다면 아래 두 반복의 100과 10을 함께 바꾸면 됩니다.
+# 화폐 비율을 바꾸고 싶다면 아래 두 반복의 99와 100, 9와 10을 짝으로 바꿔 주세요.
 보유동전에게 화폐보이기라는 일:
   표시골드는 0
   표시실버는 0
@@ -10377,7 +10457,6 @@ print(낱말)`,
 사기는 50
 시장회복재고는 5
 시장기운재고는 4
-시장폭탄재고는 2
 시장식량재고는 6
 리아넬동료는 거짓
 브룸동료는 거짓
@@ -10572,7 +10651,7 @@ print(낱말)`,
     만약에 난도번호가 1보다 작으면 불러오기성공은 거짓
     만약에 난도번호가 6보다 크면 불러오기성공은 거짓
     만약에 지역번호가 1보다 작으면 불러오기성공은 거짓
-    만약에 지역번호가 13보다 크면 불러오기성공은 거짓
+    만약에 지역번호가 마지막지역보다 크면 불러오기성공은 거짓
     만약에 최고지역이 지역번호보다 작으면 불러오기성공은 거짓
     만약에 용사생명이 최대생명보다 크면 불러오기성공은 거짓
     만약에 용사기운이 최대기운보다 크면 불러오기성공은 거짓
@@ -10779,7 +10858,7 @@ print(낱말)`,
   아니면 만약에 장신구번호가 3과 같으면
     장신구이름은 성녀의 묵주
   아니면 만약에 장신구번호가 4와 같으면
-    장신구이름은 녹스의 파편
+    장신구이름은 녹스의 심연파편
   아니면
     장신구이름은 낡은 평화 부적
   끝
@@ -10837,11 +10916,14 @@ print(낱말)`,
   끝
   만약에 수리횟수가 0보다 크면
     첫수리업적은 참
-    업적목록에 첫수리 넣어
+    업적목록에 다시벼린검 넣어
   끝
   만약에 소지브론즈가 99보다 크면
     부자업적은 참
     업적목록에 첫골드 넣어
+  끝
+  만약에 숨은보스승리가 있으면
+    업적목록에 심연정복자 넣어
   끝
 
   만약에 지역번호가 1보다 크면
@@ -10966,6 +11048,7 @@ print(낱말)`,
   폭탄수는 30
   성수수는 30
   연막탄수는 30
+  숫돌수는 30
   야영식량수는 30
   약초수는 30
   철광석수는 30
@@ -10990,7 +11073,7 @@ print(낱말)`,
 # ════════════════════════════════════════════════════════════════════
 # 모험의 큰 반복
 # 이 반복을 한 바퀴 돌면 한 지역을 지납니다.
-# 싸움에서 물러나면 같은 지역을 다시 시작합니다.
+# 싸움에서 물러나면 적이 생명을 모두 되찾고 같은 싸움이 이어집니다.
 # ════════════════════════════════════════════════════════════════════
 
 계속 반복해
@@ -11435,7 +11518,7 @@ print(낱말)`,
 
   # ── 지역과 적 ────────────────────────────────────────────────────
   # 새 적을 만들 때 아래 갈래 하나를 그대로 복사하세요.
-  # 특징은 기세, 약탈, 반사, 재생, 갑옷, 독, 흡수, 마왕, 심연 가운데 하나입니다.
+  # 특징은 기세, 약탈, 반사, 재생, 갑옷, 독, 흡수, 도박, 마왕, 심연 가운데 하나입니다.
   # 특징에 따른 실제 행동은 더 아래 「적의 반격」에 모여 있습니다.
 
   만약에 지역번호가 13과 같으면
@@ -12180,7 +12263,7 @@ print(낱말)`,
               만약에 추가운명눈이 운명눈보다 크면 운명눈은 추가운명눈
             끝
           끝
-          🎲 운명의 주사위 · 나온 눈 운명눈 / 6 · 각 눈 확률 16.7 퍼센트 말해줘
+          🎲 운명의 주사위 · 나온 눈 운명눈 / 6 말해줘
           만약에 운명눈이 1과 같으면
             준피해는 1
             용사생명에서 4 빼줘
@@ -12329,7 +12412,7 @@ print(낱말)`,
           만약에 적방어가 0보다 작으면
             적방어는 0
           끝
-          골렘의 돌 갑옷도 함께 부서졌습니다. 말해줘
+          적이름의 돌 갑옷도 함께 부서졌습니다. 말해줘
         끝
       아니면
         던질 폭탄이 없습니다. 말해줘
@@ -12459,6 +12542,14 @@ print(낱말)`,
         방어가 매우 높습니다. 폭탄은 방어를 무시하고 돌 갑옷도 부숩니다. 말해줘
       아니면 만약에 적특징이 재생과 같으면
         매 차례 상처를 회복합니다. 화상과 출혈로 회복을 따라잡으세요. 말해줘
+      아니면 만약에 적특징이 독과 같으면
+        고유기술이 40 퍼센트로 독을 겁니다. 해독제를 미리 준비하세요. 말해줘
+      아니면 만약에 적특징이 흡수와 같으면
+        준 상처를 자기 생명으로 되돌립니다. 길게 끌수록 불리합니다. 말해줘
+      아니면 만약에 적특징이 약탈과 같으면
+        고유기술로 브론즈를 빼앗습니다. 승리한 뒤 그대로 돌려받습니다. 말해줘
+      아니면 만약에 적특징이 기세와 같으면
+        고유기술을 쓸 때마다 공격이 1씩 오릅니다. 빨리 끝내세요. 말해줘
       아니면 만약에 적특징이 도박과 같으면
         레마르의 고유기술은 1과 2 역풍, 3과 4 보통, 5와 6 강화입니다. 각 묶음은 33.3 퍼센트입니다. 말해줘
       아니면 만약에 적특징이 마왕과 같으면
@@ -12466,7 +12557,7 @@ print(낱말)`,
       아니면 만약에 적특징이 심연과 같으면
         궁극기 충전을 삼키는 숨결을 씁니다. 균형 파괴와 시간 속성이 열쇠입니다. 말해줘
       끝
-      🎲 공개 확률 · 치명 14 퍼센트 · 회피 전투속도 퍼센트 · 동료 지원 동료지원확률 퍼센트 말해줘
+      🎲 공개 확률 · 치명 치명확률 퍼센트 · 회피 전투속도 퍼센트 · 동료 지원 동료지원확률 퍼센트 말해줘
       혼돈 주사위 · 1과 2 불리 / 3과 4 회복 / 5와 6 공격 · 각 16.7 퍼센트 말해줘
       만약에 직업이름이 운명도박꾼과 같으면
         운명의 주사위 · 1부터 6까지 각각 16.7 퍼센트 · 낮은 눈 2연속 뒤 다음 6 보장 말해줘
@@ -12492,6 +12583,7 @@ print(낱말)`,
             적생명은 적최대생명
             적화상은 0
             적출혈은 0
+            적중독은 0
             적균형은 적최대균형
             1 실버를 내고 길드 야영지로 물러났습니다. 적도 생명을 모두 회복했습니다. 말해줘
             계속해
@@ -12671,7 +12763,7 @@ print(낱말)`,
       만약에 기술사용이 있으면
         반사피해는 5
         용사생명에서 반사피해 빼줘
-        에드릭의 거울 방패가 기술을 비추어 반사피해 만큼 돌려줍니다. 말해줘
+        적이름의 거울 방패가 기술을 비추어 반사피해 만큼 돌려줍니다. 말해줘
       끝
     끝
 
@@ -12794,7 +12886,7 @@ print(낱말)`,
         끝
       끝
 
-      # 흑마법사 모르벨의 저주는 독으로 남습니다.
+      # 저주를 쓰는 적은 상처 대신 독을 남깁니다.
       만약에 적특징이 독과 같으면
         만약에 적의도가 고유기술과 같으면
           40% 확률로
@@ -12989,7 +13081,7 @@ print(낱말)`,
         끝
       끝
       만약에 숨은길선택이 도전과 같으면
-        지역번호는 13
+        지역번호는 마지막지역
         최고지역은 13
         계속해
       끝
@@ -13019,7 +13111,7 @@ print(낱말)`,
   운명인장수에 1 더해
   명성에 2 더해
   적보상브론즈 브론즈 가치의 전리품과 경험치 적경험 점을 얻었습니다 말해줘
-  평화의 불씨가 평화불씨 만큼 밝아졌습니다 말해줘
+  평화의 불씨가 이제 평화불씨 입니다 말해줘
   🟨 지역 우두머리의 운명 인장 1개를 얻었습니다. 현재 운명인장수 개 말해줘
 
   만약에 쓰러뜨린적에 적이름이 있으면
@@ -13032,7 +13124,8 @@ print(낱말)`,
 
 
   # ── 재료 전리품 ──────────────────────────────────────────────────
-  # 지역에 따라 재료가 달라집니다. 야영의 제작 메뉴에서 소비합니다.
+  # 지역에 따라 재료가 달라집니다. 야영의 제작 메뉴에서 씁니다.
+  # 용비늘만은 쓰는 만드는 법이 없어 파는 것으로만 값어치가 있습니다.
 
   재료수는 1부터 2까지 무작위 숫자
   만약에 지역번호가 2보다 작거나 같으면
@@ -13114,7 +13207,8 @@ print(낱말)`,
 
   # ── 살아 움직이는 지역 경제 ─────────────────────────────────────
   # 실제 가격은 기준값 + 전쟁 위험 + 운송 거리 - 상인 평판으로 계산합니다.
-  # 현지 생산지에서는 관련 물건이 싸고, 살수록 재고가 줄며 가격이 조금 오릅니다.
+  # 현지 생산지에서는 관련 물건이 쌉니다. 살수록 재고가 줄고, 회복약·고급
+  # 회복약·기운약·폭탄·식량은 살 때마다 값이 조금씩 오릅니다.
 
   운송비는 지역번호
   운송비에 전쟁위험 더해
@@ -13418,12 +13512,12 @@ print(낱말)`,
       끝
 
     아니면 만약에 구매선택이 무기제작과 같으면
-      무기강화값은 120
+      무기강화값은 무기강화기준값
       무기단계값은 무기번호
       무기단계값에 45 곱해
       무기강화값에 무기단계값 더해
       무기강화값에서 상인할인 빼줘
-      다음 무기 제작비 무기강화값 브론즈 말해줘
+      만약에 무기번호가 7보다 작거나 같으면 다음 무기 제작비 무기강화값 브론즈 말해줘
       만약에 무기번호가 7보다 크면
         이미 최고의 무기를 가지고 있습니다. 말해줘
       아니면 만약에 소지브론즈가 무기강화값보다 크거나 같으면
@@ -13454,12 +13548,12 @@ print(낱말)`,
       끝
 
     아니면 만약에 구매선택이 갑옷제작과 같으면
-      갑옷강화값은 130
+      갑옷강화값은 갑옷강화기준값
       갑옷단계값은 갑옷번호
       갑옷단계값에 55 곱해
       갑옷강화값에 갑옷단계값 더해
       갑옷강화값에서 상인할인 빼줘
-      다음 갑옷 제작비 갑옷강화값 브론즈 말해줘
+      만약에 갑옷번호가 5보다 작거나 같으면 다음 갑옷 제작비 갑옷강화값 브론즈 말해줘
       만약에 갑옷번호가 5보다 크면
         이미 최고의 갑옷을 가지고 있습니다. 말해줘
       아니면 만약에 소지브론즈가 갑옷강화값보다 크거나 같으면
@@ -13661,7 +13755,7 @@ print(낱말)`,
 
     만약에 제작선택이 회복약과 같으면
       만약에 약초수가 1보다 크면
-        약초수에서 2 빼줘
+        약초수에서 회복약약초비용 빼줘
         회복약수에 1 더해
         제작성공은 참
       끝
@@ -13692,8 +13786,8 @@ print(낱말)`,
     아니면 만약에 제작선택이 폭탄과 같으면
       만약에 철광석수가 1보다 크면
         만약에 마력가루수가 0보다 크면
-          철광석수에서 2 빼줘
-          마력가루수에서 1 빼줘
+          철광석수에서 폭탄광석비용 빼줘
+          마력가루수에서 폭탄가루비용 빼줘
           폭탄수에 1 더해
           제작성공은 참
         끝
@@ -13725,8 +13819,8 @@ print(낱말)`,
     아니면 만약에 제작선택이 룬각인과 같으면
       만약에 철광석수가 1보다 크면
         만약에 마력가루수가 1보다 크면
-          철광석수에서 2 빼줘
-          마력가루수에서 2 빼줘
+          철광석수에서 룬광석비용 빼줘
+          마력가루수에서 룬가루비용 빼줘
           용사공격에 1 더해
           용사방어에 1 더해
           최대생명에 4 더해
@@ -13870,154 +13964,156 @@ print(낱말)`,
 # 마지막 장면
 # ════════════════════════════════════════════════════════════════════
 
-화면 지워
-줄 그어
-
-평화도달은 거짓
-만약에 끝맺음이 평화와 같으면
-  평화도달은 참
-끝
-만약에 끝맺음이 완전한평화와 같으면
-  평화도달은 참
-끝
-만약에 끝맺음이 희생과 같으면
-  평화도달은 참
-끝
-
-만약에 평화도달이 있으면
-  상자로 말해줘 🟩 평화
+만약에 끝맺음이 잘못된저장과 같지 않으면
+  화면 지워
   줄 그어
-  만약에 연출번호가 2와 같으면
-    천천히 말해줘 마왕은 쓰러졌습니다. 아르테리아에 아침이 돌아옵니다.
-  아니면 만약에 연출번호가 3과 같으면
-    아주 천천히 말해줘 마침내, 평화가 돌아왔습니다.
-  아니면
-    마왕은 쓰러졌습니다. 아르테리아에 아침이 돌아옵니다. 말해줘
+
+  평화도달은 거짓
+  만약에 끝맺음이 평화와 같으면
+    평화도달은 참
   끝
-  이야기:
-
-    용사이름이 무기이름을 들어 모르가르의 심장을 꿰뚫었습니다.
-    마왕은 죽었고 마계의 문은 붉은 불꽃과 함께 무너졌습니다.
-    왕도에서는 엘레노아가 승리의 종을 울리고 모든 성벽에 왕국의 깃발을 올렸습니다.
-    몬스터 군단은 북쪽 산맥으로 달아났고 아르테리아에는 다시 평화로운 아침이 찾아왔습니다.
-
-  끝
-
-  만약에 희망점수가 7보다 크거나 같으면
-    이야기:
-
-      수도 중앙에는 승리한 용사의 동상이 세워지고 일주일 동안 축제가 열렸습니다.
-      엘프 리아넬은 숲을 되찾고, 드워프 브룸은 무너진 광산을 다시 열었습니다.
-      세린은 왕국의 대마법사가 되었고, 아델라와 카일은 전쟁 고아들을 위한 길드를 세웠습니다.
-      금룡 아우렐은 새 국왕의 대관식 위를 날았고 세 종족의 동맹은 어느 때보다 굳건해졌습니다.
-
-    끝
-    가운데 말해줘 가장 따뜻한 평화
-  아니면 만약에 희망점수가 4보다 크거나 같으면
-    이야기:
-
-      상처는 하루 만에 낫지 않았지만 길마다 다시 이름이 붙었습니다.
-      사람들은 용사이름이 지나간 선택을 이야기하며 작은 약속부터 지켰습니다.
-      완전하지 않아도 내일을 고를 수 있는 세상, 그것으로 충분한 평화가 시작되었습니다.
-
-    끝
-    가운데 말해줘 다시 시작된 평화
-  아니면
-    이야기:
-
-      전쟁은 끝났고 사람들은 문을 열었습니다.
-      다만 아직 서로를 믿는 법은 천천히 배워야 합니다.
-      용사이름은 무기를 내려놓고 이제 싸움보다 어려운 일을 시작했습니다.
-
-    끝
-    가운데 말해줘 배워 가는 평화
-  끝
-
   만약에 끝맺음이 완전한평화와 같으면
-    줄 그어
-    이야기:
-
-      심연룡 녹스가 쓰러지자 세계의 균열은 여신의 성화 속에서 완전히 닫혔습니다.
-      동료들은 왕국으로 돌아와 누구에게도 기록되지 않았던 마지막 전투를 서로의 기억에 남겼습니다.
-      이제 아르테리아의 평화는 마왕의 잔재조차 없는 완전한 새 시대가 되었습니다.
-
-    끝
-    상자로 말해줘 🟨 숨겨진 결말 · 완전한 평화
-  아니면 만약에 끝맺음이 희생과 같으면
-    줄 그어
-    이야기:
-
-      세계의 균열은 닫혔지만 용사이름은 동료들과 함께 돌아오지 못했습니다.
-      왕국의 모든 길드에는 빈 의자 하나가 놓였고 왕녀는 해마다 그 앞에 첫 번째 성화를 밝혔습니다.
-      그 희생 덕분에 다음 세대는 마왕도 심연도 모르는 평범한 삶을 살았습니다.
-
-    끝
-    상자로 말해줘 🟨 숨겨진 결말 · 마지막 수호자
+    평화도달은 참
+  끝
+  만약에 끝맺음이 희생과 같으면
+    평화도달은 참
   끝
 
-아니면
-  상자로 말해줘 🟥 아직 끝나지 않은 길
+  만약에 평화도달이 있으면
+    상자로 말해줘 🟩 평화
+    줄 그어
+    만약에 연출번호가 2와 같으면
+      천천히 말해줘 마왕은 쓰러졌습니다. 아르테리아에 아침이 돌아옵니다.
+    아니면 만약에 연출번호가 3과 같으면
+      아주 천천히 말해줘 마침내, 평화가 돌아왔습니다.
+    아니면
+      마왕은 쓰러졌습니다. 아르테리아에 아침이 돌아옵니다. 말해줘
+    끝
+    이야기:
+
+      용사이름이 무기이름을 들어 모르가르의 심장을 꿰뚫었습니다.
+      마왕은 죽었고 마계의 문은 붉은 불꽃과 함께 무너졌습니다.
+      왕도에서는 엘레노아가 승리의 종을 울리고 모든 성벽에 왕국의 깃발을 올렸습니다.
+      몬스터 군단은 북쪽 산맥으로 달아났고 아르테리아에는 다시 평화로운 아침이 찾아왔습니다.
+
+    끝
+
+    만약에 희망점수가 7보다 크거나 같으면
+      이야기:
+
+        수도 중앙에는 승리한 용사의 동상이 세워지고 일주일 동안 축제가 열렸습니다.
+        엘프 리아넬은 숲을 되찾고, 드워프 브룸은 무너진 광산을 다시 열었습니다.
+        세린은 왕국의 대마법사가 되었고, 아델라와 카일은 전쟁 고아들을 위한 길드를 세웠습니다.
+        금룡 아우렐은 새 국왕의 대관식 위를 날았고 세 종족의 동맹은 어느 때보다 굳건해졌습니다.
+
+      끝
+      가운데 말해줘 가장 따뜻한 평화
+    아니면 만약에 희망점수가 4보다 크거나 같으면
+      이야기:
+
+        상처는 하루 만에 낫지 않았지만 길마다 다시 이름이 붙었습니다.
+        사람들은 용사이름이 지나간 선택을 이야기하며 작은 약속부터 지켰습니다.
+        완전하지 않아도 내일을 고를 수 있는 세상, 그것으로 충분한 평화가 시작되었습니다.
+
+      끝
+      가운데 말해줘 다시 시작된 평화
+    아니면
+      이야기:
+
+        전쟁은 끝났고 사람들은 문을 열었습니다.
+        다만 아직 서로를 믿는 법은 천천히 배워야 합니다.
+        용사이름은 무기를 내려놓고 이제 싸움보다 어려운 일을 시작했습니다.
+
+      끝
+      가운데 말해줘 배워 가는 평화
+    끝
+
+    만약에 끝맺음이 완전한평화와 같으면
+      줄 그어
+      이야기:
+
+        심연룡 녹스가 쓰러지자 세계의 균열은 여신의 성화 속에서 완전히 닫혔습니다.
+        동료들은 왕국으로 돌아와 누구에게도 기록되지 않았던 마지막 전투를 서로의 기억에 남겼습니다.
+        이제 아르테리아의 평화는 마왕의 잔재조차 없는 완전한 새 시대가 되었습니다.
+
+      끝
+      상자로 말해줘 🟨 숨겨진 결말 · 완전한 평화
+    아니면 만약에 끝맺음이 희생과 같으면
+      줄 그어
+      이야기:
+
+        세계의 균열은 닫혔지만 용사이름은 동료들과 함께 돌아오지 못했습니다.
+        왕국의 모든 길드에는 빈 의자 하나가 놓였고 왕녀는 해마다 그 앞에 첫 번째 성화를 밝혔습니다.
+        그 희생 덕분에 다음 세대는 마왕도 심연도 모르는 평범한 삶을 살았습니다.
+
+      끝
+      상자로 말해줘 🟨 숨겨진 결말 · 마지막 수호자
+    끝
+
+  아니면
+    상자로 말해줘 🟥 아직 끝나지 않은 길
+    줄 그어
+    이야기:
+
+      평화의 불씨가 땅에 떨어졌지만 꺼지지는 않았습니다.
+      왕녀 엘레노아는 왕성의 횃불을 밝히고 다음 모험가를 기다립니다.
+      누군가 이 길을 다시 걸으면 오늘의 실패도 그 사람을 지키는 이야기가 될 것입니다.
+
+    끝
+  끝
+
+
+  # ── 마지막 기록 ────────────────────────────────────────────────────
+
   줄 그어
-  이야기:
-
-    평화의 불씨가 땅에 떨어졌지만 꺼지지는 않았습니다.
-    왕녀 엘레노아는 왕성의 횃불을 밝히고 다음 모험가를 기다립니다.
-    누군가 이 길을 다시 걸으면 오늘의 실패도 그 사람을 지키는 이야기가 될 것입니다.
-
+  용사이름 · 직업이름 · 용사단계 단계 말해줘
+  무기 무기이름 · 갑옷 갑옷이름 · 장신구 장신구이름 말해줘
+  가장 멀리 최고지역 번째 길 · 주고받은 전체턴수 차례 말해줘
+  남은 화폐 말해줘
+  소지브론즈에게 화폐보이기 해줘
+  평화의 불씨 평화불씨 · 희망 희망점수 · 명성 명성 말해줘
+  걸린시간은 잰시간
+  플레이 시간 걸린시간 초 · 균형 파괴 균형파괴수 · 약점 공격 약점공격수 · 제작 제작횟수 · 저장 저장횟수 말해줘
+  생존 기록 · 모험일 모험일 · 포만 포만 · 피로 피로 · 사기 사기 말해줘
+  경제 기록 · 전쟁 위험 전쟁위험 · 거래 거래횟수 · 수리 수리횟수 · 상인 평판 상인평판 말해줘
+  운명 기록 · 인장 운명인장수 · 조각 운명조각수 · 뽑기 운명뽑기횟수 · 도박 승 도박승리수 / 패 도박패배수 말해줘
+  내구도 · 무기 무기내구 / 무기최대내구 · 갑옷 갑옷내구 / 갑옷최대내구 말해줘
+  남은 재료 · 약초 약초수 · 철광석 철광석수 · 마력가루 마력가루수 · 용비늘 용비늘수 · 질긴천 질긴천수 · 마력수정 마력수정수 · 가죽 가죽수 말해줘
+  줄 그어
+  함께한 동료 말해줘
+  만약에 동료목록이 비었으면
+    아무도 모집하지 못했습니다. 말해줘
+  아니면
+    동료목록을 쉼표로 이어 말해줘
   끝
-끝
-
-
-# ── 마지막 기록 ────────────────────────────────────────────────────
-
-줄 그어
-용사이름 · 직업이름 · 용사단계 단계 말해줘
-무기 무기이름 · 갑옷 갑옷이름 · 장신구 장신구이름 말해줘
-가장 멀리 최고지역 번째 길 · 주고받은 전체턴수 차례 말해줘
-남은 화폐 말해줘
-소지브론즈에게 화폐보이기 해줘
-평화의 불씨 평화불씨 · 희망 희망점수 · 명성 명성 말해줘
-걸린시간은 잰시간
-플레이 시간 걸린시간 초 · 균형 파괴 균형파괴수 · 약점 공격 약점공격수 · 제작 제작횟수 · 저장 저장횟수 말해줘
-생존 기록 · 모험일 모험일 · 포만 포만 · 피로 피로 · 사기 사기 말해줘
-경제 기록 · 전쟁 위험 전쟁위험 · 거래 거래횟수 · 수리 수리횟수 · 상인 평판 상인평판 말해줘
-운명 기록 · 인장 운명인장수 · 조각 운명조각수 · 뽑기 운명뽑기횟수 · 도박 승 도박승리수 / 패 도박패배수 말해줘
-내구도 · 무기 무기내구 / 무기최대내구 · 갑옷 갑옷내구 / 갑옷최대내구 말해줘
-남은 재료 · 약초 약초수 · 철광석 철광석수 · 마력가루 마력가루수 · 용비늘 용비늘수 · 질긴천 질긴천수 · 마력수정 마력수정수 · 가죽 가죽수 말해줘
-줄 그어
-함께한 동료 말해줘
-만약에 동료목록이 비었으면
-  아무도 모집하지 못했습니다. 말해줘
-아니면
-  동료목록을 쉼표로 이어 말해줘
-끝
-줄 그어
-발견한 지역 말해줘
-발견지역을 쉼표로 이어 말해줘
-줄 그어
-쓰러뜨린 적의 기록 말해줘
-쓰러뜨린적의 기록이름마다 반복해
-  기록수는 쓰러뜨린적의 기록이름
-  기록이름 · 기록수 번 말해줘
-끝
-줄 그어
-퀘스트 일지 말해줘
-퀘스트표의 퀘스트이름마다 반복해
-  퀘스트상태는 퀘스트표의 퀘스트이름
-  퀘스트이름 · 퀘스트상태 말해줘
-끝
-줄 그어
-달성한 업적 말해줘
-만약에 업적목록이 비었으면
-  아직 달성한 업적이 없습니다. 말해줘
-아니면
-  업적목록의 업적이름마다 반복해
-    업적이름 말해줘
+  줄 그어
+  발견한 지역 말해줘
+  발견지역을 쉼표로 이어 말해줘
+  줄 그어
+  쓰러뜨린 적의 기록 말해줘
+  쓰러뜨린적의 기록이름마다 반복해
+    기록수는 쓰러뜨린적의 기록이름
+    기록이름 · 기록수 번 말해줘
   끝
-끝
-줄 그어
-가운데 말해줘 끝까지 걸어 주셔서 고맙습니다
-줄 그어`,
+  줄 그어
+  퀘스트 일지 말해줘
+  퀘스트표의 퀘스트이름마다 반복해
+    퀘스트상태는 퀘스트표의 퀘스트이름
+    퀘스트이름 · 퀘스트상태 말해줘
+  끝
+  줄 그어
+  달성한 업적 말해줘
+  만약에 업적목록이 비었으면
+    아직 달성한 업적이 없습니다. 말해줘
+  아니면
+    업적목록의 업적이름마다 반복해
+      업적이름 말해줘
+    끝
+  끝
+  줄 그어
+  가운데 말해줘 끝까지 걸어 주셔서 고맙습니다
+  줄 그어
+끝`,
     },
   ],
 };
