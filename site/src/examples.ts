@@ -49,6 +49,12 @@ export interface Example {
   readonly source: string;
   readonly fails?: true;
   readonly fixed?: true;
+  /* The program does so much arithmetic that running it is measured in
+   * minutes, not milliseconds. `scripts/check-examples.mjs` compiles it every
+   * time and runs it only when asked, because putting four minutes per
+   * language into every deploy buys very little: what breaks an example is
+   * almost always the compiler, and that is caught by compiling it. */
+  readonly slow?: true;
 }
 
 export type ExampleLanguage = 'en' | 'ko';
@@ -1907,6 +1913,749 @@ for each thing in basket
 end
 draw a line
 show how many basket things · spent spent · purse left`,
+    },
+    {
+      id: 'bitcoin',
+      label: 'Bitcoin 2009 — it really mines (4 min)',
+      group: 'big',
+      answers: [],
+      expect: 'NeedMoreBitcoin is finished every system passed',
+      slow: true,
+      source: `show NeedMoreBitcoin starting a careful reproduction of the first release version from January 2009
+use zero_knowledge latest
+
+set coinName to Bitcoin
+set releaseDate to 9 January 2009
+set blockReward to 50
+set maximumSupply to 21000000
+set halvingHeight to 210000
+set retargetInterval to 2016
+set maturityBlocks to 100
+set maturedFromHeight to 101
+set paymentHeight to 170
+set workTarget to 7237005577332262213973186563042994240829374041602535252466099000494570602496
+set genesisHeadline to Times 3 January 2009 Chancellor on brink of second bailout for banks
+set allPassed to 1
+
+show What this program builds
+show Address derivation double hashing proof of work merkle root and the link back to the previous hash
+show Transaction signing inputs outputs change fees coinbase maturity and double spend protection
+show Difficulty retargeting the halving the supply cap replay checking and three layers of tamper detection
+
+set satoshiSecret to zero knowledge secret make
+set satoshiPublic to satoshiSecret zero knowledge public make
+set satoshiAddressSeed to zero knowledge nonce make
+set satoshiAddressCommitment to satoshiAddressSeed zero knowledge commitment make
+set satoshiDeriveContext to coinName address derivation pass one
+set satoshiAddressHash to satoshiPublic satoshiAddressCommitment satoshiDeriveContext zero knowledge challenge make
+set satoshiAddressContext to coinName address derivation pass two satoshiAddressHash
+set satoshiAddress to satoshiPublic satoshiAddressCommitment satoshiAddressContext zero knowledge challenge make
+set halSecret to zero knowledge secret make
+set halPublic to halSecret zero knowledge public make
+set halAddressSeed to zero knowledge nonce make
+set halAddressCommitment to halAddressSeed zero knowledge commitment make
+set halDeriveContext to coinName address derivation pass one
+set halAddressHash to halPublic halAddressCommitment halDeriveContext zero knowledge challenge make
+set halAddressContext to coinName address derivation pass two halAddressHash
+set halAddress to halPublic halAddressCommitment halAddressContext zero knowledge challenge make
+
+set satoshiSpendable to 0
+set satoshiLocked to 0
+set satoshiChange to 0
+set halBalance to 0
+set coinsIssued to 0
+set satoshiUsedNumber to 0
+set inputSpent to 0
+set genesisNeverSpendable to 1
+
+show The release date is releaseDate
+show The block reward is blockReward bitcoin
+show The newspaper headline in the genesis block is genesisHeadline
+
+show Mining the genesis block
+set genesisTransactionContext to coinName coinbase height 0 satoshiAddress receives blockReward genesisHeadline
+set genesisTransactionSeed to zero knowledge nonce make
+set genesisTransactionCommitment to genesisTransactionSeed zero knowledge commitment make
+set genesisTransactionHash to satoshiAddress genesisTransactionCommitment genesisTransactionContext zero knowledge challenge make
+set genesisMerkle to genesisTransactionHash
+show With only one transaction the merkle root is simply the coinbase hash
+set genesisFirstContext to coinName header version one previous none merkle genesisMerkle height 0
+set genesisHeaderHash to 0
+set genesisAttempts to 0
+set genesisMining to 1
+while genesisMining exists
+set genesisNonceSeed to zero knowledge nonce make
+set genesisNonceCommitment to genesisNonceSeed zero knowledge commitment make
+set genesisMiddleHash to satoshiAddress genesisNonceCommitment genesisFirstContext zero knowledge challenge make
+set genesisSecondContext to coinName header double hash middle genesisMiddleHash
+set genesisCandidate to satoshiAddress genesisNonceCommitment genesisSecondContext zero knowledge challenge make
+set genesisHeaderHash to genesisCandidate
+add 1 to genesisAttempts
+if genesisCandidate is less than workTarget
+set genesisMining to 0
+end
+end
+show Genesis block mined after genesisAttempts attempts
+show By rule the genesis coinbase can never be spent
+add blockReward to coinsIssued
+
+show Mining the run of blocks from height one up to just before paymentHeight
+set currentHeight to 1
+set previousHeader to genesisHeaderHash
+set chainMining to 1
+while chainMining exists
+set chainTransactionContext to coinName coinbase height currentHeight satoshiAddress receives blockReward
+set chainTransactionSeed to zero knowledge nonce make
+set chainTransactionCommitment to chainTransactionSeed zero knowledge commitment make
+set chainTransactionHash to satoshiAddress chainTransactionCommitment chainTransactionContext zero knowledge challenge make
+set chainMerkle to chainTransactionHash
+set chainFirstContext to coinName header version one previous previousHeader merkle chainMerkle height currentHeight
+set chainSearching to 1
+while chainSearching exists
+set chainNonceSeed to zero knowledge nonce make
+set chainNonceCommitment to chainNonceSeed zero knowledge commitment make
+set chainMiddle to satoshiAddress chainNonceCommitment chainFirstContext zero knowledge challenge make
+set chainSecondContext to coinName header double hash middle chainMiddle
+set chainCandidate to satoshiAddress chainNonceCommitment chainSecondContext zero knowledge challenge make
+if chainCandidate is less than workTarget
+set previousHeader to chainCandidate
+set chainSearching to 0
+end
+end
+add blockReward to satoshiLocked
+add blockReward to coinsIssued
+if currentHeight is greater than or equal to maturedFromHeight
+add blockReward to satoshiSpendable
+subtract blockReward from satoshiLocked
+end
+add 1 to currentHeight
+if currentHeight equals paymentHeight
+set chainMining to 0
+end
+end
+set lastHeight to currentHeight
+subtract 1 from lastHeight
+show The run of blocks is done the last height handled is lastHeight
+show Satoshi spendable balance is satoshiSpendable
+show Satoshi balance still waiting to mature is satoshiLocked
+
+show The first payment in history from Satoshi to Hal Finney
+set transactionInput to 50
+set halOutput to 10
+set changeOutput to 40
+set transactionNumber to 1
+set expectedNumber to satoshiUsedNumber
+add 1 to expectedNumber
+set outputTotal to halOutput
+add changeOutput to outputTotal
+set computedFee to transactionInput
+subtract outputTotal from computedFee
+set maturityPassed to 0
+if satoshiSpendable is greater than or equal to transactionInput
+set maturityPassed to 1
+end
+if maturityPassed exists
+show The input has cleared the maturity wait
+else
+show The input has not matured yet so it is refused
+set allPassed to 0
+end
+set transactionMessage to satoshiAddress pays halAddress halOutput change satoshiAddress changeOutput input one fee computedFee number transactionNumber
+set transactionSeed to zero knowledge nonce make
+set transactionCommitment to transactionSeed zero knowledge commitment make
+set transactionHash to satoshiAddress transactionCommitment transactionMessage zero knowledge challenge make
+set transactionSignature to satoshiSecret transactionMessage zero knowledge proof make
+set transactionValid to satoshiPublic transactionSignature transactionMessage zero knowledge verify
+set transactionApproved to 0
+if transactionValid exists
+if maturityPassed exists
+if inputSpent equals false
+if transactionNumber equals expectedNumber
+if computedFee is greater than or equal to 0
+set transactionApproved to 1
+end
+end
+end
+end
+end
+if transactionApproved exists
+subtract transactionInput from satoshiSpendable
+add changeOutput to satoshiChange
+add halOutput to halBalance
+set satoshiUsedNumber to transactionNumber
+set inputSpent to 1
+show First payment approved with change included
+else
+show First payment refused
+set allPassed to 0
+end
+
+show Double spend test the input that was already spent is used again
+set reuseApproved to 0
+if inputSpent equals false
+set reuseApproved to 1
+end
+if reuseApproved equals false
+show The double spend of an already spent input was refused
+end
+if reuseApproved exists
+show The double spend was not stopped
+set allPassed to 0
+end
+
+show Block 170 joins the coinbase and the transaction into a merkle root
+set lastCoinbaseContext to coinName coinbase height paymentHeight satoshiAddress receives blockReward
+set lastCoinbaseSeed to zero knowledge nonce make
+set lastCoinbaseCommitment to lastCoinbaseSeed zero knowledge commitment make
+set lastCoinbaseHash to satoshiAddress lastCoinbaseCommitment lastCoinbaseContext zero knowledge challenge make
+add blockReward to satoshiLocked
+add blockReward to coinsIssued
+if paymentHeight is greater than or equal to maturedFromHeight
+add blockReward to satoshiSpendable
+subtract blockReward from satoshiLocked
+end
+set merkleJoinSeed to zero knowledge nonce make
+set merkleJoinCommitment to merkleJoinSeed zero knowledge commitment make
+if transactionApproved exists
+set merkleJoinContext to coinName merkle left lastCoinbaseHash right transactionHash
+set lastMerkleRoot to satoshiAddress merkleJoinCommitment merkleJoinContext zero knowledge challenge make
+show Made a merkle root by joining the two leaves
+else
+set lastMerkleRoot to lastCoinbaseHash
+show With one transaction the merkle root is simply the coinbase hash
+end
+set lastHeaderHash to 0
+set headerFirstContext to coinName header version one previous previousHeader merkle lastMerkleRoot height paymentHeight
+set blockAttempts to 0
+set blockMining to 1
+while blockMining exists
+set blockNonceSeed to zero knowledge nonce make
+set blockNonceCommitment to blockNonceSeed zero knowledge commitment make
+set blockMiddleHash to satoshiAddress blockNonceCommitment headerFirstContext zero knowledge challenge make
+set blockSecondContext to coinName header double hash middle blockMiddleHash
+set blockCandidate to satoshiAddress blockNonceCommitment blockSecondContext zero knowledge challenge make
+set lastHeaderHash to blockCandidate
+add 1 to blockAttempts
+if blockCandidate is less than workTarget
+set blockMining to 0
+end
+end
+show Block 170 mined after blockAttempts attempts
+
+show Report
+show Satoshi spendable balance is satoshiSpendable
+show Satoshi change output is satoshiChange
+show Satoshi balance waiting to mature is satoshiLocked
+show Hal balance is halBalance
+show Total coins issued is coinsIssued
+
+show Difficulty retarget rule checked every time retargetInterval blocks go by
+set idealDays to 14
+set actualDays to 28
+set raiseFactor to the whole number of actualDays divided by idealDays
+set adjustedTarget to workTarget
+set adjustCount to 0
+set adjusting to 1
+while adjusting exists
+if adjustCount is greater than or equal to raiseFactor
+set adjusting to 0
+else
+set adjustedTarget to the whole number of adjustedTarget divided by 2
+add 1 to adjustCount
+end
+end
+show Mining was fast so the target is cut in half which raises the difficulty
+set actualDays to 7
+set lowerFactor to the whole number of idealDays divided by actualDays
+set adjustedTargetTwo to workTarget
+set adjustCountTwo to 0
+set adjustingTwo to 1
+while adjustingTwo exists
+if adjustCountTwo is greater than or equal to lowerFactor
+set adjustingTwo to 0
+else
+add adjustedTargetTwo to adjustedTargetTwo
+add 1 to adjustCountTwo
+end
+end
+show Mining was slow so the target is made bigger which lowers the difficulty
+
+show Halving demonstration the turning point where the reward is cut in half
+set askedHeight to 209999
+set halvingCount to the whole number of askedHeight divided by halvingHeight
+set demoReward to blockReward
+set halvedSoFar to 0
+set halvingLoop to 1
+while halvingLoop exists
+if halvedSoFar is greater than or equal to halvingCount
+set halvingLoop to 0
+else
+set demoReward to the whole number of demoReward divided by 2
+add 1 to halvedSoFar
+end
+end
+show The reward at height 209999 is demoReward bitcoin
+set askedHeight to 210000
+set halvingCount to the whole number of askedHeight divided by halvingHeight
+set demoReward to blockReward
+set halvedSoFar to 0
+set halvingLoop to 1
+while halvingLoop exists
+if halvedSoFar is greater than or equal to halvingCount
+set halvingLoop to 0
+else
+set demoReward to the whole number of demoReward divided by 2
+add 1 to halvedSoFar
+end
+end
+show From height 210000 the reward is demoReward bitcoin
+
+show Replay check starting everything is worked out again from the beginning
+set replayGenesisTransactionHash to satoshiAddress genesisTransactionCommitment genesisTransactionContext zero knowledge challenge make
+set replayGenesisMiddle to satoshiAddress genesisNonceCommitment genesisFirstContext zero knowledge challenge make
+set replayGenesisSecondContext to coinName header double hash middle replayGenesisMiddle
+set replayGenesisHeader to satoshiAddress genesisNonceCommitment replayGenesisSecondContext zero knowledge challenge make
+set replayTransactionHash to satoshiAddress transactionCommitment transactionMessage zero knowledge challenge make
+set replayJoinContext to coinName merkle left lastCoinbaseHash right replayTransactionHash
+set replayMerkle to satoshiAddress merkleJoinCommitment replayJoinContext zero knowledge challenge make
+set replayMiddle to satoshiAddress blockNonceCommitment headerFirstContext zero knowledge challenge make
+set replaySecondContext to coinName header double hash middle replayMiddle
+set replayHeader to satoshiAddress blockNonceCommitment replaySecondContext zero knowledge challenge make
+set replaySignatureValid to satoshiPublic transactionSignature transactionMessage zero knowledge verify
+set replaySatoshiSpendable to 0
+set replaySatoshiChange to 0
+set replaySatoshiLocked to 0
+set replayHalBalance to 0
+set replayCount to 1
+set replaying to 1
+while replaying exists
+add blockReward to replaySatoshiLocked
+if replayCount is greater than or equal to maturedFromHeight
+add blockReward to replaySatoshiSpendable
+subtract blockReward from replaySatoshiLocked
+end
+if replayCount equals paymentHeight
+subtract transactionInput from replaySatoshiSpendable
+add changeOutput to replaySatoshiChange
+add halOutput to replayHalBalance
+set replaying to 0
+end
+add 1 to replayCount
+end
+set replayHoldingsTotal to replaySatoshiSpendable
+add replaySatoshiChange to replayHoldingsTotal
+add replaySatoshiLocked to replayHoldingsTotal
+add replayHalBalance to replayHoldingsTotal
+set holdingsTotal to satoshiSpendable
+add satoshiChange to holdingsTotal
+add satoshiLocked to holdingsTotal
+add halBalance to holdingsTotal
+set replayScore to 0
+if replayGenesisTransactionHash equals genesisTransactionHash
+add 1 to replayScore
+end
+if replayGenesisHeader equals genesisHeaderHash
+add 1 to replayScore
+end
+if replayTransactionHash equals transactionHash
+add 1 to replayScore
+end
+if replayMerkle equals lastMerkleRoot
+add 1 to replayScore
+end
+if replayHeader equals lastHeaderHash
+add 1 to replayScore
+end
+if replaySignatureValid exists
+add 1 to replayScore
+end
+if replaySatoshiSpendable equals satoshiSpendable
+add 1 to replayScore
+end
+if replayHalBalance equals halBalance
+add 1 to replayScore
+end
+if replayHoldingsTotal equals holdingsTotal
+add 1 to replayScore
+end
+if replayScore equals 9
+show Whole chain replay check passed nine items match
+else
+show Replay check failed replayScore items matched
+set allPassed to 0
+end
+show The holdings total is every output except the genesis reward
+set holdingsCheck to holdingsTotal
+add blockReward to holdingsCheck
+if holdingsCheck equals coinsIssued
+show Supply conservation check passed
+else
+show Supply conservation check failed
+set allPassed to 0
+end
+
+show Tamper test the amount in the transaction is quietly changed
+set tamperedAmount to 11
+set tamperedMessage to satoshiAddress pays halAddress tamperedAmount change satoshiAddress changeOutput input one fee computedFee number transactionNumber
+set tamperedValid to satoshiPublic transactionSignature tamperedMessage zero knowledge verify
+if tamperedValid equals false
+show First layer refused the signature caught the tampering
+end
+if tamperedValid exists
+show The signature did not catch the tampering
+set allPassed to 0
+end
+set tamperedTransactionHash to satoshiAddress transactionCommitment tamperedMessage zero knowledge challenge make
+set tamperedJoinContext to coinName merkle left lastCoinbaseHash right tamperedTransactionHash
+set tamperedMerkle to satoshiAddress merkleJoinCommitment tamperedJoinContext zero knowledge challenge make
+if tamperedMerkle is not equal to lastMerkleRoot
+show Second layer refused the merkle root caught the tampering
+end
+if tamperedMerkle equals lastMerkleRoot
+show The merkle root did not catch the tampering
+set allPassed to 0
+end
+set tamperedFirstContext to coinName header version one previous previousHeader merkle tamperedMerkle height paymentHeight
+set tamperedMiddle to satoshiAddress blockNonceCommitment tamperedFirstContext zero knowledge challenge make
+set tamperedSecondContext to coinName header double hash middle tamperedMiddle
+set tamperedHeader to satoshiAddress blockNonceCommitment tamperedSecondContext zero knowledge challenge make
+if tamperedHeader is not equal to lastHeaderHash
+show Third layer refused the header hash caught the tampering
+end
+if tamperedHeader equals lastHeaderHash
+show The header hash did not catch the tampering
+set allPassed to 0
+end
+
+if coinsIssued is less than maximumSupply
+show coinsIssued is below the cap of 21000000
+end
+if allPassed exists
+show NeedMoreBitcoin is finished every system passed
+else
+show A step failed check the results above
+end`,
+    },
+    {
+      id: 'rsa',
+      label: 'RSA, the public-key cipher',
+      group: 'big',
+      answers: [],
+      expect: 'NeedMore cipher finished every step passed',
+      source: `show NeedMore cipher starting this is a public key cipher system written entirely in plain English sentences
+
+set primeOne to 61
+set primeTwo to 53
+set allStepsPassed to 1
+
+set divisor to 2
+set checkingPrimeOne to 1
+set primeOnePassed to 1
+while checkingPrimeOne exists
+if the remainder of primeOne divided by divisor equals 0
+set primeOnePassed to 0
+set checkingPrimeOne to 0
+end
+if checkingPrimeOne exists
+set nextDivisor to divisor
+add 1 to nextDivisor
+if nextDivisor equals primeOne
+set checkingPrimeOne to 0
+else
+set divisor to nextDivisor
+end
+end
+end
+if primeOnePassed exists
+show the first prime passed its check
+else
+show the first number is not a prime
+set allStepsPassed to 0
+end
+
+set divisor to 2
+set checkingPrimeTwo to 1
+set primeTwoPassed to 1
+while checkingPrimeTwo exists
+if the remainder of primeTwo divided by divisor equals 0
+set primeTwoPassed to 0
+set checkingPrimeTwo to 0
+end
+if checkingPrimeTwo exists
+set nextDivisor to divisor
+add 1 to nextDivisor
+if nextDivisor equals primeTwo
+set checkingPrimeTwo to 0
+else
+set divisor to nextDivisor
+end
+end
+end
+if primeTwoPassed exists
+show the second prime passed its check
+else
+show the second number is not a prime
+set allStepsPassed to 0
+end
+
+set modulus to primeOne
+multiply modulus by primeTwo
+set eulerNumber to primeOne
+subtract 1 from eulerNumber
+set helperNumber to primeTwo
+subtract 1 from helperNumber
+multiply eulerNumber by helperNumber
+show modulus is the product of the two primes
+show eulerNumber is the value of the Euler phi function
+
+set publicExponent to 2
+set lookingForExponent to 1
+while lookingForExponent exists
+set euclidFirst to eulerNumber
+set euclidSecond to publicExponent
+while euclidSecond exists
+set euclidRemainder to the remainder of euclidFirst divided by euclidSecond
+set euclidFirst to euclidSecond
+set euclidSecond to euclidRemainder
+end
+if euclidFirst equals 1
+set lookingForExponent to 0
+else
+add 1 to publicExponent
+end
+end
+show the public exponent is publicExponent and it shares no common factor with the phi value
+
+set previousRemainder to eulerNumber
+set currentRemainder to publicExponent
+set previousCoefficient to 0
+set currentCoefficient to 1
+set lookingForInverse to 1
+while lookingForInverse exists
+if currentRemainder equals 0
+set lookingForInverse to 0
+else
+set quotient to the whole number of previousRemainder divided by currentRemainder
+set productValue to currentRemainder
+multiply productValue by quotient
+set nextRemainder to previousRemainder
+subtract productValue from nextRemainder
+set productValue to currentCoefficient
+multiply productValue by quotient
+set nextCoefficient to previousCoefficient
+subtract productValue from nextCoefficient
+set previousRemainder to currentRemainder
+set currentRemainder to nextRemainder
+set previousCoefficient to currentCoefficient
+set currentCoefficient to nextCoefficient
+end
+end
+set privateExponent to the remainder of previousCoefficient divided by eulerNumber
+show the inverse is worked out and the private key is made
+show the public key is publicExponent and modulus
+show the private key is privateExponent and modulus
+
+set keyCheckNumber to privateExponent
+multiply keyCheckNumber by publicExponent
+set keyCheckRemainder to the remainder of keyCheckNumber divided by eulerNumber
+if keyCheckRemainder equals 1
+show the key pair checks out
+else
+show the key pair failed its check
+set allStepsPassed to 0
+end
+
+set plainOne to 42
+set plainTwo to 777
+set plainThree to 2026
+
+show encryption starting we lock three blocks of plain text
+
+set lockedOne to 1
+set powerBase to plainOne
+set powerExponent to publicExponent
+while powerExponent exists
+if the remainder of powerExponent divided by 2 equals 1
+multiply lockedOne by powerBase
+set lockedOne to the remainder of lockedOne divided by modulus
+end
+multiply powerBase by powerBase
+set powerBase to the remainder of powerBase divided by modulus
+set powerExponent to the whole number of powerExponent divided by 2
+end
+show the first locked number is lockedOne
+
+set lockedTwo to 1
+set powerBase to plainTwo
+set powerExponent to publicExponent
+while powerExponent exists
+if the remainder of powerExponent divided by 2 equals 1
+multiply lockedTwo by powerBase
+set lockedTwo to the remainder of lockedTwo divided by modulus
+end
+multiply powerBase by powerBase
+set powerBase to the remainder of powerBase divided by modulus
+set powerExponent to the whole number of powerExponent divided by 2
+end
+show the second locked number is lockedTwo
+
+set lockedThree to 1
+set powerBase to plainThree
+set powerExponent to publicExponent
+while powerExponent exists
+if the remainder of powerExponent divided by 2 equals 1
+multiply lockedThree by powerBase
+set lockedThree to the remainder of lockedThree divided by modulus
+end
+multiply powerBase by powerBase
+set powerBase to the remainder of powerBase divided by modulus
+set powerExponent to the whole number of powerExponent divided by 2
+end
+show the third locked number is lockedThree
+
+show decryption starting we open the locks with the private key
+
+set unlockedOne to 1
+set powerBase to lockedOne
+set powerExponent to privateExponent
+while powerExponent exists
+if the remainder of powerExponent divided by 2 equals 1
+multiply unlockedOne by powerBase
+set unlockedOne to the remainder of unlockedOne divided by modulus
+end
+multiply powerBase by powerBase
+set powerBase to the remainder of powerBase divided by modulus
+set powerExponent to the whole number of powerExponent divided by 2
+end
+
+set unlockedTwo to 1
+set powerBase to lockedTwo
+set powerExponent to privateExponent
+while powerExponent exists
+if the remainder of powerExponent divided by 2 equals 1
+multiply unlockedTwo by powerBase
+set unlockedTwo to the remainder of unlockedTwo divided by modulus
+end
+multiply powerBase by powerBase
+set powerBase to the remainder of powerBase divided by modulus
+set powerExponent to the whole number of powerExponent divided by 2
+end
+
+set unlockedThree to 1
+set powerBase to lockedThree
+set powerExponent to privateExponent
+while powerExponent exists
+if the remainder of powerExponent divided by 2 equals 1
+multiply unlockedThree by powerBase
+set unlockedThree to the remainder of unlockedThree divided by modulus
+end
+multiply powerBase by powerBase
+set powerBase to the remainder of powerBase divided by modulus
+set powerExponent to the whole number of powerExponent divided by 2
+end
+
+set unlockWorked to 0
+if unlockedOne equals plainOne
+if unlockedTwo equals plainTwo
+if unlockedThree equals plainThree
+set unlockWorked to 1
+end
+end
+end
+if unlockWorked exists
+show all three blocks opened correctly and match the plain text
+else
+show decryption failed the numbers are not the same as the plain text
+set allStepsPassed to 0
+end
+
+show signing starting we sign the message fingerprint with the private key
+set messageToSign to 777
+
+set signedNumber to 1
+set powerBase to messageToSign
+set powerExponent to privateExponent
+while powerExponent exists
+if the remainder of powerExponent divided by 2 equals 1
+multiply signedNumber by powerBase
+set signedNumber to the remainder of signedNumber divided by modulus
+end
+multiply powerBase by powerBase
+set powerBase to the remainder of powerBase divided by modulus
+set powerExponent to the whole number of powerExponent divided by 2
+end
+show the signature is signedNumber
+
+set signatureCheck to 1
+set powerBase to signedNumber
+set powerExponent to publicExponent
+while powerExponent exists
+if the remainder of powerExponent divided by 2 equals 1
+multiply signatureCheck by powerBase
+set signatureCheck to the remainder of signatureCheck divided by modulus
+end
+multiply powerBase by powerBase
+set powerBase to the remainder of powerBase divided by modulus
+set powerExponent to the whole number of powerExponent divided by 2
+end
+if signatureCheck equals messageToSign
+show the signature checks out this is the real sender
+else
+show the signature check failed
+set allStepsPassed to 0
+end
+
+show tampering starting we quietly change the message
+set changedMessage to 778
+
+set forgeryCheck to 1
+set powerBase to signedNumber
+set powerExponent to publicExponent
+while powerExponent exists
+if the remainder of powerExponent divided by 2 equals 1
+multiply forgeryCheck by powerBase
+set forgeryCheck to the remainder of forgeryCheck divided by modulus
+end
+multiply powerBase by powerBase
+set powerBase to the remainder of powerBase divided by modulus
+set powerExponent to the whole number of powerExponent divided by 2
+end
+if forgeryCheck is not equal to changedMessage
+show tampering spotted the signature rejected the changed message
+end
+if forgeryCheck equals changedMessage
+show the tampering was not caught
+set allStepsPassed to 0
+end
+
+show one more thing we check that a wrong private key breaks the result too
+
+set wrongKeyResult to 1
+set powerBase to lockedOne
+set powerExponent to privateExponent
+add 1 to powerExponent
+while powerExponent exists
+if the remainder of powerExponent divided by 2 equals 1
+multiply wrongKeyResult by powerBase
+set wrongKeyResult to the remainder of wrongKeyResult divided by modulus
+end
+multiply powerBase by powerBase
+set powerBase to the remainder of powerBase divided by modulus
+set powerExponent to the whole number of powerExponent divided by 2
+end
+if wrongKeyResult is not equal to plainOne
+show a wrong key does not open it the number that came out was wrongKeyResult
+end
+if wrongKeyResult equals plainOne
+show that is not what we expected
+set allStepsPassed to 0
+end
+
+if allStepsPassed exists
+show NeedMore cipher finished every step passed
+else
+show some steps failed please look at the results above
+end`,
     },
     {
       id: 'gradebook',
@@ -8129,6 +8878,749 @@ print(낱말)`,
 끝
 줄 그어
 장바구니 개수 가지 · 쓴돈 냄 · 주머니 남음 말해줘`,
+    },
+    {
+      id: 'bitcoin',
+      label: '비트코인 2009 — 진짜로 채굴합니다 (4분)',
+      group: 'big',
+      answers: [],
+      expect: '니드모어비트코인 끝났습니다 모든 시스템 통과',
+      slow: true,
+      source: `니드모어비트코인 시작합니다 2009 년 1 월 최초 출시 버전 정밀 재현입니다 말해줘
+영지식 사용 최신
+
+코인이름은 비트코인
+릴리스날짜는 2009 년 1 월 9 일
+블록보상은 50
+최대공급량은 21000000
+반감기높이는 210000
+재조정간격은 2016
+숙성대기는 100
+숙성시작높이는 101
+송금높이는 170
+작업목표는 7237005577332262213973186563042994240829374041602535252466099000494570602496
+창세헤드라인은 타임스 2009 년 1 월 3 일 칸캘러 은행 구제 금융 직전
+전체성공은 1
+
+구현 시스템 안내 말해줘
+주소 파생 이중 해시 작업 증명 머클 뿌리 이전 해시 연결 말해줘
+거래 서명 입력 출력 잔돈 수수료 코인베이스 숙성 이중 지불 방지 말해줘
+난이도 재조정 반감기 최대 공급량 재생 검증 삼층 변조 감지 말해줘
+
+사토시비밀은 영지식 비밀 만들기
+사토시공개는 사토시비밀로 영지식 공개값 만들기
+사토시주소약속원본은 영지식 일회값 만들기
+사토시주소약속은 사토시주소약속원본으로 영지식 약속 만들기
+사토시파생문맥은 코인이름 주소 파생 공개값 한번 걷기
+사토시주소해시는 사토시공개와 사토시주소약속과 사토시파생문맥으로 영지식 비대화 도전 만들기
+사토시주소문맥은 코인이름 주소 파생 두번 걷기 사토시주소해시
+사토시주소는 사토시공개와 사토시주소약속과 사토시주소문맥으로 영지식 비대화 도전 만들기
+할피비밀은 영지식 비밀 만들기
+할피공개는 할피비밀로 영지식 공개값 만들기
+할피주소약속원본은 영지식 일회값 만들기
+할피주소약속은 할피주소약속원본으로 영지식 약속 만들기
+할피파생문맥은 코인이름 주소 파생 공개값 한번 걷기
+할피주소해시는 할피공개와 할피주소약속과 할피파생문맥으로 영지식 비대화 도전 만들기
+할피주소문맥은 코인이름 주소 파생 두번 걷기 할피주소해시
+할피주소는 할피공개와 할피주소약속과 할피주소문맥으로 영지식 비대화 도전 만들기
+
+사토시가용은 0
+사토시잠금은 0
+사토시잔돈은 0
+할피보유는 0
+발행량은 0
+사토시사용번호는 0
+입력사용됨은 0
+창세사용불가는 1
+
+릴리스 날짜는 릴리스날짜 입니다 말해줘
+블록 보상은 블록보상 비트코인입니다 말해줘
+창세 블록 신문 제목은 창세헤드라인 말해줘
+
+창세 블록 채굴을 시작합니다 말해줘
+창세거래문맥은 코인이름 코인베이스 높이 0 사토시주소 에게 블록보상 발행 창세헤드라인
+창세거래약속원본은 영지식 일회값 만들기
+창세거래약속값은 창세거래약속원본으로 영지식 약속 만들기
+창세거래해시는 사토시주소와 창세거래약속값과 창세거래문맥으로 영지식 비대화 도전 만들기
+창세머클은 창세거래해시
+거래가 하나뿐이므로 머클 뿌리가 곧바로 코인베이스 해시입니다 말해줘
+창세앞문맥은 코인이름 헤더 버전 하나 이전 없음 머클 창세머클 높이 0
+창세헤더해시는 0
+창세시도는 0
+창세진행중은 1
+동안 창세진행중
+창세논스원본은 영지식 일회값 만들기
+창세논스약속은 창세논스원본으로 영지식 약속 만들기
+창세중간해시는 사토시주소와 창세논스약속과 창세앞문맥으로 영지식 비대화 도전 만들기
+창세뒷문맥은 코인이름 헤더 이중 해시 중간 창세중간해시
+창세후보는 사토시주소와 창세논스약속과 창세뒷문맥으로 영지식 비대화 도전 만들기
+창세헤더해시는 창세후보
+창세시도에 1 더해
+만약에 창세후보가 작업목표보다 작으면
+창세진행중은 0
+끝
+끝
+창세 블록 채굴 완료 시도 횟수는 창세시도 입니다 말해줘
+창세 코인베이스는 영구 사용 불가 규칙을 적용했습니다 말해줘
+발행량에 블록보상 더해
+
+연속 채굴 시작 높이 하나부터 송금높이 바로 앞까지입니다 말해줘
+현재높이는 1
+이전헤더는 창세헤더해시
+연속채굴중은 1
+동안 연속채굴중
+연속거래문맥은 코인이름 코인베이스 높이 현재높이 사토시주소 에게 블록보상 발행
+연속거래약속원본은 영지식 일회값 만들기
+연속거래약속값은 연속거래약속원본으로 영지식 약속 만들기
+연속거래해시는 사토시주소와 연속거래약속값과 연속거래문맥으로 영지식 비대화 도전 만들기
+연속머클은 연속거래해시
+연속앞문맥은 코인이름 헤더 버전 하나 이전 이전헤더 머클 연속머클 높이 현재높이
+연속진행중은 1
+동안 연속진행중
+연속논스원본은 영지식 일회값 만들기
+연속논스약속은 연속논스원본으로 영지식 약속 만들기
+연속중간은 사토시주소와 연속논스약속과 연속앞문맥으로 영지식 비대화 도전 만들기
+연속뒷문맥은 코인이름 헤더 이중 해시 중간 연속중간
+연속후보는 사토시주소와 연속논스약속과 연속뒷문맥으로 영지식 비대화 도전 만들기
+만약에 연속후보가 작업목표보다 작으면
+이전헤더는 연속후보
+연속진행중은 0
+끝
+끝
+사토시잠금에 블록보상 더해
+발행량에 블록보상 더해
+만약에 현재높이가 숙성시작높이보다 크거나 같으면
+사토시가용에 블록보상 더해
+사토시잠금에서 블록보상 빼
+끝
+현재높이에 1 더해
+만약에 현재높이가 송금높이와 같으면
+연속채굴중은 0
+끝
+끝
+마지막높이는 현재높이
+마지막높이에서 1 빼
+연속 채굴 완료 처리한 마지막 높이는 마지막높이 입니다 말해줘
+사토시 가용 잔액은 사토시가용 입니다 말해줘
+사토시 숙성 대기 잔액은 사토시잠금 입니다 말해줘
+
+역사적 첫 송금 블록 사토시에서 할 피니에게 말해줘
+거래입력은 50
+출력할피는 10
+잔돈출력은 40
+거래번호는 1
+거래예상번호는 사토시사용번호
+거래예상번호에 1 더해
+출력합은 출력할피
+출력합에 잔돈출력 더해
+계산수수료는 거래입력
+계산수수료에서 출력합 빼
+숙성통과는 0
+만약에 사토시가용이 거래입력보다 크거나 같으면
+숙성통과는 1
+끝
+만약에 숙성통과가 참이면
+입력 출력은 숙성 대기를 통과했습니다 말해줘
+아니면
+입력이 아직 숙성되지 않아 거부됩니다 말해줘
+전체성공은 0
+끝
+거래내용은 사토시주소 에서 할피주소 에게 출력할피 전송 잔돈 사토시주소 에게 잔돈출력 입력 하나 수수료 계산수수료 번호 거래번호
+거래약속원본은 영지식 일회값 만들기
+거래약속값은 거래약속원본으로 영지식 약속 만들기
+거래해시는 사토시주소와 거래약속값과 거래내용으로 영지식 비대화 도전 만들기
+거래서명은 사토시비밀과 거래내용으로 영지식 비대화 증명 만들기
+거래검증은 사토시공개와 거래서명과 거래내용으로 영지식 비대화 검증
+거래승인은 0
+만약에 거래검증이 참이면
+만약에 숙성통과가 참이면
+만약에 입력사용됨이 거짓이면
+만약에 거래번호가 거래예상번호와 같으면
+만약에 계산수수료가 0보다 크거나 같으면
+거래승인은 1
+끝
+끝
+끝
+끝
+끝
+만약에 거래승인이 참이면
+사토시가용에서 거래입력 빼
+사토시잔돈에 잔돈출력 더해
+할피보유에 출력할피 더해
+사토시사용번호는 거래번호
+입력사용됨은 1
+첫 송금 승인 잔돈 포함 말해줘
+아니면
+첫 송금 거부 말해줘
+전체성공은 0
+끝
+
+이중 지불 시험 이미 쓴 입력을 다시 씁니다 말해줘
+재사용시도승인은 0
+만약에 입력사용됨이 거짓이면
+재사용시도승인은 1
+끝
+만약에 재사용시도승인이 거짓이면
+이미 쓴 입력의 이중 지불을 거부했습니다 말해줘
+끝
+만약에 재사용시도승인이 참이면
+이중 지불을 막지 못했습니다 말해줘
+전체성공은 0
+끝
+
+블록 170 코인베이스와 거래를 머클로 묶습니다 말해줘
+마지막코인베이스문맥은 코인이름 코인베이스 높이 송금높이 사토시주소 에게 블록보상 발행
+마지막코인베이스약속원본은 영지식 일회값 만들기
+마지막코인베이스약속값은 마지막코인베이스약속원본으로 영지식 약속 만들기
+마지막코인베이스해시는 사토시주소와 마지막코인베이스약속값과 마지막코인베이스문맥으로 영지식 비대화 도전 만들기
+사토시잠금에 블록보상 더해
+발행량에 블록보상 더해
+만약에 송금높이가 숙성시작높이보다 크거나 같으면
+사토시가용에 블록보상 더해
+사토시잠금에서 블록보상 빼
+끝
+머클결합약속원본은 영지식 일회값 만들기
+머클결합약속값은 머클결합약속원본으로 영지식 약속 만들기
+만약에 거래승인이 참이면
+머클결합문맥은 코인이름 머클 왼쪽 마지막코인베이스해시 오른쪽 거래해시
+머클루트마지막은 사토시주소와 머클결합약속값과 머클결합문맥으로 영지식 비대화 도전 만들기
+두 잎을 결합한 머클 뿌리를 만들었습니다 말해줘
+아니면
+머클루트마지막은 마지막코인베이스해시
+거래가 하나여서 머클 뿌리가 곧바로 코인베이스 해시입니다 말해줘
+끝
+헤더해시마지막은 0
+헤더앞문맥은 코인이름 헤더 버전 하나 이전 이전헤더 머클 머클루트마지막 높이 송금높이
+시도는 0
+진행중은 1
+동안 진행중
+논스원본은 영지식 일회값 만들기
+논스약속은 논스원본으로 영지식 약속 만들기
+중간해시는 사토시주소와 논스약속과 헤더앞문맥으로 영지식 비대화 도전 만들기
+뒷문맥은 코인이름 헤더 이중 해시 중간 중간해시
+후보는 사토시주소와 논스약속과 뒷문맥으로 영지식 비대화 도전 만들기
+헤더해시마지막은 후보
+시도에 1 더해
+만약에 후보가 작업목표보다 작으면
+진행중은 0
+끝
+끝
+블록 170 채굴 완료 시도 횟수는 시도 입니다 말해줘
+
+보고 시작합니다 말해줘
+사토시 가용 잔액은 사토시가용 입니다 말해줘
+사토시 잔돈 출력은 사토시잔돈 입니다 말해줘
+사토시 숙성 대기는 사토시잠금 입니다 말해줘
+할피 보유는 할피보유 입니다 말해줘
+총 발행량은 발행량 입니다 말해줘
+
+난이도 재조정 규칙 매 재조정간격 블록마다 확인 말해줘
+이상경과는 14
+실제경과는 28
+배율상향은 실제경과를 이상경과로 나눈 몫
+조정목표는 작업목표
+조정카운트는 0
+조정진행중은 1
+동안 조정진행중
+만약에 조정카운트가 배율상향보다 크거나 같으면
+조정진행중은 0
+아니면
+조정목표는 조정목표를 2로 나눈 몫
+조정카운트에 1 더해
+끝
+끝
+채굴이 빨라 목표를 절반으로 줄여 난이도를 올립니다 말해줘
+실제경과는 7
+배율하향은 이상경과를 실제경과로 나눈 몫
+조정목표둘은 작업목표
+조정카운트둘은 0
+조정진행둘은 1
+동안 조정진행둘
+만약에 조정카운트둘이 배율하향보다 크거나 같으면
+조정진행둘은 0
+아니면
+조정목표둘에 조정목표둘 더해
+조정카운트둘에 1 더해
+끝
+끝
+채굴이 느려 목표를 키워 난이도를 내립니다 말해줘
+
+반감기 시연 보상 절반 전환점 말해줘
+물음높이는 209999
+반감횟수는 물음높이를 반감기높이로 나눈 몫
+시연보상은 블록보상
+반감카운트는 0
+반감진행중은 1
+동안 반감진행중
+만약에 반감카운트가 반감횟수보다 크거나 같으면
+반감진행중은 0
+아니면
+시연보상은 시연보상을 2로 나눈 몫
+반감카운트에 1 더해
+끝
+끝
+높이 209999 의 보상은 시연보상 비트코인입니다 말해줘
+물음높이는 210000
+반감횟수는 물음높이를 반감기높이로 나눈 몫
+시연보상은 블록보상
+반감카운트는 0
+반감진행중은 1
+동안 반감진행중
+만약에 반감카운트가 반감횟수보다 크거나 같으면
+반감진행중은 0
+아니면
+시연보상은 시연보상을 2로 나눈 몫
+반감카운트에 1 더해
+끝
+끝
+높이 210000 부터 보상은 시연보상 비트코인입니다 말해줘
+
+재생 검증 시작 처음부터 다시 계산합니다 말해줘
+재생창세거래해시는 사토시주소와 창세거래약속값과 창세거래문맥으로 영지식 비대화 도전 만들기
+재생창세중간은 사토시주소와 창세논스약속과 창세앞문맥으로 영지식 비대화 도전 만들기
+재생창세뒷문맥은 코인이름 헤더 이중 해시 중간 재생창세중간
+재생창세헤더는 사토시주소와 창세논스약속과 재생창세뒷문맥으로 영지식 비대화 도전 만들기
+재생거래해시는 사토시주소와 거래약속값과 거래내용으로 영지식 비대화 도전 만들기
+재생결합문맥은 코인이름 머클 왼쪽 마지막코인베이스해시 오른쪽 재생거래해시
+재생머클은 사토시주소와 머클결합약속값과 재생결합문맥으로 영지식 비대화 도전 만들기
+재생중간은 사토시주소와 논스약속과 헤더앞문맥으로 영지식 비대화 도전 만들기
+재생뒷문맥은 코인이름 헤더 이중 해시 중간 재생중간
+재생헤더는 사토시주소와 논스약속과 재생뒷문맥으로 영지식 비대화 도전 만들기
+재생서명검증은 사토시공개와 거래서명과 거래내용으로 영지식 비대화 검증
+재생사토시가용은 0
+재생사토시잔돈은 0
+재생사토시잠금은 0
+재생할피는 0
+재생카운트는 1
+재생진행중은 1
+동안 재생진행중
+재생사토시잠금에 블록보상 더해
+만약에 재생카운트가 숙성시작높이보다 크거나 같으면
+재생사토시가용에 블록보상 더해
+재생사토시잠금에서 블록보상 빼
+끝
+만약에 재생카운트가 송금높이와 같으면
+재생사토시가용에서 거래입력 빼
+재생사토시잔돈에 잔돈출력 더해
+재생할피에 출력할피 더해
+재생진행중은 0
+끝
+재생카운트에 1 더해
+끝
+재생보유합은 재생사토시가용
+재생보유합에 재생사토시잔돈 더해
+재생보유합에 재생사토시잠금 더해
+재생보유합에 재생할피 더해
+보유합은 사토시가용
+보유합에 사토시잔돈 더해
+보유합에 사토시잠금 더해
+보유합에 할피보유 더해
+재생점수는 0
+만약에 재생창세거래해시가 창세거래해시와 같으면
+재생점수에 1 더해
+끝
+만약에 재생창세헤더가 창세헤더해시와 같으면
+재생점수에 1 더해
+끝
+만약에 재생거래해시가 거래해시와 같으면
+재생점수에 1 더해
+끝
+만약에 재생머클이 머클루트마지막과 같으면
+재생점수에 1 더해
+끝
+만약에 재생헤더가 헤더해시마지막과 같으면
+재생점수에 1 더해
+끝
+만약에 재생서명검증이 참이면
+재생점수에 1 더해
+끝
+만약에 재생사토시가용이 사토시가용과 같으면
+재생점수에 1 더해
+끝
+만약에 재생할피가 할피보유와 같으면
+재생점수에 1 더해
+끝
+만약에 재생보유합이 보유합과 같으면
+재생점수에 1 더해
+끝
+만약에 재생점수가 9와 같으면
+전체 사슬 재생 검증 성공 아홉 항목 일치 말해줘
+아니면
+재생 검증 실패 일치한 항목 수는 재생점수 개입니다 말해줘
+전체성공은 0
+끝
+보유 합계는 창세 보상을 제외한 모든 출력입니다 말해줘
+보유합검증은 보유합
+보유합검증에 블록보상 더해
+만약에 보유합검증이 발행량과 같으면
+공급 보존 검증 성공 말해줘
+아니면
+공급 보존 검증 실패 말해줘
+전체성공은 0
+끝
+
+변조 시험 거래 금액을 몰래 바꿉니다 말해줘
+변조금액은 11
+변조내용은 사토시주소 에서 할피주소 에게 변조금액 전송 잔돈 사토시주소 에게 잔돈출력 입력 하나 수수료 계산수수료 번호 거래번호
+변조검증은 사토시공개와 거래서명과 변조내용으로 영지식 비대화 검증
+만약에 변조검증이 거짓이면
+일층 거부 서명이 변조를 잡았습니다 말해줘
+끝
+만약에 변조검증이 참이면
+서명이 변조를 못 잡았습니다 말해줘
+전체성공은 0
+끝
+변조거래해시는 사토시주소와 거래약속값과 변조내용으로 영지식 비대화 도전 만들기
+변조결합문맥은 코인이름 머클 왼쪽 마지막코인베이스해시 오른쪽 변조거래해시
+변조머클은 사토시주소와 머클결합약속값과 변조결합문맥으로 영지식 비대화 도전 만들기
+만약에 변조머클이 머클루트마지막과 같지않으면
+이층 거부 머클 뿌리가 변조를 잡았습니다 말해줘
+끝
+만약에 변조머클이 머클루트마지막과 같으면
+머클이 변조를 못 잡았습니다 말해줘
+전체성공은 0
+끝
+변조앞문맥은 코인이름 헤더 버전 하나 이전 이전헤더 머클 변조머클 높이 송금높이
+변조중간은 사토시주소와 논스약속과 변조앞문맥으로 영지식 비대화 도전 만들기
+변조뒷문맥은 코인이름 헤더 이중 해시 중간 변조중간
+변조헤더는 사토시주소와 논스약속과 변조뒷문맥으로 영지식 비대화 도전 만들기
+만약에 변조헤더가 헤더해시마지막과 같지않으면
+삼층 거부 헤더 해시가 변조를 잡았습니다 말해줘
+끝
+만약에 변조헤더가 헤더해시마지막과 같으면
+헤더가 변조를 못 잡았습니다 말해줘
+전체성공은 0
+끝
+
+만약에 발행량이 최대공급량보다 작으면
+발행량이 상한 21000000 아래입니다 말해줘
+끝
+만약에 전체성공이 참이면
+니드모어비트코인 끝났습니다 모든 시스템 통과 말해줘
+아니면
+실패 단계가 있습니다 결과를 확인하세요 말해줘
+끝`,
+    },
+    {
+      id: 'rsa',
+      label: 'RSA 공개키 암호',
+      group: 'big',
+      answers: [],
+      expect: '니드모어암호 끝났습니다 모든 단계를 통과했습니다',
+      source: `니드모어암호 시작합니다 순수 한국어 문장형으로 만든 공개키 암호 시스템입니다 말해줘
+
+소수하나는 61
+소수둘은 53
+전체성공은 1
+
+검사수는 2
+소수하나검사중은 1
+소수하나합격은 1
+동안 소수하나검사중
+만약에 소수하나를 검사수로 나눈 나머지가 0과 같으면
+소수하나합격은 0
+소수하나검사중은 0
+끝
+만약에 소수하나검사중이 참이면
+다음검사수는 검사수
+다음검사수에 1 더해
+만약에 다음검사수가 소수하나와 같으면
+소수하나검사중은 0
+아니면
+검사수는 다음검사수
+끝
+끝
+끝
+만약에 소수하나합격이 참이면
+첫 소수 검증 통과 말해줘
+아니면
+첫 수가 소수가 아닙니다 말해줘
+전체성공은 0
+끝
+
+검사수는 2
+소수둘검사중은 1
+소수둘합격은 1
+동안 소수둘검사중
+만약에 소수둘을 검사수로 나눈 나머지가 0과 같으면
+소수둘합격은 0
+소수둘검사중은 0
+끝
+만약에 소수둘검사중이 참이면
+다음검사수는 검사수
+다음검사수에 1 더해
+만약에 다음검사수가 소수둘과 같으면
+소수둘검사중은 0
+아니면
+검사수는 다음검사수
+끝
+끝
+끝
+만약에 소수둘합격이 참이면
+둘째 소수 검증 통과 말해줘
+아니면
+둘째 수가 소수가 아닙니다 말해줘
+전체성공은 0
+끝
+
+모듈러값은 소수하나
+모듈러값에 소수둘 곱해
+오일러값은 소수하나
+오일러값에서 1 빼
+보조값은 소수둘
+보조값에서 1 빼
+오일러값에 보조값 곱해
+모듈러값은 두 소수의 곱입니다 말해줘
+오일러값은 오일러 피 함수 값입니다 말해줘
+
+공개지수는 2
+공개지수찾는중은 1
+동안 공개지수찾는중
+유클리드첫수는 오일러값
+유클리드둘수는 공개지수
+동안 유클리드둘수
+유클리드나머지는 유클리드첫수를 유클리드둘수로 나눈 나머지
+유클리드첫수는 유클리드둘수
+유클리드둘수는 유클리드나머지
+끝
+만약에 유클리드첫수가 1과 같으면
+공개지수찾는중은 0
+아니면
+공개지수에 1 더해
+끝
+끝
+공개지수는 서로소인 공개 지수 입니다 말해줘
+
+이전나머지는 오일러값
+현재나머지는 공개지수
+이전계수는 0
+현재계수는 1
+역원찾는중은 1
+동안 역원찾는중
+만약에 현재나머지가 0과 같으면
+역원찾는중은 0
+아니면
+몫값은 이전나머지를 현재나머지로 나눈 몫
+곱값은 현재나머지
+곱값에 몫값 곱해
+다음나머지는 이전나머지
+다음나머지에서 곱값 빼
+곱값은 현재계수
+곱값에 몫값 곱해
+다음계수는 이전계수
+다음계수에서 곱값 빼
+이전나머지는 현재나머지
+현재나머지는 다음나머지
+이전계수는 현재계수
+현재계수는 다음계수
+끝
+끝
+개인지수는 이전계수를 오일러값으로 나눈 나머지
+역원 계산 완료 개인 키를 만들었습니다 말해줘
+공개키는 공개지수 와 모듈러값 입니다 말해줘
+개인키는 개인지수 와 모듈러값 입니다 말해줘
+
+키검증값은 개인지수
+키검증값에 공개지수 곱해
+키검증나머지는 키검증값을 오일러값으로 나눈 나머지
+만약에 키검증나머지가 1과 같으면
+키 쌍 검증 성공 말해줘
+아니면
+키 쌍 검증 실패 말해줘
+전체성공은 0
+끝
+
+원문하나는 42
+원문둘은 777
+원문셋은 2026
+
+암호화 시작 평문 세 블록을 잠급니다 말해줘
+
+암호문하나는 1
+거듭밑은 원문하나
+거듭지수는 공개지수
+동안 거듭지수
+만약에 거듭지수를 2로 나눈 나머지가 1과 같으면
+암호문하나에 거듭밑 곱해
+암호문하나는 암호문하나를 모듈러값으로 나눈 나머지
+끝
+거듭밑에 거듭밑 곱해
+거듭밑은 거듭밑을 모듈러값으로 나눈 나머지
+거듭지수는 거듭지수를 2로 나눈 몫
+끝
+첫 암호문은 암호문하나 입니다 말해줘
+
+암호문둘은 1
+거듭밑은 원문둘
+거듭지수는 공개지수
+동안 거듭지수
+만약에 거듭지수를 2로 나눈 나머지가 1과 같으면
+암호문둘에 거듭밑 곱해
+암호문둘은 암호문둘을 모듈러값으로 나눈 나머지
+끝
+거듭밑에 거듭밑 곱해
+거듭밑은 거듭밑을 모듈러값으로 나눈 나머지
+거듭지수는 거듭지수를 2로 나눈 몫
+끝
+둘째 암호문은 암호문둘 입니다 말해줘
+
+암호문셋은 1
+거듭밑은 원문셋
+거듭지수는 공개지수
+동안 거듭지수
+만약에 거듭지수를 2로 나눈 나머지가 1과 같으면
+암호문셋에 거듭밑 곱해
+암호문셋은 암호문셋을 모듈러값으로 나눈 나머지
+끝
+거듭밑에 거듭밑 곱해
+거듭밑은 거듭밑을 모듈러값으로 나눈 나머지
+거듭지수는 거듭지수를 2로 나눈 몫
+끝
+셋째 암호문은 암호문셋 입니다 말해줘
+
+복호화 시작 개인 키로 잠금을 엽니다 말해줘
+
+복호문하나는 1
+거듭밑은 암호문하나
+거듭지수는 개인지수
+동안 거듭지수
+만약에 거듭지수를 2로 나눈 나머지가 1과 같으면
+복호문하나에 거듭밑 곱해
+복호문하나는 복호문하나를 모듈러값으로 나눈 나머지
+끝
+거듭밑에 거듭밑 곱해
+거듭밑은 거듭밑을 모듈러값으로 나눈 나머지
+거듭지수는 거듭지수를 2로 나눈 몫
+끝
+
+복호문둘은 1
+거듭밑은 암호문둘
+거듭지수는 개인지수
+동안 거듭지수
+만약에 거듭지수를 2로 나눈 나머지가 1과 같으면
+복호문둘에 거듭밑 곱해
+복호문둘은 복호문둘을 모듈러값으로 나눈 나머지
+끝
+거듭밑에 거듭밑 곱해
+거듭밑은 거듭밑을 모듈러값으로 나눈 나머지
+거듭지수는 거듭지수를 2로 나눈 몫
+끝
+
+복호문셋은 1
+거듭밑은 암호문셋
+거듭지수는 개인지수
+동안 거듭지수
+만약에 거듭지수를 2로 나눈 나머지가 1과 같으면
+복호문셋에 거듭밑 곱해
+복호문셋은 복호문셋을 모듈러값으로 나눈 나머지
+끝
+거듭밑에 거듭밑 곱해
+거듭밑은 거듭밑을 모듈러값으로 나눈 나머지
+거듭지수는 거듭지수를 2로 나눈 몫
+끝
+
+복호결과는 0
+만약에 복호문하나가 원문하나와 같으면
+만약에 복호문둘이 원문둘과 같으면
+만약에 복호문셋이 원문셋과 같으면
+복호결과는 1
+끝
+끝
+끝
+만약에 복호결과가 참이면
+세 블록 모두 복호화 성공 원문과 일치합니다 말해줘
+아니면
+복호화 실패 원문과 다릅니다 말해줘
+전체성공은 0
+끝
+
+서명 시작 메시지 지문을 개인 키로 서명합니다 말해줘
+서명대상은 777
+
+서명값은 1
+거듭밑은 서명대상
+거듭지수는 개인지수
+동안 거듭지수
+만약에 거듭지수를 2로 나눈 나머지가 1과 같으면
+서명값에 거듭밑 곱해
+서명값은 서명값을 모듈러값으로 나눈 나머지
+끝
+거듭밑에 거듭밑 곱해
+거듭밑은 거듭밑을 모듈러값으로 나눈 나머지
+거듭지수는 거듭지수를 2로 나눈 몫
+끝
+서명값은 서명값 입니다 말해줘
+
+검증값은 1
+거듭밑은 서명값
+거듭지수는 공개지수
+동안 거듭지수
+만약에 거듭지수를 2로 나눈 나머지가 1과 같으면
+검증값에 거듭밑 곱해
+검증값은 검증값을 모듈러값으로 나눈 나머지
+끝
+거듭밑에 거듭밑 곱해
+거듭밑은 거듭밑을 모듈러값으로 나눈 나머지
+거듭지수는 거듭지수를 2로 나눈 몫
+끝
+만약에 검증값이 서명대상과 같으면
+서명 검증 성공 진짜 발신자입니다 말해줘
+아니면
+서명 검증 실패 말해줘
+전체성공은 0
+끝
+
+변조 시작 메시지를 몰래 바꿉니다 말해줘
+변조대상은 778
+
+위조검증은 1
+거듭밑은 서명값
+거듭지수는 공개지수
+동안 거듭지수
+만약에 거듭지수를 2로 나눈 나머지가 1과 같으면
+위조검증에 거듭밑 곱해
+위조검증은 위조검증을 모듈러값으로 나눈 나머지
+끝
+거듭밑에 거듭밑 곱해
+거듭밑은 거듭밑을 모듈러값으로 나눈 나머지
+거듭지수는 거듭지수를 2로 나눈 몫
+끝
+만약에 위조검증이 변조대상과 같지않으면
+변조 감지 서명이 변조된 메시지를 거부했습니다 말해줘
+끝
+만약에 위조검증이 변조대상과 같으면
+변조를 못 잡았습니다 말해줘
+전체성공은 0
+끝
+
+잠깐 잘못된 개인 키로도 검증이 깨지는지 확인합니다 말해줘
+
+거짓복호는 1
+거듭밑은 암호문하나
+거듭지수는 개인지수
+거듭지수에 1 더해
+동안 거듭지수
+만약에 거듭지수를 2로 나눈 나머지가 1과 같으면
+거짓복호에 거듭밑 곱해
+거짓복호는 거짓복호를 모듈러값으로 나눈 나머지
+끝
+거듭밑에 거듭밑 곱해
+거듭밑은 거듭밑을 모듈러값으로 나눈 나머지
+거듭지수는 거듭지수를 2로 나눈 몫
+끝
+만약에 거짓복호가 원문하나와 같지않으면
+잘못된 키로는 평문이 깨집니다 복호 결과는 거짓복호 였습니다 말해줘
+끝
+만약에 거짓복호가 원문하나와 같으면
+예상과 다릅니다 말해줘
+전체성공은 0
+끝
+
+만약에 전체성공이 참이면
+니드모어암호 끝났습니다 모든 단계를 통과했습니다 말해줘
+아니면
+일부 단계가 실패했습니다 결과를 확인하세요 말해줘
+끝`,
     },
     {
       id: 'gradebook',

@@ -1430,6 +1430,10 @@ pre code {
   transition: color 0.2s var(--ease), background 0.2s var(--ease);
 }
 .copy-btn:hover { color: var(--ink); background: var(--surface-hover); }
+/* 지금은 할 일이 없는 단추. 페이지에서 빼지 않고 흐리게만 둔다 — 자판으로
+ * 옮겨 다니는 사람에게도 「여기 되돌리기가 있다」가 보여야 한다. */
+.copy-btn[aria-disabled="true"] { opacity: 0.42; cursor: not-allowed; }
+.copy-btn[aria-disabled="true"]:hover { color: var(--ink-faint); background: var(--surface-2); }
 
 .links { list-style: none; margin: 2rem 0 0; padding: 0; display: grid; gap: 0.15rem; }
 .links li { border-top: 1px solid var(--line); }
@@ -2133,8 +2137,8 @@ table.syntax tr:last-child td { border-bottom: 0; }
    * half a fingertip, and one of the three is the link-copying button. They
    * take a row of their own instead and share it evenly. */
   .pane-head { padding: 0.6rem 0.85rem; flex-wrap: wrap; }
-  .pane-head .pane-tools { width: 100%; margin-left: 0; }
-  .pane-tools .copy-btn { flex: 1; justify-content: center; font-size: var(--t-xs); }
+  .pane-head .pane-tools { width: 100%; margin-left: 0; flex-wrap: wrap; }
+  .pane-tools .copy-btn { flex: 0 1 auto; justify-content: center; font-size: var(--t-xs); }
   /* Written as two classes so that raising every menu entry to a finger
    * height on touch screens cannot switch this one back on. */
   .head-nav a.nav-hide-sm { display: none; }
@@ -2852,7 +2856,7 @@ section[id], [id] { scroll-margin-top: calc(var(--head-h, 6rem) + 1rem); }
   }
   .brand { min-height: var(--tap); display: inline-flex; align-items: center; }
   .pane-head .pane-tools { flex-wrap: wrap; }
-  .pane-tools .copy-btn { flex: 1 1 6rem; }
+  .pane-tools .copy-btn { flex: 0 1 auto; }
   :root[data-focus="true"] .btn,
   :root[data-focus="true"] .seg button,
   :root[data-focus="true"] .tidy-bar .btn {

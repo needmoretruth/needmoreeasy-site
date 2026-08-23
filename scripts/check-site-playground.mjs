@@ -9,6 +9,13 @@ const page = await context.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+// 되돌리기 기록이 글과 어긋나면 페이지가 기록을 비우면서 이 말을 남긴다.
+// 그 길은 닿을 수 없어야 하므로, 한 번이라도 나오면 실패다.
+page.on('console', (m) => {
+  if (m.type() === 'warning' && m.text().includes('되돌리기 기록이 글과 어긋나')) {
+    errors.push('되돌리기 기록이 글과 어긋나 비워짐 — ' + m.text());
+  }
+});
 
 await page.goto(BASE + '/ko/index.html', { waitUntil: 'domcontentloaded' });
 await page.waitForFunction(() => document.querySelector('#engine-dot')?.dataset.state === 'ready', null, { timeout: 60000 });
@@ -652,6 +659,332 @@ if (skipped.id !== 'editor') {
 } else {
   console.log('파이썬 칸이 열려 있어도 건너뛰기가 쓰는 칸으로 데려감');
 }
+
+// ───────────────────────────── 되돌리기·다시 하기
+//
+// 이 페이지는 예제·세이브·이름 바꾸기·정리 어느 것을 눌러도 편집 칸의 value에
+// 통째로 대입한다. 그러면 브라우저가 갖고 있던 되돌리기 기록이 그 순간 비워진다.
+// 그래서 되돌리기는 페이지가 직접 들고 있어야 하고, 아래 다섯 갈래가 그것이
+// 실제로 되는지를 본다.
+
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '하나 말해줘\n';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(200);
+
+// 1) 낱말 단위로 끊어서 되돌린다 — 한 글자씩도, 통째로도 아니다.
+await page.locator('#editor').click();
+await page.keyboard.press('Control+End');
+await page.keyboard.type('둘 셋');
+await page.waitForTimeout(300);
+const afterTyping = await page.inputValue('#editor');
+await page.keyboard.press('Control+z');
+await page.waitForTimeout(150);
+const onceBack = await page.inputValue('#editor');
+await page.keyboard.press('Control+z');
+await page.waitForTimeout(150);
+const twiceBack = await page.inputValue('#editor');
+await page.keyboard.press('Control+Shift+z');
+await page.waitForTimeout(150);
+const forward = await page.inputValue('#editor');
+if (!afterTyping.endsWith('둘 셋')) errors.push('친 글자가 들어가지 않음: ' + JSON.stringify(afterTyping.slice(-8)));
+if (onceBack === afterTyping) errors.push('되돌리기가 아무것도 하지 않음');
+// 「둘 셋」을 쳤으면 한 번에 「셋」만 지워져야 한다. 글자 하나씩이면 「둘 셋」이
+// 「둘 」이 되기까지 두 번 눌러야 하고, 통째로면 첫 번째에 「둘」까지 사라진다.
+if (onceBack.endsWith('둘 셋') || !onceBack.endsWith('둘 ')) {
+  errors.push(`한 번 되돌렸더니 「${afterTyping.slice(-8)}」→「${onceBack.slice(-8)}」 — 낱말 단위가 아니다`);
+}
+if (twiceBack.includes('둘')) errors.push('두 번 되돌렸는데도 친 것이 남아 있음');
+if (forward !== onceBack) errors.push('다시 하기가 되돌리기를 되짚지 못함');
+console.log(onceBack !== afterTyping && twiceBack !== onceBack && forward === onceBack
+  ? '되돌리기가 낱말 단위로 끊기고, 다시 하기가 되짚음'
+  : 'FAIL 되돌리기·다시 하기');
+
+// 2) 한글 한 글자는 한 걸음이다.
+//
+// 조합 중에는 input이 두세 번 오므로, 그것을 그대로 기록하면 한 글자를 지우는 데
+// 되돌리기를 세 번 눌러야 한다. 반쪽짜리 글자(ㄲ·끄)가 되살아나면 더 나쁘다.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '하나 말해줘\n';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(250);
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.focus();
+  editor.setSelectionRange(editor.value.length, editor.value.length);
+  editor.dispatchEvent(new CompositionEvent('compositionstart'));
+  for (const half of ['ㄲ', '끄']) {
+    editor.value = editor.value.replace(/[ㄲ끄]?$/, half);
+    editor.dispatchEvent(new Event('input'));
+  }
+  editor.value = editor.value.replace(/끄$/, '끝');
+  editor.dispatchEvent(new CompositionEvent('compositionend'));
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(400);
+const withLetter = await page.inputValue('#editor');
+await page.keyboard.press('Control+z');
+await page.waitForTimeout(200);
+const letterGone = await page.inputValue('#editor');
+if (!withLetter.endsWith('끝')) errors.push('한글 조합 흉내가 글자를 넣지 못함');
+if (/[ㄲ끄끝]/.test(letterGone)) {
+  errors.push(`한글 한 글자를 한 번에 못 지움 — 남은 것 「${letterGone.slice(-4)}」`);
+}
+console.log(!/[ㄲ끄끝]/.test(letterGone)
+  ? '한글 한 글자가 되돌리기 한 번에 통째로 지워짐'
+  : 'FAIL 한글 한 글자 되돌리기');
+
+// 3) 이름 바꾸기는 몇 곳을 고쳤든 한 걸음이다.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '__셋째이름은 3\n__셋째이름 말해줘\n__셋째이름에 1 더해\n';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForFunction(() => document.querySelector('#python').dataset.state === 'ok'
+  && document.querySelector('#python').textContent.includes('__셋째이름'), null, { timeout: 20000 });
+await page.evaluate(() => document.querySelector('[data-rename-open]').click());
+await page.fill('#rename-from', '__셋째이름');
+await page.fill('#rename-to', '__넷째이름');
+await page.click('#rename-go');
+await page.waitForFunction(() => document.querySelector('#editor').value.includes('__넷째이름'), null, { timeout: 30000 });
+const renamedText = await page.inputValue('#editor');
+await page.evaluate(() => document.querySelector('#editor-undo').click());
+await page.waitForTimeout(300);
+const renameBack = await page.inputValue('#editor');
+const spots = (renamedText.match(/__넷째이름/g) ?? []).length;
+if (spots < 3) errors.push(`이름 바꾸기가 ${spots}곳만 고침 — 셋이어야 함`);
+if ((renameBack.match(/__넷째이름/g) ?? []).length !== 0) {
+  errors.push('되돌리기 한 번으로 이름 바꾸기가 통째로 돌아오지 않음');
+}
+if ((renameBack.match(/__셋째이름/g) ?? []).length !== 3) {
+  errors.push('되돌린 뒤에 옛 이름이 세 곳 다 있지 않음');
+}
+console.log(spots >= 3 && (renameBack.match(/__셋째이름/g) ?? []).length === 3
+  ? `이름 바꾸기 ${spots}곳이 되돌리기 한 번에 함께 돌아옴`
+  : 'FAIL 이름 바꾸기 되돌리기');
+
+// 4) 남의 프로그램으로는 되돌아가지 않는다.
+//
+// 예제를 누르면 화면에 있던 것은 그 사람의 글이 아니게 된다. 거기서 되돌리기를
+// 누르면 앞사람의 프로그램이 튀어나와야 할 이유가 없고, 그것은 놀라움이다.
+await page.evaluate(() => {
+  const group = [...document.querySelectorAll('#example-groups .chip')].find((c) => c.textContent.includes('처음'));
+  if (group) group.click();
+});
+await page.waitForTimeout(300);
+await page.evaluate(() => {
+  const chip = [...document.querySelectorAll('#examples .chip')][1];
+  if (chip) chip.click();
+});
+await page.waitForTimeout(900);
+const freshOpen = await page.evaluate(() => ({
+  text: document.querySelector('#editor').value,
+  undo: document.querySelector('#editor-undo').getAttribute('aria-disabled') === 'true',
+}));
+if (!freshOpen.undo) errors.push('예제를 열었는데 되돌리기가 살아 있음 — 남의 프로그램으로 되돌아간다');
+// 그리고 브라우저 자신의 되돌리기가 새어 나오지 않아야 한다.
+//
+// value에 통째로 대입해도 크로미움·웹킷은 자기 되돌리기 기록을 비우지 않는다.
+// 비워진 것처럼 보일 뿐이어서, 여러 번 누른 뒤 다시하기를 누르면 예제가 열리기
+// 전의 글이 지금 프로그램 위에 겹쳐 들어온다.
+//
+// 아래는 자판으로 두드린다. 페이지는 그것을 keydown과 beforeinput 두 곳에서
+// 막는데, 실제로 둘 다 듣는지는 따로 확인했다 — keydown 쪽을 꺼 두고 이 검사를
+// 돌렸더니 그대로 통과했다. 오른쪽 클릭 메뉴의 「실행 취소」와 맥 편집 메뉴는
+// beforeinput 쪽으로 오고, 그 둘은 스크립트로 누를 수 없다.
+await page.locator('#editor').click();
+for (let i = 0; i < 5; i += 1) await page.keyboard.press('Control+z');
+for (let i = 0; i < 5; i += 1) await page.keyboard.press('Control+Shift+z');
+await page.waitForTimeout(400);
+const afterHammer = await page.inputValue('#editor');
+if (afterHammer !== freshOpen.text) {
+  errors.push('예제를 연 뒤 되돌리기를 연타했더니 글이 바뀜 — 브라우저 자신의 기록이 새어 나온다');
+}
+console.log(afterHammer === freshOpen.text
+  ? '되돌리기를 연타해도 브라우저 자신의 옛 기록이 새어 나오지 않음'
+  : 'FAIL 브라우저 되돌리기가 새어 나옴');
+console.log(freshOpen.undo
+  ? '예제를 열면 되돌리기 기록이 그 프로그램의 것으로 새로 시작함'
+  : 'FAIL 예제를 열어도 되돌리기가 남아 있음');
+
+// 5) 파일마다 자기 기록을 가진다.
+//
+// 파일 셋은 서로 다른 프로그램이다. 파일 2에서 친 것을 되돌리려고 눌렀는데
+// 파일 1에서 친 것이 되돌아가면 그것은 글을 잃는 것이다.
+await page.evaluate(() => document.querySelector('[data-file="1"]').click());
+await page.waitForTimeout(400);
+await page.locator('#editor').click();
+await page.keyboard.press('Control+End');
+await page.keyboard.type('첫째파일글');
+await page.waitForTimeout(400);
+await page.evaluate(() => document.querySelector('[data-file="2"]').click());
+await page.waitForTimeout(400);
+await page.locator('#editor').click();
+await page.keyboard.press('Control+End');
+await page.keyboard.type('둘째파일글');
+await page.waitForTimeout(400);
+await page.evaluate(() => document.querySelector('[data-file="1"]').click());
+await page.waitForTimeout(400);
+await page.keyboard.press('Control+z');
+await page.waitForTimeout(300);
+const perFile = await page.evaluate(() => ({
+  now: document.querySelector('#editor').value,
+  tab: document.querySelector('[data-file="1"]').getAttribute('aria-selected'),
+}));
+if (perFile.tab !== 'true') errors.push('파일 1로 돌아오지 못함');
+if (perFile.now.includes('첫째파일글')) errors.push('파일 1에서 되돌렸는데 그 파일의 글이 지워지지 않음');
+if (perFile.now.includes('둘째파일글')) errors.push('파일 1에 파일 2의 글이 들어 있음');
+console.log(!perFile.now.includes('첫째파일글') && !perFile.now.includes('둘째파일글')
+  ? '파일마다 되돌리기 기록이 따로 있음'
+  : 'FAIL 파일별 되돌리기 기록');
+
+
+// 6) 되돌리기는 방금 고친 자리로 간다.
+//
+// 커서 자리를 따로 들고 있으면 그것이 낡는다 — 상자 안에서 다른 곳을 눌러도
+// input도 blur도 오지 않기 때문이다. 200번째 줄을 고치고 세 번째 줄로 옮겨
+// 고친 뒤 되돌리면, 커서가 200번째 줄로 날아가고 화면도 거기로 굴러갔다.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = Array.from({ length: 220 }, (_, i) => `줄${i} 말해줘`).join('\n');
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(400);
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  const far = editor.value.indexOf('줄200');
+  editor.focus();
+  editor.setSelectionRange(far + 4, far + 4);
+});
+await page.keyboard.type('멀리');
+await page.waitForTimeout(300);
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  const near = editor.value.indexOf('줄3 ');
+  editor.setSelectionRange(near + 2, near + 2);
+  editor.scrollTop = 0;
+});
+await page.keyboard.type('가까이');
+await page.waitForTimeout(300);
+await page.keyboard.press('Control+z');
+await page.waitForTimeout(400);
+const landed = await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  return {
+    line: editor.value.slice(0, editor.selectionStart).split('\n').length,
+    top: Math.round(editor.scrollTop),
+    text: editor.value,
+  };
+});
+if (landed.text.includes('가까이')) errors.push('되돌렸는데 방금 친 글이 남아 있음');
+if (!landed.text.includes('멀리')) errors.push('되돌리기가 앞의 걸음까지 지워 버림');
+if (landed.line > 6) errors.push(`되돌린 뒤 커서가 ${landed.line}번째 줄 — 고친 자리는 4번째 줄이다`);
+if (landed.top > 80) errors.push(`되돌린 뒤 화면이 ${landed.top}px 굴러가 있음 — 고친 자리는 맨 위다`);
+console.log(landed.line <= 6 && landed.top <= 80 && !landed.text.includes('가까이')
+  ? `되돌리기가 방금 고친 자리(${landed.line}번째 줄)로 감`
+  : 'FAIL 되돌린 자리');
+
+// 7) 파일에 넣어도 원래 있던 파일의 기록이 남아 있다.
+//
+// 넣기는 같은 글을 두 파일에 두는 일이다. 기록을 옮겨 버리면, 두고 온 파일로
+// 돌아왔을 때 방금까지 치던 것을 되돌릴 수 없다.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '먼저 쓴 글 말해줘\n';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(300);
+await page.evaluate(() => document.querySelector('[data-file="1"]').click());
+await page.waitForTimeout(300);
+await page.locator('#editor').click();
+await page.keyboard.press('Control+End');
+await page.keyboard.type('__옮길글');
+await page.waitForTimeout(400);
+await page.evaluate(() => {
+  // 파일 2에는 이미 글이 있으므로 한 번은 「덮어쓸까요」로 묻고 두 번째가 확인이다.
+  const put = document.querySelector('[data-copy-to="2"]');
+  put.click(); put.click();
+});
+await page.waitForTimeout(600);
+const moved = await page.evaluate(() => ({
+  where: document.querySelector('[data-file="2"]').getAttribute('aria-selected'),
+  undo: document.querySelector('#editor-undo').getAttribute('aria-disabled') === 'true',
+}));
+if (moved.where !== 'true') errors.push('파일 2에 넣었는데 파일 2로 가지 않음');
+if (moved.undo) errors.push('파일에 넣었더니 되돌리기가 죽음 — 같은 글인데 걸음을 잃었다');
+await page.evaluate(() => document.querySelector('[data-file="1"]').click());
+await page.waitForTimeout(400);
+const leftBehind = await page.evaluate(() => document.querySelector('#editor-undo').getAttribute('aria-disabled') === 'true');
+if (leftBehind) errors.push('두고 온 파일의 되돌리기 기록이 사라짐');
+console.log(!moved.undo && !leftBehind
+  ? '파일에 넣어도 양쪽 다 되돌리기 기록을 가짐'
+  : 'FAIL 파일에 넣기와 되돌리기 기록');
+
+// 8) 정리한 뒤 다른 프로그램을 열면 「정리 전으로」는 사라진다.
+//
+// 그 단추는 어느 한 프로그램의 정리 전 모습을 가리킨다. 다른 프로그램이 올라온
+// 뒤에도 남아 있으면, 누르는 순간 남의 글이 지금 글을 덮는다.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = '셋은   3\n셋 말해줘\n';
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForFunction(() => document.querySelector('#python').dataset.state === 'ok', null, { timeout: 20000 });
+await page.click('#tidy');
+await page.waitForFunction(() => document.querySelector('#tidy-undo').hidden === false, null, { timeout: 20000 })
+  .catch(() => errors.push('정리했는데 「정리 전으로」가 나타나지 않음'));
+await page.evaluate(() => {
+  const group = [...document.querySelectorAll('#example-groups .chip')].find((c) => c.textContent.includes('처음'));
+  if (group) group.click();
+});
+await page.waitForTimeout(300);
+await page.evaluate(() => { document.querySelectorAll('#examples .chip')[2]?.click(); });
+await page.waitForTimeout(900);
+const afterOther = await page.evaluate(() => document.querySelector('#tidy-undo').hidden);
+if (!afterOther) errors.push('다른 예제를 열었는데 「정리 전으로」가 아직 떠 있음');
+console.log(afterOther
+  ? '다른 프로그램을 열면 「정리 전으로」가 함께 사라짐'
+  : 'FAIL 정리 전으로가 남아 있음');
+
+// 9) 한 번 되돌리는 데 줄을 통째로 다시 그리지 않는다.
+//
+// 되돌리기 한 번은 한 군데를 도로 붙이는 일이다. 색칠한 줄을 전부 새로 만들면
+// 긴 프로그램에서 한 번 누를 때마다 십분의 일 초가 든다. 세는 검사라서 기계가
+// 바빠도 흔들리지 않는다.
+await page.evaluate(() => {
+  const editor = document.querySelector('#editor');
+  editor.value = Array.from({ length: 600 }, (_, i) => `줄${i} 말해줘`).join('\n');
+  editor.dispatchEvent(new Event('input'));
+});
+await page.waitForTimeout(600);
+await page.locator('#editor').click();
+await page.keyboard.press('Control+End');
+await page.keyboard.type('바꾼글');
+await page.waitForTimeout(400);
+await page.evaluate(() => {
+  window.__inkGone = 0;
+  const layer = document.querySelector('#editor-ink');
+  window.__inkWatch = new MutationObserver((list) => {
+    for (const m of list) window.__inkGone += m.removedNodes.length;
+  });
+  window.__inkWatch.observe(layer, { childList: true });
+});
+await page.keyboard.press('Control+z');
+await page.waitForTimeout(400);
+const inkGone = await page.evaluate(() => {
+  window.__inkWatch.disconnect();
+  return { gone: window.__inkGone, rows: document.querySelector('#editor-ink').children.length };
+});
+if (inkGone.gone > 10) {
+  errors.push(`되돌리기 한 번에 색칠한 줄 ${inkGone.gone}개를 새로 그림 — 한 군데만 고치면 된다`);
+}
+console.log(inkGone.gone <= 10
+  ? `되돌리기 한 번이 색칠한 줄 ${inkGone.gone}개만 건드림 (전체 ${inkGone.rows}줄)`
+  : 'FAIL 되돌릴 때마다 전부 다시 그림');
 
 console.log(errors.length ? 'FAIL 콘솔 오류: ' + errors.join(' | ') : '콘솔 오류 없음');
 await browser.close();

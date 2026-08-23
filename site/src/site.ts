@@ -1465,6 +1465,209 @@ class CompilerLink {
   }
 }
 
+/* ---------------------------------------------------------------- undo
+
+   What one press of undo puts back.
+
+   Storing the whole program per step would be the obvious thing and the wrong
+   one: the biggest example on the site is 88 KB, and a hundred keystrokes
+   would be 8.8 MB of text held for the length of a visit — per file, and there
+   are four. So a step holds only the part that actually changed: where it
+   happened, what was taken out, what was put in. Typing a letter costs one
+   character; a rename that touches four hundred lines costs the span it
+   touched, once.
+
+   A step does not carry the caret. It does not need to: the caret belongs
+   where the change is, and the change is `at` plus whatever was just written
+   there. Storing the caret separately was worse than useless — clicking
+   somewhere else inside the box fires no event, so the stored caret went
+   stale and undo scrolled to a line nobody had touched. */
+interface EditStep {
+  readonly at: number;
+  readonly removed: string;
+  readonly inserted: string;
+}
+
+/* Whether the keyboard in front of this page is a Mac one. Used for one thing
+ * only: Ctrl+Y means something else there. */
+const ON_MAC = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+
+/* A button that is on the page and reachable but has nothing to do yet.
+ * Kept in one place because the two states have to agree: what a screen reader
+ * is told, and what the eye sees. */
+function unavailable(button: HTMLButtonElement | null): boolean {
+  return button?.getAttribute('aria-disabled') === 'true';
+}
+
+function setUnavailable(button: HTMLButtonElement | null, off: boolean): void {
+  if (button === null) return;
+  button.setAttribute('aria-disabled', off ? 'true' : 'false');
+}
+
+/* A copy of a cut-out piece that does not hold on to what it was cut from.
+ *
+ * `slice` of thirteen characters or more does not copy in V8: it hands back a
+ * window on to the original, and that original cannot be thrown away while the
+ * window is held. A step keeps its piece for the whole visit, so without this
+ * a hundred small edits to the big example would hold a hundred whole copies
+ * of it. Measured: sixty forty-character pieces of a hundred-thousand-letter
+ * program cost 6.0 MB held this way and 0.11 MB copied out.
+ *
+ * Below thirteen characters V8 copies anyway. Above a few thousand the piece
+ * is most of the program itself, so what it holds on to is no longer the
+ * thing that costs — and those are capped by the history's letter budget. */
+function flat(piece: string): string {
+  if (piece.length < 13 || piece.length > 8192) return piece;
+  return Array.from(piece).join('');
+}
+
+/* The smallest change that turns `before` into `after`.
+ *
+ * Walk in from both ends while the characters agree; what is left in the
+ * middle is the edit. That is exact for everything a person does to a text box
+ * — typing, deleting, pasting over a selection — and for a rename it collapses
+ * to the one span from the first changed line to the last. */
+function difference(before: string, after: string): EditStep | null {
+  if (before === after) return null;
+  const shorter = Math.min(before.length, after.length);
+  let head = 0;
+  while (head < shorter && before[head] === after[head]) head += 1;
+  let tail = 0;
+  while (tail < shorter - head
+    && before[before.length - 1 - tail] === after[after.length - 1 - tail]) tail += 1;
+  return {
+    at: head,
+    removed: flat(before.slice(head, before.length - tail)),
+    inserted: flat(after.slice(head, after.length - tail)),
+  };
+}
+
+/* How long one joined-up run of typing may get.
+ *
+ * A run is broken by a space, so in English a step is a word. Korean is
+ * written without spaces between a good many things — `안녕하세요반갑습니다` is
+ * one run — and one press of undo taking a whole line back is not undo. */
+const RUN_LETTERS = 20;
+
+function joinable(older: EditStep, newer: EditStep): boolean {
+  // Typing carries on where it left off, and nothing was taken out on the way.
+  const typing = older.removed === '' && newer.removed === ''
+    && newer.at === older.at + older.inserted.length
+    && older.inserted.length < RUN_LETTERS
+    && !older.inserted.includes('\n') && !newer.inserted.includes('\n');
+  // Backspace eats backwards into the same run; forward delete eats forwards.
+  const rubbing = older.inserted === '' && newer.inserted === ''
+    && (newer.at + newer.removed.length === older.at || newer.at === older.at)
+    && older.removed.length < RUN_LETTERS
+    && !older.removed.includes('\n') && !newer.removed.includes('\n');
+  return typing || rubbing;
+}
+
+function joined(older: EditStep, newer: EditStep): EditStep {
+  if (older.removed === '' && newer.removed === '') {
+    return { at: older.at, removed: '', inserted: older.inserted + newer.inserted };
+  }
+  const backwards = newer.at < older.at;
+  return {
+    at: backwards ? newer.at : older.at,
+    removed: backwards ? newer.removed + older.removed : older.removed + newer.removed,
+    inserted: '',
+  };
+}
+
+/* One editor's worth of history.
+ *
+ * `at` is how many steps are currently applied, so redo is simply the steps
+ * above it. Typing a new letter after undoing throws those away, which is what
+ * every other editor does and what people expect.
+ *
+ * The caps are a size and a count together. 240 steps is far more than anyone
+ * presses in a visit, and the character budget is what stops one enormous
+ * rename from being held forever — a typed step is a hundred bytes and never
+ * comes near it, while one tidy of the biggest Korean example is 415,000
+ * characters, so the budget is really a limit on how many of those are kept. Oldest goes first: the step you are most
+ * likely to still want is the one you just made. */
+const HISTORY_STEPS = 240;
+const HISTORY_LETTERS = 600_000;
+
+class EditHistory {
+  steps: EditStep[] = [];
+  at = 0;
+  /* False once a run of typing has been closed off — by a space, by a pause,
+   * by anything that is not more typing. The next letter starts a new step. */
+  open = false;
+
+  get canUndo(): boolean { return this.at > 0; }
+
+  get canRedo(): boolean { return this.at < this.steps.length; }
+
+  clear(): void {
+    this.steps = [];
+    this.at = 0;
+    this.open = false;
+  }
+
+  close(): void { this.open = false; }
+
+  add(step: EditStep): void {
+    // Anything undone and then typed over is gone, as everywhere else.
+    if (this.at < this.steps.length) this.steps.length = this.at;
+    const last = this.steps[this.at - 1];
+    if (this.open && last !== undefined && joinable(last, step)) {
+      this.steps[this.at - 1] = joined(last, step);
+    } else {
+      this.steps.push(step);
+      this.at += 1;
+    }
+    // A word is a step. Ending a run on the space means the space belongs to
+    // the word it follows, which is where a person expects the cut to be.
+    this.open = step.removed === ''
+      ? !/\s$/.test(step.inserted)
+      : !/\s/.test(step.removed);
+    this.trim();
+  }
+
+  trim(): void {
+    let letters = 0;
+    for (const step of this.steps) letters += step.removed.length + step.inserted.length;
+    while (this.steps.length > HISTORY_STEPS || (letters > HISTORY_LETTERS && this.steps.length > 1)) {
+      const gone = this.steps.shift();
+      if (gone === undefined) break;
+      letters -= gone.removed.length + gone.inserted.length;
+      if (this.at > 0) this.at -= 1;
+    }
+  }
+
+  /* A history of one's own with the same steps in it.
+   *
+   * The steps themselves never change once made, so sharing them is safe;
+   * what must not be shared is the mark, because two files that both hand out
+   * the same mark walk each other's text. */
+  copy(): EditHistory {
+    const made = new EditHistory();
+    made.steps = this.steps.slice();
+    made.at = this.at;
+    return made;
+  }
+
+  /* The step to walk back over, or to walk forward into. Taking it moves the
+   * mark; the caller is the one that knows how to put the text back. */
+  takeBack(): EditStep | null {
+    if (!this.canUndo) return null;
+    this.at -= 1;
+    this.open = false;
+    return this.steps[this.at] ?? null;
+  }
+
+  takeForward(): EditStep | null {
+    if (!this.canRedo) return null;
+    const step = this.steps[this.at] ?? null;
+    this.at += 1;
+    this.open = false;
+    return step;
+  }
+}
+
 class Playground {
   readonly editor: HTMLTextAreaElement;
   /* The coloured copy under the editor, and the box that holds the two
@@ -1545,6 +1748,8 @@ class Playground {
    * file and have no playground. */
   readonly tidyButton: HTMLButtonElement | null;
   readonly tidyUndoButton: HTMLButtonElement | null;
+  readonly undoButton: HTMLButtonElement | null;
+  readonly redoButton: HTMLButtonElement | null;
   readonly tidyNote: HTMLElement | null;
   readonly tidyBar: HTMLElement | null;
   /* The row of six group names above the examples, and the row under them that
@@ -1644,6 +1849,31 @@ class Playground {
    * anybody meant to compile. */
   composing = false;
 
+  /* Undo, one history per file.
+   *
+   * It has to be the page's own: every path that puts a program into the box
+   * assigns to `value`, and that empties the browser's built-in undo. So today
+   * one press of an example chip takes away every step a visitor had.
+   *
+   * `mirror` is what the box held when the last step was recorded. A step is
+   * the difference between the mirror and what is there now, which is why
+   * nothing has to be intercepted: the `input` event is enough, and paste, cut
+   * and drag all arrive through it.
+   *
+   * One history per file because the files are four separate programs — the
+   * owner's rule is that pressing an example must not take away what you were
+   * writing, and an undo stack that belonged to whichever file was last open
+   * would break the same promise in a quieter way. */
+  histories: Map<FileId, EditHistory> = new Map();
+  mirror = '';
+  /* Closes a run of typing after a pause, so that coming back to a program
+   * after a moment does not undo into the middle of the last word. */
+  restTimer: number | undefined = undefined;
+  /* Undos asked for in the middle of building a Korean letter, held until the
+   * letter is finished. Presses are counted, not collapsed: holding the keys
+   * down through a syllable must not lose four of the five. */
+  pendingWalks: ('back' | 'forward')[] = [];
+
   constructor(root: ParentNode) {
     // `root` is the playground element itself, so it has to be looked up from
     // the document rather than searched inside.
@@ -1695,6 +1925,8 @@ class Playground {
     this.problemDetailText = queryMaybe(root, '#problem-detail-text', HTMLElement);
     this.tidyButton = queryMaybe(root, '#tidy', HTMLButtonElement);
     this.tidyUndoButton = queryMaybe(root, '#tidy-undo', HTMLButtonElement);
+    this.undoButton = queryMaybe(document, '#editor-undo', HTMLButtonElement);
+    this.redoButton = queryMaybe(document, '#editor-redo', HTMLButtonElement);
     this.tidyNote = queryMaybe(root, '#tidy-note', HTMLElement);
     this.tidyBar = queryMaybe(root, '.tidy-bar', HTMLElement);
     this.groupBar = queryMaybe(root, '#example-groups', HTMLElement);
@@ -2038,15 +2270,67 @@ class Playground {
       if (event.key === 'Enter') { event.preventDefault(); this.renameTo?.focus({ preventScroll: true }); }
       if (event.key === 'Escape') { event.preventDefault(); this.closeEditorBar(); }
     });
-    // The key everyone already presses to look for something. The browser's
-    // own find cannot see inside a text box, so this one takes it over while
-    // the caret is in the program.
+    // The keys everyone already presses. The browser's own find cannot see
+    // inside a text box, and its own undo is emptied every time this page puts
+    // a program into the box, so both are taken over while the caret is in the
+    // program. Ctrl and Cmd are both accepted rather than asking which machine
+    // this is: the wrong one of the two is not a shortcut anybody else uses.
     this.editor.addEventListener('keydown', (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      /* With a Korean input method running, Windows reports `key: 'Process'`
+       * for every keydown while a letter is being built, so the letter is
+       * asked for by position as well. */
+      const key = event.key.toLowerCase();
+      const is = (letter: string, code: string): boolean => key === letter || event.code === code;
+      if (is('f', 'KeyF')) {
         event.preventDefault();
         this.openEditorBar('find');
       }
+      if (is('z', 'KeyZ')) {
+        event.preventDefault();
+        this.walk(event.shiftKey ? 'forward' : 'back');
+      }
+      /* Windows has a second key for redo and a lot of people use it. Not on a
+       * Mac: there Ctrl+Y is "put back what was last cut" in every text box,
+       * and taking it would break something that already works. */
+      if (is('y', 'KeyY') && !ON_MAC) {
+        event.preventDefault();
+        this.walk('forward');
+      }
     });
+
+    /* Undo, recorded from `input` — the one event every way of changing a text
+     * box goes through, so typing, pasting, cutting and dragging text in are
+     * all covered without any of them being intercepted. Leaving the box ends
+     * the run of typing, so coming back later starts a new step. */
+    this.editor.addEventListener('input', () => this.recordEdit());
+
+    /* And the browser's own undo is stopped here rather than at the keys.
+     *
+     * Assigning `value` does NOT empty the stack the browser keeps (measured:
+     * only Firefox empties it) — it leaves it holding text that is no longer
+     * on screen, so a native redo can paste a program from before an example
+     * was opened into the middle of the one that is. The keys are not the only
+     * way in either: the right-click menu, the Edit menu on a Mac and shaking
+     * an iPhone all ask for the same thing, and none of them is a keystroke.
+     * `beforeinput` is where all of them meet, and it can be refused. */
+    this.editor.addEventListener('beforeinput', (event) => {
+      if (!(event instanceof InputEvent)) return;
+      if (event.inputType !== 'historyUndo' && event.inputType !== 'historyRedo') return;
+      event.preventDefault();
+      this.walk(event.inputType === 'historyUndo' ? 'back' : 'forward');
+    });
+    this.editor.addEventListener('blur', () => {
+      this.recordEdit();
+      this.history.close();
+    });
+    this.undoButton?.addEventListener('click', () => {
+      if (!unavailable(this.undoButton)) this.walk('back');
+    });
+    this.redoButton?.addEventListener('click', () => {
+      if (!unavailable(this.redoButton)) this.walk('forward');
+    });
+    this.showUndoState();
 
     /* How long to wait after the last keystroke. A short program compiles in
      * a few milliseconds and should answer while you type; a four-thousand-line
@@ -2225,7 +2509,7 @@ class Playground {
       return;
     }
     this.beforeTidy = before;
-    this.setEditorText(outcome.nme);
+    this.setEditorText(outcome.nme, 'step');
     this.sayTidy(TEXT.tidyDone(outcome.changed));
     if (this.tidyUndoButton) this.tidyUndoButton.hidden = false;
     void this.compileNow();
@@ -2236,7 +2520,7 @@ class Playground {
 
   undoTidy(): void {
     if (this.beforeTidy === null) return;
-    this.setEditorText(this.beforeTidy);
+    this.setEditorText(this.beforeTidy, 'step');
     this.beforeTidy = null;
     if (this.tidyUndoButton) this.tidyUndoButton.hidden = true;
     this.sayTidy(TEXT.tidyUndone);
@@ -2510,8 +2794,16 @@ class Playground {
       clearTimeout(settle);
       this.composing = false;
       // Chrome sends `input` after this one and Safari before it, so the
-      // compile is asked for here rather than trusting the order.
+      // compile is asked for here rather than trusting the order. Undo has the
+      // same problem and the same answer: recording is put behind the two of
+      // them, so one syllable is one step whichever order they came in.
       this.scheduleCompile();
+      setTimeout(() => {
+        this.recordEdit();
+        const held = this.pendingWalks;
+        this.pendingWalks = [];
+        for (const direction of held) this.walk(direction);
+      }, 0);
       settle = setTimeout(() => {
         this.paintInk();
         delete stack.dataset.composing;
@@ -2536,10 +2828,166 @@ class Playground {
 
   /* Every path that puts a program into the box goes through here, so that
    * the copy underneath can never be showing something else. Typing does not:
-   * it fires `input`, which the wiring above listens for. */
-  setEditorText(text: string): void {
+   * it fires `input`, which the wiring above listens for.
+   *
+   * `how` says what this write means to undo.
+   *
+   *   'fresh'  a different program is being opened — an example, a save slot,
+   *            a link with a program in it. There is nothing to walk back to,
+   *            because what was here belonged to something else.
+   *   'step'   one deliberate edit of the visitor's own text: a rename, a
+   *            tidy. It goes on the history as ONE step, however many lines it
+   *            touched, which is the whole point of having it.
+   *   'swap'   the same programs, a different one of them on screen — moving
+   *            between the four files. Each keeps its own history, so this
+   *            takes none of it away; it only says which one is in front.
+   *
+   * Nothing here fires `input`. That is on purpose — the callers already do
+   * the compiling and saving themselves, in the order they need — but it does
+   * mean the mirror has to be brought up to date right here or the next
+   * keystroke would be recorded as though it had made the whole change. */
+  setEditorText(text: string, how: 'fresh' | 'step' | 'swap' = 'fresh'): void {
+    if (how === 'step') this.recordEdit();
+    const was = this.editor.value;
     this.editor.value = text;
+    if (how === 'step') {
+      const step = difference(was, text);
+      if (step !== null) {
+        this.history.add(step);
+        this.history.close();
+      }
+    } else if (how === 'fresh') {
+      this.history.clear();
+    }
+    // The tidy's own undo points at one particular program. A different one is
+    // now on screen, so that offer no longer means anything and pressing it
+    // would put back a text belonging to something the visitor has left.
+    if (how !== 'step') {
+      this.beforeTidy = null;
+      if (this.tidyUndoButton) this.tidyUndoButton.hidden = true;
+    }
+    this.rememberEditor();
+    this.showUndoState();
     this.paintInk(true);
+  }
+
+  /* The history of the file that is on screen. Kept in a map rather than a
+   * field so that switching files switches histories without any copying. */
+  get history(): EditHistory {
+    let found = this.histories.get(this.activeFile);
+    if (found === undefined) {
+      found = new EditHistory();
+      this.histories.set(this.activeFile, found);
+    }
+    return found;
+  }
+
+  rememberEditor(): void {
+    this.mirror = this.editor.value;
+  }
+
+  /* Put whatever has happened since the last look on the history.
+   *
+   * Safe to call as often as anything likes: if the text has not changed it
+   * does nothing. That is what lets every path that matters — a keystroke, the
+   * end of a Korean syllable, pressing undo, leaving the box — simply call it
+   * first and not have to know whether anything is pending. */
+  recordEdit(): void {
+    if (this.composing) return;
+    const step = difference(this.mirror, this.editor.value);
+    if (step === null) return;
+    const here = this.history;
+    here.add(step);
+    this.rememberEditor();
+    this.showUndoState();
+    // The run being closed is this file's, even if the visitor has moved to
+    // another one by the time the pause is up.
+    clearTimeout(this.restTimer);
+    this.restTimer = setTimeout(() => here.close(), 1500);
+  }
+
+  /* Walk one step back, or one step forward.
+   *
+   * The step says where it happened and what was on each side of it, so the
+   * text is rebuilt around that one span instead of being swapped wholesale —
+   * an undo in the middle of a four-thousand-line program touches the span it
+   * touched and nothing else.
+   *
+   * If what is in the box is not what the step expects, the history and the
+   * text have come apart, and the honest thing is to drop the history rather
+   * than write something nobody asked for. */
+  walk(direction: 'back' | 'forward'): void {
+    /* Never write to the box while an input method is building a letter.
+     * Assigning `value` mid-composition does not even send `compositionend`:
+     * the half-built syllable is carried into whatever was written and comes
+     * out again later, in the wrong place. So the press is remembered and
+     * carried out the moment the letter is finished. */
+    if (this.composing) {
+      if (this.pendingWalks.length < 64) this.pendingWalks.push(direction);
+      return;
+    }
+    this.recordEdit();
+    const step = direction === 'back' ? this.history.takeBack() : this.history.takeForward();
+    if (step === null) return;
+    const cut = direction === 'back' ? step.inserted : step.removed;
+    const put = direction === 'back' ? step.removed : step.inserted;
+    const text = this.editor.value;
+    if (text.slice(step.at, step.at + cut.length) !== cut) {
+      /* Every write to the box goes through `setEditorText` or is caught by
+       * `input`, so this cannot happen and the history is only dropped here to
+       * be sure nothing is written that nobody asked for. It is said out loud
+       * because a silently emptied history looks exactly like a broken button,
+       * and `check-site-playground.mjs` fails if this is ever printed. */
+      console.warn('nme: 되돌리기 기록이 글과 어긋나 비웠습니다');
+      this.history.clear();
+      this.showUndoState();
+      return;
+    }
+    this.editor.value = text.slice(0, step.at) + put + text.slice(step.at + cut.length);
+    /* The caret belongs at the far end of what was just written, and what was
+     * written is short enough to show whenever it is a person's own edit
+     * coming back — so it is selected, which is how the visitor sees what the
+     * press did. A tidy or a rename puts back half the program; highlighting
+     * that would be shouting, so those only get the caret. */
+    const end = step.at + put.length;
+    const caret: readonly [number, number] = put.length > 0 && put.length <= 400
+      ? [step.at, end]
+      : [end, end];
+    // Pressing the button moves the focus to the button. The caret is the
+    // whole point of putting the text back, so it comes home with it.
+    this.editor.focus({ preventScroll: true });
+    this.editor.setSelectionRange(caret[0], caret[1]);
+    this.rememberEditor();
+    this.showUndoState();
+    // One press is one splice, which is the shape the row-by-row repaint was
+    // written for. Rebuilding all of them would cost a tenth of a second on a
+    // long program for a change of a few letters.
+    this.paintInk();
+    // Firefox pulls the box back to the caret a frame or two after the
+    // selection is set, which undoes a scroll made in the same tick.
+    requestAnimationFrame(() => this.scrollEditorTo(caret[0]));
+    // The text is not what the armed "overwrite file 2?" offer was about any
+    // more, and the find count was counted against a text that has changed.
+    this.disarmOverwrites();
+    this.findAt = -1;
+    this.markHashNote();
+    this.scheduleCompile();
+    this.writeFiles();
+    this.drawFiles();
+    if (this.grow) this.grow();
+    this.markLine();
+  }
+
+  /* Grey them out without taking them off the page.
+   *
+   * `disabled` would take them out of the tab order, and these two start out
+   * with nothing to do on every visit — so a person moving by keyboard would
+   * never meet the two buttons they most need to know are there, right up
+   * until the moment they no longer need to be told. `aria-disabled` says the
+   * same thing to a screen reader and keeps them reachable. */
+  showUndoState(): void {
+    setUnavailable(this.undoButton, !this.history.canUndo);
+    setUnavailable(this.redoButton, !this.history.canRedo);
   }
 
   /* On a phone the editor is the whole screen's worth of space there is, so
@@ -2766,7 +3214,11 @@ class Playground {
         for (const id of FILE_IDS) {
           if (id === this.activeFile) continue;
           const value: unknown = id in shelf ? Reflect.get(shelf, id) : '';
-          if (typeof value === 'string') this.files[id] = value;
+          if (typeof value !== 'string' || value === this.files[id]) continue;
+          this.files[id] = value;
+          // Those steps describe the text this tab used to hold. Walking back
+          // over them would splice two people's programs together.
+          this.histories.delete(id);
         }
         this.drawFiles();
       } catch {
@@ -2816,10 +3268,13 @@ class Playground {
     if (id === this.activeFile) return;
     clearTimeout(this.debounce);
     this.disarmOverwrites();
+    // The last thing typed into the file being left belongs to that file's
+    // history, and this is the last moment it can be put there.
+    this.recordEdit();
     this.writeFiles();
     this.activeFile = id;
     if (id !== 'example') this.openExample = null;
-    this.setEditorText(this.files[id]);
+    this.setEditorText(this.files[id], 'swap');
     this.terminal.textContent = '';
     this.slots.current = null;
     this.drawFiles();
@@ -2873,8 +3328,16 @@ class Playground {
       fileOverwriteTimers.delete(button);
     }
     this.files[id] = source;
+    /* The same characters are still on screen, so the history comes along —
+     * pressing undo straight after ought to take back the word just typed, not
+     * find an empty stack. It is a copy and not the same one: the file being
+     * left still holds that text too and its own steps are still worth
+     * something, and two files sharing one mark would walk each other's text. */
+    this.recordEdit();
+    const carried = this.history.copy();
     this.activeFile = id;
-    this.setEditorText(source);
+    this.histories.set(id, carried);
+    this.setEditorText(source, 'swap');
     this.drawFiles();
     this.writeFiles();
     this.flashSaved();
@@ -3341,7 +3804,7 @@ class Playground {
       if (outcome.broken) { this.say(TEXT.renameBroken); return; }
       if (outcome.unsafe) { this.say(TEXT.renameUnsafe); return; }
       if (outcome.count === 0) { this.say(TEXT.renameNothing); return; }
-      this.setEditorText(outcome.text);
+      this.setEditorText(outcome.text, 'step');
       this.writeFiles();
       this.drawFiles();
       this.say(TEXT.renameDone(outcome.count, to));

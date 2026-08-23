@@ -32,6 +32,16 @@
     <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/ai-assistants"/>
   </url>
   <url>
+    <loc>https://needmoreeasy.com/learn/changes</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/changes"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/changes"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/changes</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/changes"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/changes"/>
+  </url>
+  <url>
     <loc>https://needmoreeasy.com/learn/converting-python</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/converting-python"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/converting-python"/>
@@ -1080,6 +1090,16 @@
     <loc>https://needmoreeasy.com/ko/learn/reference</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/reference"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/reference"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/learn/site-changes</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/site-changes"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/site-changes"/>
+  </url>
+  <url>
+    <loc>https://needmoreeasy.com/ko/learn/site-changes</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://needmoreeasy.com/learn/site-changes"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://needmoreeasy.com/ko/learn/site-changes"/>
   </url>
   <url>
     <loc>https://needmoreeasy.com/learn/start</loc>

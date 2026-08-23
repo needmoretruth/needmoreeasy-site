@@ -178,6 +178,16 @@ for (const [language, list] of Object.entries(EXAMPLES)) {
       }
     }
 
+    /* A program that mines. `ko/bitcoin` does 2,828 modular exponentiations on
+     * 2,048-bit numbers, which is 256 seconds in this engine and 153 in
+     * CPython — the arithmetic is the point of it, so there is nothing to make
+     * faster. Compiling it is checked on every run; running it is not, unless
+     * asked. Said out loud rather than skipped quietly. */
+    if (example.slow && !process.env.NME_SLOW) {
+      console.log(`ok    ${language}/${example.id}  컴파일만 확인함 — 실행은 몇 분짜리다 (NME_SLOW=1이면 끝까지 돌린다)`);
+      continue;
+    }
+
     let outcome;
     try {
       outcome = JSON.parse(engine.run(compiled.python));

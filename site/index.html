@@ -139,7 +139,7 @@ Welcome</pre>
 
     <div class="panes" data-view="nme">
       <div class="pane pane-nme">
-        <div class="pane-head"><strong id="editor-title">Examples</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" data-copy-editor>copy</button><button class="copy-btn" type="button" data-copy-link>share link</button><button class="copy-btn" type="button" data-find-open>find</button><button class="copy-btn" type="button" data-rename-open>rename a job</button><button class="copy-btn" type="button" data-download-editor>download</button></span></div>
+        <div class="pane-head"><strong id="editor-title">Examples</strong><span>.nme</span><span class="pane-tools"><button class="copy-btn" type="button" id="editor-undo" aria-keyshortcuts="Control+Z Meta+Z" aria-disabled="true">Undo</button><button class="copy-btn" type="button" id="editor-redo" aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y" aria-disabled="true">Redo</button><button class="copy-btn" type="button" data-copy-editor>copy</button><button class="copy-btn" type="button" data-copy-link>share link</button><button class="copy-btn" type="button" data-find-open>find</button><button class="copy-btn" type="button" data-rename-open>rename a job</button><button class="copy-btn" type="button" data-download-editor>download</button></span></div>
         <div class="editor-bar" id="editor-bar" hidden>
           <span class="editor-row" id="find-row">
             <input class="editor-input" id="find-text" type="text" autocomplete="off" spellcheck="false" placeholder="find in the code" aria-label="Find in the code">
@@ -182,7 +182,7 @@ Welcome</pre>
         <button type="button" data-tidy-level="beginner" aria-pressed="false">Beginner</button>
         <button type="button" data-tidy-level="advanced" aria-pressed="false">Python</button>
       </span>
-      <button class="btn btn-ghost" id="tidy-undo" type="button" hidden>Undo</button>
+      <button class="btn btn-ghost" id="tidy-undo" type="button" hidden>Undo tidy</button>
       <span class="tidy-note" id="tidy-note" aria-live="polite">Write it any way you like. This rewrites it in one way of writing, and the program stays the same.</span>
     </div>
 

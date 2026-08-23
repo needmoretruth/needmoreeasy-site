@@ -52,6 +52,25 @@ CORE_PAGES: list[tuple[str, str, str]] = [
     ("zero-knowledge-nizk", "zero-knowledge", "deeper"),
 ]
 
+# Two published pages are not in the language repository's `docs/`.
+#
+# The changelog is that repository's own top-level file — the record of what
+# each release changed, written for readers rather than for git. Until now it
+# was only visible to somebody who went to GitHub, which is exactly the thing
+# this site exists so that nobody has to do.
+#
+# The site's own record lives in THIS repository, because the site changes on
+# its own schedule: a release of the compiler and a change to the playground
+# are different events and a reader should not have to work out which was which.
+#
+# `where` says which repository to read from, `key` is the path inside it
+# without the `.md`, and Korean adds `.ko` in front of the extension exactly as
+# it does everywhere else.
+EXTRA_PAGES: list[tuple[str, str, str, str]] = [
+    ("repo", "CHANGELOG", "changes", "deeper"),
+    ("site", "docs/site-changes", "site-changes", "deeper"),
+]
+
 PROMPT_PAGES: list[tuple[str, str]] = [
     ("prompts/README", "prompts"),
     ("prompts/nme-sentence", "prompts/sentence"),
@@ -271,6 +290,12 @@ def collect(docs: Path) -> list[Page]:
             if path is None:
                 continue
             pages.append(make_page(key, lang, slug, path, "prompts"))
+        for where, key, slug, group in EXTRA_PAGES:
+            base = docs.parent if where == "repo" else ROOT
+            path = source_for(base, key, lang)
+            if path is None:
+                continue
+            pages.append(make_page(key, lang, slug, path, group))
         for path in sorted((docs / "guides").glob("*.md")):
             name = path.name.removesuffix(".ko.md").removesuffix(".md")
             if name in GUIDE_SKIP:
@@ -922,14 +947,28 @@ def render_page(
     twin = by_key.get((page.key, "ko" if page.lang == "en" else "en"))
     twin_url = twin.url if twin else STRINGS["ko" if page.lang == "en" else "en"]["learn"]
     description = first_sentence(page.text) or page.title
-    source_link = GITHUB + str(page.source.relative_to(docs.parent)).replace(os.sep, "/")
+    # Most pages are the language repository's own Markdown, and saying so with
+    # a link to it is part of there being one source of truth. The site's own
+    # record is not in that repository — this one is not published anywhere to
+    # link to — so that line is simply left off rather than pointed somewhere
+    # that does not exist.
+    try:
+        inside = page.source.relative_to(docs.parent)
+    except ValueError:
+        inside = None
+    credit = (
+        ""
+        if inside is None
+        else f'<p class="fineprint"><a href="{GITHUB + str(inside).replace(os.sep, "/")}">'
+        f'{escape(words["source"])}</a></p>'
+    )
 
     article = f"""    <article class="doc-main">
 {crumbs(page)}
 <div class="prose">
 {body}
 </div>
-<p class="fineprint"><a href="{source_link}">{escape(words["source"])}</a></p>
+{credit}
 {turners(page, order)}
     </article>"""
 

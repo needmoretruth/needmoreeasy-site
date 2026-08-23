@@ -54,6 +54,18 @@ for (const theme of ['light', 'dark']) {
           bodyBg: getComputedStyle(document.body).backgroundColor,
           themeToggle: document.querySelectorAll('[data-theme-choice]').length,
           small: small.slice(0, 4),
+          /* 편집 칸 위의 단추 줄. 일곱 개가 한 줄에 못 들어가는 폭에서는
+           * 줄을 바꿔야 한다 — 옆으로 밀려 나가거나 글자가 잘리면 안 된다. */
+          tools: (() => {
+            const bar = document.querySelector('#playground .pane-nme .pane-tools');
+            if (bar === null) return null;
+            return {
+              over: bar.scrollWidth - bar.clientWidth,
+              cut: [...bar.children]
+                .filter((b) => b.scrollWidth > b.clientWidth + 1)
+                .map((b) => b.textContent),
+            };
+          })(),
         };
       });
 
@@ -62,6 +74,8 @@ for (const theme of ['light', 'dark']) {
       if (info.themeToggle !== 3) note(`${tag}: 테마 단추 ${info.themeToggle}개`);
       if (info.bodyBg === 'rgba(0, 0, 0, 0)') note(`${tag}: 본문 배경 없음`);
       if (info.small.length) note(`${tag}: 누르기 작은 요소 ${info.small.join(', ')}`);
+      if (info.tools !== null && info.tools.over > 1) note(`${tag}: 편집 단추 줄이 ${info.tools.over}px 넘침`);
+      if (info.tools !== null && info.tools.cut.length) note(`${tag}: 편집 단추 글자 잘림 ${info.tools.cut.join(', ')}`);
       if (errors.length) note(`${tag}: 콘솔 오류 ${errors.slice(0, 2).join(' | ')}`);
       await page.close();
     }

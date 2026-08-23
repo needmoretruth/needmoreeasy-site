@@ -124,4 +124,9 @@ createServer(async (request, response) => {
     response.writeHead(404, { 'content-type': 'text/plain' });
     response.end('not found');
   }
-}).listen(PORT, () => console.log(`site preview on http://localhost:${PORT}`));
+/* 127.0.0.1에만 묶는다.
+ *
+ * 호스트를 빼면 Node는 모든 랜카드에 묶어서(`*:8788`) 같은 망에 있는 누구나 들어올 수
+ * 있게 된다. 이것은 배포 전에 이 기계에서만 보려고 띄우는 서버이므로 바깥에 열려 있을
+ * 이유가 하나도 없다. 방화벽이 막아 주더라도 방화벽에 기대지 않는다. */
+}).listen(PORT, '127.0.0.1', () => console.log(`site preview on http://127.0.0.1:${PORT}`));
