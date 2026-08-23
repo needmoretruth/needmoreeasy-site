@@ -65,6 +65,14 @@ const TYPES = {
   '.mjs': 'text/javascript; charset=utf-8',
   '.wasm': 'application/wasm',
   '.svg': 'image/svg+xml',
+  // Without these the preview server falls back to application/octet-stream,
+  // which makes a browser download the file instead of showing it — and a
+  // check that navigates to the social image then fails for that reason alone.
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
   '.json': 'application/json; charset=utf-8',
   '.xml': 'application/xml; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8',

@@ -74,21 +74,37 @@ const ok = (message) => console.log('ok   ' + message);
 
   for (const [name, source, expected] of CHANGES) {
     const seen = await page.evaluate(async (code) => {
+      /* The Python pane is drawn one element per line, so that a keystroke
+       * repaints only the lines that changed instead of all 4,337 of them.
+       * Its `textContent` therefore runs every line together with nothing
+       * between them. Read the rows. The fallback is for a deployment older
+       * than that change, so this file can still be pointed at one. */
+      const readPython = () => {
+        const pane = document.querySelector('#python');
+        if (!pane) return '';
+        const rows = [...pane.querySelectorAll('.pyline')];
+        return rows.length > 0 ? rows.map((row) => row.textContent ?? '').join('\n') : (pane.textContent ?? '');
+      };
       const editor = document.querySelector('#editor');
       editor.value = code;
       editor.dispatchEvent(new Event('input'));
       await new Promise((wake) => setTimeout(wake, 700));
       return {
-        python: document.querySelector('#python')?.textContent ?? '',
+        python: readPython(),
         state: document.querySelector('#python')?.dataset.state ?? '',
         problem: document.querySelector('#problem')?.textContent ?? '',
+        banded: document.querySelector('#problem')?.hidden === false,
       };
     }, source);
     // `expected === null` means the release turned this program into a
     // refusal. A compiler that still accepts it is one release behind, and
     // the Python it produces looks perfectly fine — which is the whole point.
     if (expected === null) {
-      if (seen.state === 'error') ok(name);
+      // A refusal no longer wipes the pane: the Python from a moment ago stays
+      // up, marked stale, so that one wrong letter does not collapse the page
+      // under the reader's cursor. So the pane says `behind`, not `error`, and
+      // what proves the refusal reached the reader is the band beneath it.
+      if (seen.state !== 'ok' && seen.banded) ok(name);
       else note(`${name} — 거절되지 않고 컴파일됨: ${seen.python.trim().split('\n')[0] || '(없음)'}`);
     } else if (seen.python.includes(expected)) {
       ok(name);
@@ -117,6 +133,17 @@ const ok = (message) => console.log('ok   ' + message);
 
   const started = Date.now();
   const seen = await page.evaluate(async () => {
+    /* The Python pane is drawn one element per line, so that a keystroke
+     * repaints only the lines that changed instead of all 4,337 of them.
+     * Its `textContent` therefore runs every line together with nothing
+     * between them. Read the rows. The fallback is for a deployment older
+     * than that change, so this file can still be pointed at one. */
+    const readPython = () => {
+      const pane = document.querySelector('#python');
+      if (!pane) return '';
+      const rows = [...pane.querySelectorAll('.pyline')];
+      return rows.length > 0 ? rows.map((row) => row.textContent ?? '').join('\n') : (pane.textContent ?? '');
+    };
     const editor = document.querySelector('#editor');
     const python = document.querySelector('#python');
     // The compile is debounced and the program is large, so wait for the pane
@@ -128,11 +155,12 @@ const ok = (message) => console.log('ok   ' + message);
       if (now > 0 && now === last) break;
       last = now;
     }
+    const made = readPython();
     return {
       wrote: editor?.value?.split('\n').length ?? 0,
-      became: python?.textContent?.replace(/\n$/, '').split('\n').length ?? 0,
+      became: made.replace(/\n$/, '').split('\n').length,
       state: python?.dataset.state,
-      first: python?.textContent?.trim().split('\n')[0] ?? '',
+      first: made.trim().split('\n')[0] ?? '',
     };
   });
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
