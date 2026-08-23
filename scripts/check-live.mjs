@@ -99,6 +99,59 @@ const ok = (message) => console.log('ok   ' + message);
   await page.close();
 }
 
+/* 1c. the largest program on the site has to compile in the browser.
+ *
+ * Everything above compiles a few lines. `peace` is 4,337 of them, and it is
+ * the one program a visitor is most likely to arrive for — the site offers it
+ * as the answer to "how far does the sentence syntax go?". A compiler that
+ * handles every short example and falls over on this one has failed at exactly
+ * the thing the page is advertising.
+ *
+ * The timing is reported rather than asserted. It is here so that a later
+ * release which doubles it is visible in the deploy log instead of being
+ * discovered by a reader whose tab has stopped responding. */
+{
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  await page.goto(BASE + '/ko/#example=peace', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => document.querySelector('#engine-dot')?.dataset.state === 'ready', null, { timeout: 120000 });
+
+  const started = Date.now();
+  const seen = await page.evaluate(async () => {
+    const editor = document.querySelector('#editor');
+    const python = document.querySelector('#python');
+    // The compile is debounced and the program is large, so wait for the pane
+    // to stop growing rather than for a fixed time.
+    let last = -1;
+    for (let tick = 0; tick < 60; tick += 1) {
+      await new Promise((wake) => setTimeout(wake, 500));
+      const now = python?.textContent?.length ?? 0;
+      if (now > 0 && now === last) break;
+      last = now;
+    }
+    return {
+      wrote: editor?.value?.split('\n').length ?? 0,
+      became: python?.textContent?.replace(/\n$/, '').split('\n').length ?? 0,
+      state: python?.dataset.state,
+      first: python?.textContent?.trim().split('\n')[0] ?? '',
+    };
+  });
+  const seconds = ((Date.now() - started) / 1000).toFixed(1);
+
+  if (seen.wrote < 4000) {
+    note(`가장 큰 예제가 실리지 않음 — 편집 칸이 ${seen.wrote}줄`);
+  } else if (seen.state === 'error') {
+    note(`가장 큰 예제(${seen.wrote}줄)가 컴파일되지 않음 — ${seen.first}`);
+  } else if (seen.became !== seen.wrote) {
+    // One NME statement is exactly one physical Python line, so the two panes
+    // must have the same number of lines. A mismatch means a statement was
+    // swallowed or split, which no short example would reveal.
+    note(`가장 큰 예제의 줄이 어긋남 — 쓴 것 ${seen.wrote}줄, 된 것 ${seen.became}줄`);
+  } else {
+    ok(`가장 큰 예제 ${seen.wrote}줄이 브라우저에서 컴파일됨  ${seconds}초`);
+  }
+  await page.close();
+}
+
 /* 2. a wrong address must say so */
 {
   const page = await browser.newPage();
