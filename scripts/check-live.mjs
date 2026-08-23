@@ -58,6 +58,11 @@ const ok = (message) => console.log('ok   ' + message);
     ['0.8.0 글자를 숫자로',
      '답글은 42\n답은 답글을 숫자로 바꾼 것\n답 말해줘',
      '답 = int(답글)'],
+    // 0.9.0 refuses this one, so the pair is the other way round: what must
+    // reach the reader is the refusal, not a line of Python.
+    ['0.9.0 참이 될 수 없는 비교를 거절함',
+     '수호룬은 거짓\n선택을 물어봐 수호룬, 폭약\n만약에 선택이 수호룬과 같으면\n    골랐습니다 말해줘\n끝',
+     null],
   ];
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   await page.goto(BASE + '/ko/', { waitUntil: 'domcontentloaded' });
@@ -68,15 +73,28 @@ const ok = (message) => console.log('ok   ' + message);
   else note('바닥글에 빌드 커밋이 없음');
 
   for (const [name, source, expected] of CHANGES) {
-    const python = await page.evaluate(async (code) => {
+    const seen = await page.evaluate(async (code) => {
       const editor = document.querySelector('#editor');
       editor.value = code;
       editor.dispatchEvent(new Event('input'));
       await new Promise((wake) => setTimeout(wake, 700));
-      return document.querySelector('#python')?.textContent ?? '';
+      return {
+        python: document.querySelector('#python')?.textContent ?? '',
+        state: document.querySelector('#python')?.dataset.state ?? '',
+        problem: document.querySelector('#problem')?.textContent ?? '',
+      };
     }, source);
-    if (python.includes(expected)) ok(name);
-    else note(`${name} — 나온 것: ${python.trim().split('\n')[0] || '(없음)'}`);
+    // `expected === null` means the release turned this program into a
+    // refusal. A compiler that still accepts it is one release behind, and
+    // the Python it produces looks perfectly fine — which is the whole point.
+    if (expected === null) {
+      if (seen.state === 'error') ok(name);
+      else note(`${name} — 거절되지 않고 컴파일됨: ${seen.python.trim().split('\n')[0] || '(없음)'}`);
+    } else if (seen.python.includes(expected)) {
+      ok(name);
+    } else {
+      note(`${name} — 나온 것: ${seen.python.trim().split('\n')[0] || '(없음)'}`);
+    }
   }
   await page.close();
 }
