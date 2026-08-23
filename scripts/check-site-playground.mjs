@@ -420,6 +420,25 @@ if (!/실행/.test(blocked.note)) errors.push('왜 정리할 수 없는지 말�
 if (blocked.nme !== '안녕하세요 말해줘\n끝\n') errors.push('정리할 수 없는데 글자를 건드림');
 console.log(errors.length ? 'FAIL 정리하기' : '정리하기 — 표기만 바뀌고 파이썬은 그대로, 되돌리기도 됨');
 
+// 건너뛰기 링크는 「쓰는 칸으로」라고 말한다. 좁은 화면에서 파이썬 칸을 켜 두면
+// 쓰는 칸이 display:none이 되어 포커스를 받지 못한다 — 그러면 링크는 아무 데도
+// 데려가지 못하고, 머리글을 지나가려던 사람은 문서 맨 위로 되돌아간다.
+await page.evaluate(() => document.querySelector('.play-tabs [data-view="python"]').click());
+await page.waitForTimeout(200);
+await page.evaluate(() => document.querySelector('.skip-link').focus());
+await page.keyboard.press('Enter');
+await page.waitForTimeout(250);
+const skipped = await page.evaluate(() => ({
+  id: document.activeElement ? document.activeElement.id : '',
+  view: document.querySelector('.panes').dataset.view,
+}));
+if (skipped.id !== 'editor') {
+  errors.push('파이썬 칸이 열려 있을 때 건너뛰기가 쓰는 칸에 못 감 — ' + (skipped.id || '아무 데도'));
+  console.log('FAIL 건너뛰기');
+} else {
+  console.log('파이썬 칸이 열려 있어도 건너뛰기가 쓰는 칸으로 데려감');
+}
+
 console.log(errors.length ? 'FAIL 콘솔 오류: ' + errors.join(' | ') : '콘솔 오류 없음');
 await browser.close();
 process.exit(errors.length ? 1 : 0);

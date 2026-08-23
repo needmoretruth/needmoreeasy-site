@@ -424,6 +424,17 @@ a:hover { text-decoration-color: currentColor; }
   border-radius: inherit;
 }
 
+/* Where the skip link lands. A container carries tabindex="-1" only so that
+ * `href="#id"` moves focus at all — without it the browser scrolls and leaves
+ * focus on <body>, so the next Tab restarts at the top of the page and the one
+ * link meant to bypass the header saves nothing. Nothing is typed into these,
+ * so they get no ring: <main> is 29,000px tall and its frame would draw a black
+ * rule down both edges of the window with a bottom that never arrives. What
+ * confirms the jump is the next Tab landing inside the content. The front page
+ * does not rely on this at all — its skip link goes to the writing box itself,
+ * which is a real control with a real ring. */
+#doc:focus-visible, #playground:focus-visible { outline: none; }
+
 code, kbd, samp, pre { font-family: var(--mono); }
 
 p code, li code, td code, th code {

@@ -1802,6 +1802,7 @@ class Playground {
       });
     }
 
+    this.wireSkipLink();
     this.wireTools();
     this.wireFiles();
     this.wireOtherTabs();
@@ -2153,6 +2154,29 @@ class Playground {
   }
 
   /* --- taking the code away --------------------------------------------- */
+
+  /* The skip link promises the writing box, and on a phone the writing box can
+   * be behind the Python tab. A hidden element cannot take focus, so there the
+   * plain href would scroll nowhere and leave focus on <body> — the header
+   * un-skipped, which is the whole thing the link exists to prevent. Open the
+   * pane that holds it first and let the browser do the rest. With scripting
+   * off the markup already works on its own: the page ships with the writing
+   * pane open. */
+  wireSkipLink(): void {
+    const link = queryMaybe(document, '.skip-link', HTMLAnchorElement);
+    if (link === null) return;
+    link.addEventListener('click', () => {
+      const id = link.getAttribute('href')?.slice(1);
+      if (id === undefined || id === '') return;
+      const target = document.getElementById(id);
+      if (target === null || target.offsetParent !== null) return;
+      const holder = target.closest('.pane');
+      if (holder === null) return;
+      const view = holder.classList.contains('pane-nme') ? 'nme' : 'python';
+      const tab = this.tabs.find((one) => one.dataset.view === view);
+      if (tab !== undefined) tab.click();
+    });
+  }
 
   wireTools(): void {
     const flash = (button: HTMLElement, ok: boolean): void => {

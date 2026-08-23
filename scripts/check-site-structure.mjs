@@ -3,6 +3,12 @@
  * skip a step, a single h1, a language and a title. None of these show up in a
  * screenshot, and all of them matter to someone using a screen reader.
  *
+ * The skip link is driven for real — Tab, then Enter — because the markup
+ * cannot tell you whether it works. `href="#x"` moves focus only when #x can
+ * take focus; against a plain <section> the browser scrolls, leaves focus on
+ * <body>, and the next Tab restarts at the top of the page. That is exactly
+ * what the one thing meant to save a keyboard user from the header was doing.
+ *
  *   node scripts/check-site-structure.mjs [base-url]
  */
 import { chromium } from 'playwright';
@@ -29,7 +35,26 @@ for (const path of ['/index.html', '/ko/index.html', guidePath('timer', 'ko'), '
     const title = document.title.length;
     return { dupes, imgs, namelessButtons, jumps, h1, lang, title };
   });
+  const skip = await page.evaluate(() => {
+    const link = document.querySelector('.skip-link');
+    return link ? { href: link.getAttribute('href') } : null;
+  });
   const problems = [];
+  if (skip) {
+    const want = skip.href.slice(1);
+    await page.keyboard.press('Tab');
+    const first = await page.evaluate(() => document.activeElement?.className || '');
+    if (!String(first).includes('skip-link')) problems.push('첫 Tab이 건너뛰기 링크가 아님');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(120);
+    const landed = await page.evaluate(() => {
+      const el = document.activeElement;
+      return { id: el?.id || '', tag: el?.tagName || '' };
+    });
+    if (landed.id !== want) {
+      problems.push(`건너뛰기가 포커스를 못 옮김 — #${want}로 갔어야 하는데 ${landed.tag}${landed.id ? '#' + landed.id : ''}에 있음`);
+    }
+  }
   if (out.dupes.length) problems.push('중복 id ' + out.dupes.join(','));
   if (out.imgs) problems.push('alt 없는 그림 ' + out.imgs);
   if (out.namelessButtons) problems.push('이름 없는 단추 ' + out.namelessButtons);

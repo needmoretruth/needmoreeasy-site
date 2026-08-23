@@ -615,7 +615,7 @@ def page_shell(
   </div>
 </header>
 
-<main id="doc">
+<main id="doc" tabindex="-1">
 <section class="{shell_class}">
   <div class="wrap">
 {rail_html}
