@@ -2188,6 +2188,15 @@ class Playground {
    * and left alone. `clientWidth` is used rather than the border box because
    * it is the one measurement that already has the scrollbar taken out of
    * it — get that wrong and the copy wraps a line the box does not. */
+  /* Make the coloured copy sit exactly where the box's own text sits.
+   *
+   * This reads the box's geometry, which makes the browser lay the box out
+   * before it can answer. Opening the largest example spends 278 ms here, and
+   * 161 ms of that is the four-thousand-line textarea laying itself out — work
+   * the browser has to do to paint at all, whoever asks for it. The other
+   * 117 ms is the copy underneath doing the same. Splitting the reads from the
+   * writes was tried and measured: it changed nothing, because the cost is the
+   * layout and not the order of the calls. */
   syncInkBox(): void {
     const layer = this.inkLayer;
     if (!layer) return;
@@ -2291,9 +2300,17 @@ class Playground {
       }, 220);
     });
 
-    const watch = new ResizeObserver(() => this.syncInkBox());
+    /* The box changes size as you type, and the observer fires for each of
+     * those changes. Syncing more than once before the next paint is work
+     * nobody sees, so the calls collapse into one per frame. */
+    let due = 0;
+    const soon = (): void => {
+      if (due !== 0) return;
+      due = requestAnimationFrame(() => { due = 0; this.syncInkBox(); });
+    };
+    const watch = new ResizeObserver(soon);
     watch.observe(this.editor);
-    addEventListener('resize', () => this.syncInkBox());
+    addEventListener('resize', soon);
 
     this.inkReady = true;
     this.paintInk(true);
