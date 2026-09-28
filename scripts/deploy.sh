@@ -22,6 +22,13 @@ PROJECT=needmoreeasy
 
 [ -f "$ENV_FILE" ] || { echo "no .env at $ENV_FILE" >&2; exit 1; }
 
+# The browser checks open the English pages, and the site forwards a browser
+# that asks for Korean to the Korean page. On a machine whose own language is
+# Korean every English check would quietly measure the Korean page instead, so
+# the browsers they start are told English. (`check-live.mjs` asks for Korean
+# itself where that forwarding is what it tests.)
+export LANG=en_US.UTF-8 LANGUAGE=en
+
 cd "$REPO_ROOT"
 
 echo "== 싣고 나갈 컴파일러가 저장소의 그 커밋인가 =="
