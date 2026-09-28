@@ -9,6 +9,9 @@ to work out which of them moved.
 
 ## 2026-09-29
 
+- **The playground runs compiler 0.10.0**, so sums in words, counting loops, changing
+  one item of a list and a random item work here too. A new example, *Counting and
+  sums*, shows the first three in a dozen lines.
 - **Installing NME on your own computer is one line.** The bottom of the home page
   now gives one command for macOS and Linux and one for Windows PowerShell, each with
   its own copy button. It downloads a ready-made `nme` for your computer, refuses it

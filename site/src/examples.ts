@@ -167,6 +167,25 @@ show Hello friend!
 end`,
     },
     {
+      id: 'counting',
+      label: 'Counting and sums',
+      group: 'data',
+      answers: [],
+      expect: '17',
+      source: `# Count with a name, do sums in words, change one item of a list.
+count n from 1 to 5
+show n times n
+end
+set prices to list 3, 5, 8
+set item 2 of prices to 6
+set total to 0
+for each price in prices
+set total to total plus price
+end
+show total
+count n from 3 to 1 and show n`,
+    },
+    {
       id: 'collect',
       label: 'Adding to a list',
       group: 'data',
@@ -7180,6 +7199,25 @@ end`,
 친구들의 친구마다 반복해
 안녕하세요 친구! 말해줘
 끝`,
+    },
+    {
+      id: 'counting',
+      label: '세기와 셈',
+      group: 'data',
+      answers: [],
+      expect: '17',
+      source: `# 이름으로 세고, 셈을 낱말로 하고, 목록의 항목 하나를 바꿉니다.
+수를 1부터 5까지 세면서 반복해
+수 곱하기 수 말해줘
+끝
+값들은 목록 3, 5, 8
+값들 2번째를 6으로 바꿔
+합은 0
+값들의 값마다 반복해
+합은 합 더하기 값
+끝
+합 말해줘
+수를 3부터 1까지 세면서 반복해서 수 말해줘`,
     },
     {
       id: 'collect',
