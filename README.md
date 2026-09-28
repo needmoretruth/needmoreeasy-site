@@ -11,6 +11,7 @@ crates/nme-web/    NME source  ->  Python source        (wraps the upstream nme-
 crates/nme-run/    Python source -> output              (embeds RustPython)
 site/              the site itself; this folder is what gets published
 site/src/          the pages' scripts, in TypeScript; compiled into site/assets/
+site/install.*     the one-line installers for the prebuilt `nme` (shell and PowerShell)
 scripts/           build + deploy + a preview server + the example regression check
 ```
 
@@ -53,6 +54,13 @@ The `check-site-*` scripts that take an address need a preview server running (t
 address as an argument) and Playwright, which `npm install` puts in this
 repository's own `node_modules`. `deploy.sh` starts and stops its own server and
 refuses to publish if any check fails.
+
+The guides, the syntax list and the AI prompts are written in the
+[language repository](https://github.com/needmoretruth/needmoreeasy) and turned
+into pages here, so the scripts expect it checked out next to this one
+(`../needmoreeasy`), or wherever `NME_REPO` points. `deploy.sh` reads the
+Cloudflare account it publishes to from `~/.config/nme/cloudflare.env`, or the
+file `NME_ENV_FILE` names; that file never lives in the repository.
 
 `scripts/serve.mjs` compiles `site/src/` first when the output is missing or
 older than the source, so a fresh checkout can be previewed with one command.
