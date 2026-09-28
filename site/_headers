@@ -17,6 +17,13 @@
 # Cloudflare Pages injects at the edge. It sets no cookies and sees no program
 # text. Removing those two entries blocks it; the page keeps working either way.
 
+# The one-line installers are piped into a shell (`curl … | sh`, `irm … | iex`).
+# PowerShell's `irm` hands `iex` text only when the response says it is text.
+/install.sh
+  Content-Type: text/plain; charset=utf-8
+/install.ps1
+  Content-Type: text/plain; charset=utf-8
+
 # No Cache-Control overrides here on purpose. Cloudflare Pages already sends
 # `max-age=0, must-revalidate`, which makes a redeploy visible immediately and
 # still lets the browser skip re-downloading an unchanged 6 MB engine (it gets

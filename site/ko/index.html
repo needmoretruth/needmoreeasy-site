@@ -571,25 +571,41 @@ show Hello 이름!
         <h2>본인 컴퓨터에서는 원래 쓰던 파이썬으로 돕니다.</h2>
         <p class="lede">
           배우는 데에는 필요하지 않습니다. 파일을 저장하거나 인터넷을 쓰거나
-          브라우저 없이 돌아가는 프로그램이 필요해지는 날을 위한 것입니다. 지금은
-          공개 베타라 소스에서 직접 빌드합니다. 안정판 러스트, 파이썬 3.8 이상,
-          Git이 필요합니다. 아래 명령은 <code>beta</code> 가지를 받는데, 이 화면의
-          컴파일러가 그보다 새로울 때가 있습니다. 가장 최근에 더한 문장이 설치본에서
-          아직 안 된다면 그 때문입니다.
+          브라우저 없이 돌아가는 프로그램이 필요해지는 날을 위한 것입니다. 한 줄을
+          붙여 넣으면 내 컴퓨터에 맞게 미리 만든 <code>nme</code>를 받아 확인하고
+          설정까지 합니다. 러스트도 Git도 필요 없습니다. 프로그램은 컴퓨터에 있는
+          파이썬 3.8 이상으로 돌고, 파이썬이 더 필요한지는 설치 프로그램이 알려 줍니다.
         </p>
         <p class="fineprint">
           <a href="/ko/learn/install">설치 안내</a> ·
+          <a href="https://github.com/needmoretruth/needmoreeasy/releases/latest">직접 내려받기</a> ·
           <a href="/ko/learn/start">5분 시작</a>
         </p>
       </div>
-      <div class="copy-wrap">
-        <button class="copy-btn" type="button" data-copy="install-code">복사</button>
-        <pre class="code" data-shell id="install-code">git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
-cd needmoreeasy
-cargo install --path crates/nme-cli --locked
-nme --version
-
-nme run examples/hello-sentence</pre>
+      <div class="install-cmds">
+        <div>
+          <span class="figure-label">macOS · Linux — 터미널</span>
+          <div class="copy-wrap">
+            <button class="copy-btn" type="button" data-copy="install-unix">복사</button>
+            <pre class="code" data-shell id="install-unix">curl -fsSL https://needmoreeasy.com/install.sh | sh</pre>
+          </div>
+        </div>
+        <div>
+          <span class="figure-label">Windows — PowerShell</span>
+          <div class="copy-wrap">
+            <button class="copy-btn" type="button" data-copy="install-win">복사</button>
+            <pre class="code" data-shell id="install-win">irm https://needmoreeasy.com/install.ps1 | iex</pre>
+          </div>
+        </div>
+        <div>
+          <span class="figure-label">그다음, 새 터미널에서</span>
+          <div class="copy-wrap">
+            <button class="copy-btn" type="button" data-copy="install-try">복사</button>
+            <pre class="code" data-shell id="install-try">nme --version
+echo '안녕 말해줘' &gt; hello.nme
+nme 실행 hello</pre>
+          </div>
+        </div>
       </div>
     </div>
   </div>

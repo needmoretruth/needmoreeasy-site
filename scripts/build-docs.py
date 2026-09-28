@@ -1184,7 +1184,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--repo",
-        default=os.environ.get("NME_REPO", str(Path.home() / "nmt" / "needmoreeasy")),
+        # The language repository, checked out next to this one.
+        default=os.environ.get("NME_REPO", str(Path(__file__).resolve().parents[2] / "needmoreeasy")),
     )
     parser.add_argument("--nme", default=None, help="path to the nme binary")
     arguments = parser.parse_args()

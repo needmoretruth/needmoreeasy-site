@@ -575,25 +575,41 @@ show Hello 이름!
         <p class="lede">
           You do not need this to learn. It is for the day you want a program
           that saves files, reaches the network, or runs without a browser.
-          This is the public beta and it builds from source: you need stable
-          Rust, Python 3.8 or newer, and Git. The command below takes the
-          <code>beta</code> branch, and the compiler on this page is sometimes
-          newer than it — that is why the most recently added sentences may not
-          work yet in an installed copy.
+          Paste one line and a ready-made <code>nme</code> for your computer is
+          downloaded, checked, and set up — no Rust, no Git. Your programs then
+          run on the Python already on your computer, version 3.8 or newer; the
+          installer says whether you still need it.
         </p>
         <p class="fineprint">
           <a href="/learn/install">Installation guide</a> ·
+          <a href="https://github.com/needmoretruth/needmoreeasy/releases/latest">Download by hand</a> ·
           <a href="/learn/start">Five-minute guide</a>
         </p>
       </div>
-      <div class="copy-wrap">
-        <button class="copy-btn" type="button" data-copy="install-code">copy</button>
-        <pre class="code" data-shell id="install-code">git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
-cd needmoreeasy
-cargo install --path crates/nme-cli --locked
-nme --version
-
-nme run examples/hello-sentence</pre>
+      <div class="install-cmds">
+        <div>
+          <span class="figure-label">macOS · Linux — Terminal</span>
+          <div class="copy-wrap">
+            <button class="copy-btn" type="button" data-copy="install-unix">copy</button>
+            <pre class="code" data-shell id="install-unix">curl -fsSL https://needmoreeasy.com/install.sh | sh</pre>
+          </div>
+        </div>
+        <div>
+          <span class="figure-label">Windows — PowerShell</span>
+          <div class="copy-wrap">
+            <button class="copy-btn" type="button" data-copy="install-win">copy</button>
+            <pre class="code" data-shell id="install-win">irm https://needmoreeasy.com/install.ps1 | iex</pre>
+          </div>
+        </div>
+        <div>
+          <span class="figure-label">Then, in a new terminal</span>
+          <div class="copy-wrap">
+            <button class="copy-btn" type="button" data-copy="install-try">copy</button>
+            <pre class="code" data-shell id="install-try">nme --version
+echo 'say Hello' &gt; hello.nme
+nme run hello</pre>
+          </div>
+        </div>
       </div>
     </div>
   </div>

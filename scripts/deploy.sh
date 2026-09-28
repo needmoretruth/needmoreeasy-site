@@ -3,18 +3,21 @@
 #
 #   bash scripts/deploy.sh
 #
-# Everything Cloudflare needs comes from ~/nmt/web/.env, the same file every
-# other Cloudflare task on this machine uses: CLOUDFLARE_EMAIL,
-# CLOUDFLARE_API_KEY, CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_ZONE_ID. The two ids
-# are not secrets on their own, but they name a real account, and this
-# repository is meant to be readable by anyone.
+# Everything Cloudflare needs comes from one file outside the repository,
+# ~/.config/nme/cloudflare.env unless NME_ENV_FILE names another:
+# CLOUDFLARE_EMAIL, CLOUDFLARE_API_KEY, CLOUDFLARE_ACCOUNT_ID and
+# CLOUDFLARE_ZONE_ID. The two ids are not secrets on their own, but they name a
+# real account, and this repository is meant to be readable by anyone.
+#
+# The guides are published from the language repository, expected next to this
+# one (../needmoreeasy) unless NME_REPO names another.
 #
 # Both cargo builds go through the machine-wide heavy-work lock, because a
 # parallel heavy build once froze this box hard enough to need a power cycle.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ENV_FILE="${NME_ENV_FILE:-$HOME/nmt/web/.env}"
+ENV_FILE="${NME_ENV_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/nme/cloudflare.env}"
 PROJECT=needmoreeasy
 
 [ -f "$ENV_FILE" ] || { echo "no .env at $ENV_FILE" >&2; exit 1; }
@@ -50,7 +53,7 @@ echo "== 문서 안의 프로그램 전수 시험 =="
 # The guides and prompts are written in the language repository and published
 # from here, so this is the last place their code can be checked before it
 # reaches a reader. Nothing else in this deploy compiles their ```nme blocks.
-NME_REPO="${NME_REPO:-$HOME/nmt/needmoreeasy}"
+NME_REPO="${NME_REPO:-$REPO_ROOT/../needmoreeasy}"
 if [ -d "$NME_REPO/scripts" ]; then
   ( cd "$NME_REPO" \
     && python3 scripts/check-guide-code.py \

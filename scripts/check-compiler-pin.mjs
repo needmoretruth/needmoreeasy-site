@@ -23,10 +23,10 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { homedir } from 'node:os';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const repo = process.env.NME_REPO || join(homedir(), 'nmt', 'needmoreeasy');
+// The language repository, checked out next to this one unless NME_REPO says otherwise.
+const repo = process.env.NME_REPO || join(root, '..', 'needmoreeasy');
 
 let bad = 0;
 const fail = (message) => { bad += 1; console.log('FAIL ' + message); };

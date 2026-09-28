@@ -7,6 +7,18 @@ language and in the compiler that runs in your browser is kept separately, in th
 [changelog](changes) — they are two different things, and a reader should not have
 to work out which of them moved.
 
+## 2026-09-29
+
+- **Installing NME on your own computer is one line.** The bottom of the home page
+  now gives one command for macOS and Linux and one for Windows PowerShell, each with
+  its own copy button. It downloads a ready-made `nme` for your computer, refuses it
+  unless it matches the checksum published with the release, and puts it where a new
+  terminal finds it. Installing Rust and Git and compiling from source are no longer part of it.
+- **The installer tells you whether you still need Python**, and where to get it.
+- **The page no longer scrolls sideways on a narrow phone with large text.** At 320
+  pixels wide with text at 150%, the example shelf and the label under it made the
+  whole page wider than the screen.
+
 ## 2026-08-23
 
 - **Undo and redo.** Ctrl+Z and Ctrl+Shift+Z (Ctrl+Y as well on Windows), and two
