@@ -254,9 +254,12 @@ function rememberLanguageChoice(): void {
   });
 }
 
-/* The English page is the site's front door, so it is the only page that ever
- * forwards. It forwards once, only for a visitor whose browser asks for Korean
- * and who has never chosen a language here. Anyone who clicks "EN" stays. */
+/* A visitor whose browser asks for Korean, and who has never chosen a language
+ * here, is forwarded once to the Korean twin of the page they opened — the one
+ * the page names in its `hreflang="ko"` link. A shared link to an English guide
+ * used to land such a visitor on the Korean home page instead, losing the guide.
+ * A page with no Korean twin (the 404 page) does not forward. Anyone who clicks
+ * "EN" stays. */
 function forwardKoreanSpeakersOnce(): void {
   if (LANG !== 'en') return;
   let stored: string | null = null;
@@ -269,7 +272,11 @@ function forwardKoreanSpeakersOnce(): void {
   const wantsKorean = (navigator.languages || [navigator.language || ''])
     .some((tag) => String(tag).toLowerCase().startsWith('ko'));
   if (!wantsKorean) return;
-  location.replace('/ko/' + location.hash);
+  const twin = document.querySelector('link[rel="alternate"][hreflang="ko"]');
+  const href = twin instanceof HTMLLinkElement ? twin.getAttribute('href') : null;
+  if (!href) return;
+  const target = new URL(href, location.href);
+  location.replace(target.pathname + location.search + location.hash);
 }
 
 /* --- theme, motion, depth ------------------------------------------------ */

@@ -18,6 +18,8 @@ to work out which of them moved.
 - **The page no longer scrolls sideways on a narrow phone with large text.** At 320
   pixels wide with text at 150%, the example shelf and the label under it made the
   whole page wider than the screen.
+- **A link to an English guide opens that guide in Korean for a Korean browser**, instead
+  of the Korean home page. It used to throw away the page the link was for.
 
 ## 2026-08-23
 
