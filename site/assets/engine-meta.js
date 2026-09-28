@@ -1,6 +1,6 @@
 /* Written by scripts/stamp-assets.mjs — do not edit by hand. */
 
-export const ENGINE_BYTES = 11478676;
-export const COMPILER_BYTES = 2147543;
-export const COMPILER_COMMIT = 'bf9db12a0313f37df44fc2cc8534c2743cd61ce9';
-export const COMPILER_SHA256 = 'f1ab3ba6ed3e79db962769f006d4ea57eb80d0d075fca890115f1b24b8de9f5d';
+export const ENGINE_BYTES = 11450416;
+export const COMPILER_BYTES = 2149960;
+export const COMPILER_COMMIT = 'b9475db7d65254939cd30a9e8e0d1aa385fc4814';
+export const COMPILER_SHA256 = '135ca722268b93c01599fea3447c0967eef125e82abd49860416c4b1e31559fb';
